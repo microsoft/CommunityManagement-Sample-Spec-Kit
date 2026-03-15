@@ -1,0 +1,39 @@
+{
+  "name": "acroyoga-community",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed:geography": "tsx src/db/seeds/geography.ts",
+    "db:seed:admin": "tsx src/db/seeds/admin.ts"
+  },
+  "dependencies": {
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.18.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "next": "^16.1.6",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.20.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "stripe": "^20.4.1",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.1.6",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.0"
+  }
+}
