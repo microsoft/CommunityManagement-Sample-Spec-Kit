@@ -2,7 +2,7 @@
 
 > Priority: P1 — Required for regular community classes and festivals
 > Status: Draft
-> Constitution check: Principles I, II, IV, VII
+> Constitution check: Principles I, II, IV, VII, XI, XII
 
 ## User Scenarios & Testing
 
@@ -67,23 +67,27 @@
 | ID | Requirement | Priority |
 |----|-------------|----------|
 | FR-01 | Recurrence rules: daily, weekly, monthly with optional end date and occurrence count | P0 |
-| FR-02 | `nextOccurrence` computed at query time for sorting and display | P0 |
-| FR-03 | Per-occurrence RSVP: each occurrence is independently RSVP-able | P0 |
+| FR-02 | Occurrences are virtual — expanded from recurrence rule at query time, not stored as rows. `nextOccurrence` computed at query time for sorting and display | P0 |
+| FR-03 | Per-occurrence RSVP: each occurrence is independently RSVP-able. RSVPs and overrides keyed by composite `(eventId, occurrenceDate)` | P0 |
 | FR-04 | Series edit: edit all future occurrences or single occurrence | P1 |
 | FR-05 | Series cancel: cancel all future or single occurrence with attendee notification | P1 |
 | FR-06 | Event groups (type: festival/combo/series) linking multiple events or days | P1 |
-| FR-07 | Ticket types per group: independent capacity pools, cost, concession cost | P1 |
+| FR-07 | Ticket types per group: independent capacity pools, cost, concession cost. Concession pricing only available to users with admin-approved concession status on their profile. If concession cost is null/not set on a ticket type, concession option is not shown | P1 |
 | FR-08 | Cross-capacity validation: combined ticket cannot exceed any individual day's remaining capacity | P1 |
-| FR-09 | Teacher revenue splits: fixed or percentage amount per teacher per ticket type | P2 |
+| FR-09 | Teacher revenue splits: deferred to v2. All ticket revenue goes to the event creator's Stripe account. Teachers are paid out-of-band by the creator | P2 |
+| FR-10 | Festival/group ticket cancellation follows spec 001 refund policy: creator-defined refund window, credit preferred over refund. Combined tickets (e.g., full-weekend pass) are atomic — cancel the whole pass or keep it; no partial day drop. User must cancel and rebook individual days if they want partial attendance | P1 |
+| FR-11 | Concession status: users apply on their profile; scoped admin approves/rejects. Approved users see concession pricing at checkout for all events. Status can be revoked by admin | P1 |
+| FR-12 | Single currency per event or event group. Creator sets currency (ISO 4217) at event/group level; all ticket types inherit it. Aligns with Stripe Connect Standard settlement currency. No cross-currency ticket mixing | P0 |
 
 ### Key Entities
 
 - **RecurrenceRule**: frequency (daily/weekly/monthly), interval, daysOfWeek, endDate, occurrenceCount
-- **OccurrenceOverride**: eventId, occurrenceDate, overrideType (cancelled/modified), modifiedFields (JSON)
-- **EventGroup**: id, name, type (festival/combo/series), description, startDate, endDate
+- **OccurrenceOverride**: eventId, occurrenceDate (composite key with eventId), overrideType (cancelled/modified), modifiedFields (JSON)
+- **EventGroup**: id, name, type (festival/combo/series), description, startDate, endDate, currency (ISO 4217)
 - **EventGroupMember**: groupId, eventId, sortOrder
-- **TicketType**: id, groupId, name, cost, currency, concessionCost, capacity, description
-- **Booking**: id, ticketTypeId, userId, paymentStatus, bookedAt
+- **TicketType**: id, groupId, name, cost, concessionCost, capacity, description (currency inherited from EventGroup)
+- **Booking**: id, ticketTypeId, userId, pricingTier (standard/concession), paymentStatus, bookedAt
+- **ConcessionStatus**: id, userId, status (pending/approved/revoked), approvedBy, approvedAt, revokedAt
 
 ### Edge Cases
 
@@ -92,3 +96,5 @@
 - Festival day capacity reduced after tickets sold: show warning to organiser; do not cancel existing bookings
 - Timezone edge case: recurring event crosses DST boundary; occurrences should stay at the same local time
 - User books per-day ticket then wants to upgrade to full festival: swap booking, adjust capacities atomically
+- User cancels full-weekend pass: all per-day capacity slots are released atomically; refund/credit per spec 001 policy
+- User wants to drop one day from a combined pass: must cancel entire pass and rebook desired individual days (no partial cancellation)
