@@ -36,7 +36,8 @@ export type PermissionAction =
   | "post"
   | "follow"
   | "moderateThread"
-  | "moderateReports";
+  | "moderateReports"
+  | "approveConcession";
 
 export interface CheckPermissionRequest {
   action: PermissionAction;
