@@ -1,37 +1,33 @@
 <!--
   Sync Impact Report
-  Version change: 1.1.0 → 1.2.0 (MINOR — material additions, no removals)
+  Version change: 1.2.0 → 1.3.0 (MINOR — material constraint additions from code review, two new quality gates)
   Modified principles:
-    - I. API-First Design → added "Rationale" line, tightened wording
-    - II. Test-First Development → added E2E coverage mention for critical flows
-    - III. Privacy & Data Protection → added uploaded-media EXIF stripping test hint
-    - IV. Server-Side Authority → no change
-    - V. UX Consistency → added design-system token constraint
-    - VI. Performance Budget → added API response-time constraint
-    - VII. Simplicity → replaced subjective "clear, measurable value" with concrete gate
-    - VIII. Internationalisation → added CI lint gate reference
-    - IX. Scoped Permissions → added multiple-grant resolution rule
-    - X. Notification Architecture → added spec cross-ref for waitlist/expiry
-    - XI. Resource Ownership → added teacher profile / recurring-event callouts
-    - XII. Financial Integrity → added cross-capacity booking atomicity note
+    - I. API-First Design → added error-response shape constraint (Finding 14)
+    - III. Privacy & Data Protection → added cross-spec GDPR deletion mandate (Finding 7)
+    - IV. Server-Side Authority → added Zod-only validation constraint (Finding 15)
+    - VI. Performance Budget → added N+1 / list-endpoint query-complexity constraint (Finding 8-9)
+    - IX. Scoped Permissions → added withPermission() middleware mandate for admin endpoints (Finding 3-6)
+    - XI. Resource Ownership → added per-mutation ownership-verification constraint (Finding 2)
+    - XII. Financial Integrity → added OAuth state-signing constraint (Finding 17)
+  Unchanged principles: II, V, VII, VIII, X
   Added sections:
-    - Principle–Spec Alignment Matrix (new)
-    - Quality Gate #9: i18n compliance
-    - Quality Gate #10: permission smoke test
-    - Performance Thresholds: API response-time target
-    - Governance: version-bump policy, amendment procedure, compliance cadence
+    - Quality Gate #11: Auth consistency
+    - Quality Gate #12: Cross-spec data integrity
   Removed sections: (none)
+  Alignment matrix: filled gaps for II, III, IV, VI, IX, X, XI, XII across all specs
   Templates requiring updates:
     - .specify/templates/plan-template.md ✅ no updates needed (Constitution Check is generic)
     - .specify/templates/spec-template.md ✅ no updates needed (constitution check line is generic)
     - .specify/templates/tasks-template.md ✅ no updates needed (phase structure unchanged)
     - .specify/templates/constitution-template.md ✅ no updates needed (placeholder structure unchanged)
   Follow-up TODOs:
-    - Specs 003, 004, 005 should add missing principle refs (XI, XII) to their headers
+    - Existing routes using x-user-id header MUST be migrated to getServerSession()/requireAuth()
+    - GDPR deletion function MUST be audited to cover Spec 005 tables
+    - Specs 003, 004, 005 should add missing principle refs to their headers
 -->
 # AcroYoga Community — Project Constitution
 
-> Version 1.2.0 — Governing architectural principles for the
+> Version 1.3.0 — Governing architectural principles for the
 > AcroYoga Community Events platform.
 
 ## Core Principles
@@ -52,6 +48,7 @@ contract ensures all clients share identical business logic.
 - All mutations MUST go through API endpoints, never direct DB calls from components
 - Response shapes MUST be defined as TypeScript interfaces in a central types file
 - Breaking changes MUST use a new API version (`/v2/`, `/v3/`, etc.)
+- All error responses MUST use the shared `@/lib/errors` helpers to produce a consistent envelope shape (`{ error: string, code: string, details?: unknown }`); ad-hoc `NextResponse.json({ message })` patterns are prohibited
 
 ### II. Test-First Development
 
@@ -80,6 +77,7 @@ storage.
 - All PII fields MUST be encrypted at rest
 - Data export endpoint MUST return all user data as JSON within 30 days (GDPR Article 15)
 - Data deletion MUST hard-delete PII; anonymised aggregates are retained for analytics
+- Every new spec that introduces PII-bearing tables MUST update the GDPR account-deletion function AND the data-export function to cover the new tables; an integration test MUST prove the new data is included in both operations
 - Media upload pipeline MUST strip EXIF/GPS metadata; verify with an integration test
 
 ### IV. Server-Side Authority
@@ -90,7 +88,7 @@ convenience only and MUST be duplicated server-side. No client input
 is trusted.
 
 **Constraints:**
-- All input MUST be validated with schema validation (e.g., Zod) at API boundary
+- All request-body and query-parameter validation MUST use Zod schemas at the API boundary; manual `typeof`/truthiness checks MUST NOT be used as a substitute for schema validation
 - Capacity checks MUST be atomic (`SELECT FOR UPDATE` or equivalent)
 - Price calculations MUST happen server-side only; client displays server-provided values
 - Permission checks MUST run in middleware or service layer, never only in UI
@@ -123,6 +121,7 @@ be updated without a constitution version change.
 - Heavy libraries (maps, rich editors) MUST be loaded on demand, not in initial bundle
 - Every async data fetch MUST have a loading state and a timeout
 - API mutation endpoints (RSVP, booking, payment) MUST respond in < 1 s at p95 on broadband
+- List endpoints MUST NOT execute per-item queries (N+1 pattern); related data MUST be fetched via JOINs, sub-selects, or batch `WHERE IN` queries — reviewers MUST reject any list function whose query count scales linearly with result size
 
 ### VII. Simplicity
 
@@ -167,6 +166,7 @@ user can access or modify resources outside their granted scope.
 - Admins at a hierarchy level can manage all resources at and below their level
 - Permission checks MUST run on every mutation; read access respects visibility rules
 - When a user holds multiple grants, the server MUST evaluate all and apply the most permissive for the requested action
+- Admin-only endpoints (moderation, verification, dashboard, bulk operations) MUST use `withPermission()` middleware (or equivalent role-check decorator) that verifies the caller holds the required admin scope; a bare `requireAuth()` check is insufficient for admin routes
 
 ### X. Notification Architecture
 
@@ -194,6 +194,7 @@ transfers require explicit action, never implicit reassignment.
 - Admin override is scoped: only admins whose scope covers the resource's location can act
 - When an owner leaves the platform, resources MUST be flagged for admin review, not auto-deleted
 - Recurring event series and individual occurrence overrides share the ownership of the parent event
+- Every mutation route MUST verify that the authenticated caller is the resource owner OR holds an admin scope grant covering that resource; checking authentication alone is insufficient — a test MUST prove that an authenticated non-owner receives 403
 
 ### XII. Financial Integrity
 
@@ -209,6 +210,7 @@ the client.
 - Refund eligibility MUST be determined by server-side rules tied to event cancellation policies
 - All payment state transitions MUST be logged for auditability
 - Cross-capacity booking (e.g., festival day + full-weekend pass) MUST be validated atomically in a single transaction
+- OAuth flows (e.g., Stripe Connect) MUST use a signed or opaque `state` parameter (e.g., HMAC-signed token); raw user IDs or other guessable values MUST NOT be passed as the OAuth `state`
 
 ---
 
@@ -216,18 +218,18 @@ the client.
 
 | Principle | 001 Discovery | 002 Social | 003 Recurring | 004 Permissions | 005 Teachers |
 |-----------|:---:|:---:|:---:|:---:|:---:|
-| I. API-First | ✅ | ✅ | ✅ | | ✅ |
-| II. Test-First | ✅ | | ✅ | | |
+| I. API-First | ✅ | ✅ | ✅ | ✅ | ✅ |
+| II. Test-First | ✅ | ✅ | ✅ | ✅ | ✅ |
 | III. Privacy | ✅ | ✅ | | | ✅ |
-| IV. Server-Side Authority | ✅ | | ✅ | ✅ | |
+| IV. Server-Side Authority | ✅ | ✅ | ✅ | ✅ | ✅ |
 | V. UX Consistency | ✅ | ✅ | | | ✅ |
-| VI. Performance Budget | ✅ | | | | |
+| VI. Performance Budget | ✅ | ✅ | ✅ | | ✅ |
 | VII. Simplicity | | | ✅ | | |
 | VIII. Internationalisation | ✅ | ✅ | | | ✅ |
-| IX. Scoped Permissions | | | | ✅ | |
-| X. Notification Architecture | | ✅ | | | |
-| XI. Resource Ownership | | | ✅ | ✅ | ✅ |
-| XII. Financial Integrity | | | ✅ | ✅ | |
+| IX. Scoped Permissions | | | | ✅ | ✅ |
+| X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ |
+| XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ |
+| XII. Financial Integrity | | | ✅ | ✅ | ✅ |
 
 > **Usage:** Each spec's header SHOULD list the principles that apply.
 > Specs 003, 004, and 005 should be updated to include XI and XII
@@ -249,6 +251,8 @@ Every pull request MUST pass these gates before merge:
 8. **Constitution review** — reviewer confirms the change does not violate any core principle
 9. **i18n compliance** — no raw user-facing string literals in UI components (automated lint)
 10. **Permission smoke test** — any new mutation endpoint MUST include an integration test proving a 403 response for an unauthorised caller
+11. **Auth consistency** — all API routes MUST authenticate through `getServerSession()` or the `requireAuth()` wrapper; client-injectable headers (e.g., `x-user-id`, `x-api-key`) MUST NOT be used as the authentication mechanism; PR reviewers MUST reject any route that reads identity from a request header instead of the session
+12. **Cross-spec data integrity** — any new spec that references tables defined in another spec MUST include an integration test that exercises the cross-spec query path with realistic data; additionally, any new PII table MUST appear in the GDPR deletion and data-export test suites before the PR can merge
 
 ### Performance Thresholds
 
@@ -292,4 +296,4 @@ Exceptions may be granted for prototyping/spike branches clearly
 labelled as such (branch prefix `spike/` or `prototype/`).
 Exceptions MUST NOT merge to `main`.
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-15 | **Last Amended**: 2026-03-15
+**Version**: 1.3.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-16
