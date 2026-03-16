@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const createOccurrenceOverrideSchema = z.object({
+  occurrenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   overrideType: z.enum(["cancelled", "modified"]),
   modifiedFields: z
     .object({
@@ -30,6 +31,9 @@ export const updateOccurrenceOverrideSchema = z.object({
 });
 
 export const seriesEditSchema = z.object({
+  scope: z.enum(["all", "this", "thisAndFuture"]),
+  occurrenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  changes: z.record(z.string(), z.unknown()).default({}),
   title: z.string().max(255).optional(),
   description: z.string().optional(),
   capacity: z.number().int().positive().optional(),
