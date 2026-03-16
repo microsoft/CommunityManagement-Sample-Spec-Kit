@@ -41,7 +41,7 @@ export async function DELETE(
   }
 
   try {
-    const cancelled = await cancelBooking(bookingId, "user");
+    const cancelled = await cancelBooking(bookingId, "credit");
     return NextResponse.json(cancelled);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Cancellation failed";

@@ -1,7 +1,13 @@
 import { db } from "@/lib/db/client";
-import type { CreditBalance } from "@/types/credits";
 
-export async function getCreditBalance(userId: string, creatorId: string): Promise<CreditBalance> {
+interface SimpleCreditBalance {
+  userId: string;
+  creatorId: string;
+  balance: number;
+  currency: string;
+}
+
+export async function getCreditBalance(userId: string, creatorId: string): Promise<SimpleCreditBalance> {
   const result = await db().query<{ total: string; currency: string }>(
     `SELECT SUM(remaining_balance) as total, currency
      FROM credits

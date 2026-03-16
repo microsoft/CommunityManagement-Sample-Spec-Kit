@@ -148,6 +148,7 @@ export async function applySeriesEdit(
     // Cancel all occurrences from the split date onwards
     // and create override entries for them
     const { occurrenceDate } = data;
+    if (!occurrenceDate) return;
     const eventResult = await db().query<{ recurrence_rule: string }>(
       `SELECT recurrence_rule FROM events WHERE id = $1`,
       [eventId],

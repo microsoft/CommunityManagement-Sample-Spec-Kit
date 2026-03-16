@@ -130,10 +130,9 @@ export async function getTicketTypeAvailability(
   const sold = parseInt(booked.rows[0].count, 10);
 
   return {
-    ticketTypeId,
-    capacity: ticket.capacity,
+    ...ticket,
     sold,
-    remaining: ticket.capacity - sold,
+    available: ticket.capacity - sold,
   };
 }
 

@@ -35,7 +35,7 @@ export async function getOverride(
 
 export async function createOverride(
   eventId: string,
-  data: CreateOccurrenceOverrideRequest,
+  data: CreateOccurrenceOverrideRequest & { occurrenceDate: string },
   createdBy: string,
 ): Promise<OccurrenceOverride> {
   const result = await db().query<OccurrenceOverride>(

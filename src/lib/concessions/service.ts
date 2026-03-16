@@ -78,9 +78,9 @@ export async function reviewConcession(
     throw new Error(`Cannot review concession with status: ${existing.rows[0].status}`);
   }
 
-  const newStatus: ConcessionStatusValue = data.decision;
+  const decision = data.action;
 
-  if (newStatus === "approved") {
+  if (decision === "approve") {
     const result = await db().query<ConcessionStatus>(
       `UPDATE concession_statuses
        SET status = 'approved', approved_by = $2, approved_at = now()
