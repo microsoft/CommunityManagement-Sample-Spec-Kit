@@ -20,8 +20,10 @@ export async function GET(
     end: new Date(event.endDatetime),
     summary: event.title,
     description: event.description ?? undefined,
-    location: `${event.venue.name}, ${event.venue.address}`,
-    geo: { lat: event.venue.latitude, lon: event.venue.longitude },
+    location: {
+      title: `${event.venue.name}, ${event.venue.address}`,
+      geo: { lat: event.venue.latitude, lon: event.venue.longitude },
+    },
     url: event.externalUrl ?? undefined,
   });
 

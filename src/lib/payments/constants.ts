@@ -1,1 +1,1 @@
-export const STRIPE_API_VERSION = "2024-12-18.acacia" as const;
+export const STRIPE_API_VERSION = "2026-02-25.clover" as const;
