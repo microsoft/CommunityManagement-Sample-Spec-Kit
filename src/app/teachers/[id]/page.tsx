@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 interface Certification {
   id: string;
@@ -56,11 +57,43 @@ export default function TeacherProfilePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (error || !profile) return <div className="p-6 text-red-600">{error ?? "Not found"}</div>;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-24 mb-6" />
+        <div className="h-8 bg-gray-200 rounded w-1/2 mb-4" />
+        <div className="h-4 bg-gray-200 rounded w-1/3 mb-6" />
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-gray-200 rounded" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <p className="font-medium">{error ?? "Teacher not found"}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Link
+        href="/teachers"
+        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mb-6 inline-block"
+      >
+        ← Back to Teachers
+      </Link>
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold">{profile.display_name}</h1>

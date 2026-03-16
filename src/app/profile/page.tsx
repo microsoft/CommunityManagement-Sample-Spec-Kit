@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 interface SocialLinkForm {
   platform: "facebook" | "instagram" | "youtube" | "website";
@@ -9,6 +11,7 @@ interface SocialLinkForm {
 }
 
 export default function ProfilePage() {
+  const { status: authStatus } = useSession();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [defaultRole, setDefaultRole] = useState<string>("hybrid");
@@ -19,6 +22,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [detecting, setDetecting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+  const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/profiles/me")
@@ -42,17 +47,28 @@ export default function ProfilePage() {
   }, []);
 
   async function saveProfile() {
+    setNameError(null);
+    setSaveStatus("idle");
+    if (!displayName.trim()) {
+      setNameError("Display name is required");
+      return;
+    }
     setSaving(true);
-    await fetch("/api/profiles/me", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName, bio, defaultRole, avatarUrl, homeCityId }),
-    });
-    await fetch("/api/profiles/me/social-links", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ links: socialLinks }),
-    });
+    try {
+      const res1 = await fetch("/api/profiles/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName, bio, defaultRole, avatarUrl, homeCityId }),
+      });
+      await fetch("/api/profiles/me/social-links", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ links: socialLinks }),
+      });
+      setSaveStatus(res1.ok ? "success" : "error");
+    } catch {
+      setSaveStatus("error");
+    }
     setSaving(false);
   }
 
@@ -96,18 +112,35 @@ export default function ProfilePage() {
     setSocialLinks(socialLinks.filter((_, i) => i !== index));
   }
 
+  if (authStatus === "unauthenticated") {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <p className="text-gray-600 text-lg">Please sign in to view your profile.</p>
+        <Link href="/api/auth/signin" className="text-indigo-600 hover:text-indigo-800 font-medium mt-4 inline-block">Sign In</Link>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div className="p-6 max-w-2xl mx-auto animate-pulse"><div className="h-8 bg-gray-200 rounded w-48 mb-4" /><div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-gray-200 rounded" />)}</div></div>;
+    return <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse"><div className="h-8 bg-gray-200 rounded w-48 mb-4" /><div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-gray-200 rounded" />)}</div></div>;
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Profile</h1>
+
+      {saveStatus === "success" && (
+        <div className="mb-4 p-3 rounded bg-green-50 border border-green-200 text-green-800">Profile saved successfully!</div>
+      )}
+      {saveStatus === "error" && (
+        <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-800">Failed to save profile. Please try again.</div>
+      )}
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Display Name</label>
-          <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full border rounded px-3 py-2" maxLength={255} />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+          <input type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameError(null); }} className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${nameError ? 'border-red-300' : 'border-gray-300'}`} maxLength={255} />
+          {nameError && <p className="text-red-600 text-sm mt-1">{nameError}</p>}
         </div>
 
         <div>
