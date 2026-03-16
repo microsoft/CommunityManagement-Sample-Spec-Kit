@@ -36,9 +36,9 @@ export async function DELETE(
   const { messageId } = await params;
 
   // Check if user has admin permissions
-  const permResult = await checkPermission(session.userId, "moderateThread", {
-    scopeType: "global",
-    scopeValue: null,
+  const permResult = await checkPermission(session.userId, {
+    action: "moderateThread",
+    targetScope: { scopeType: "global", scopeValue: null },
   });
   const isAdmin = permResult.allowed;
 

@@ -12,9 +12,9 @@ export async function PATCH(
   const session = await getServerSession();
   if (!session) return unauthorized();
 
-  const permResult = await checkPermission(session.userId, "moderateReports", {
-    scopeType: "global",
-    scopeValue: null,
+  const permResult = await checkPermission(session.userId, {
+    action: "moderateReports",
+    targetScope: { scopeType: "global", scopeValue: null },
   });
   if (!permResult.allowed) return forbidden("Requires moderateReports permission");
 

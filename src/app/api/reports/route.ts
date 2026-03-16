@@ -29,9 +29,9 @@ export async function GET(req: NextRequest) {
   if (!session) return new NextResponse(null, { status: 401 });
 
   // Check moderateReports permission
-  const permResult = await checkPermission(session.userId, "moderateReports", {
-    scopeType: "global",
-    scopeValue: null,
+  const permResult = await checkPermission(session.userId, {
+    action: "moderateReports",
+    targetScope: { scopeType: "global", scopeValue: null },
   });
   if (!permResult.allowed) return forbidden("Requires moderateReports permission");
 
