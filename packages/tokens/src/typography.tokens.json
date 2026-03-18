@@ -1,0 +1,29 @@
+{
+  "font": {
+    "family": {
+      "sans": { "$value": "Inter, system-ui, sans-serif", "$type": "fontFamily" },
+      "mono": { "$value": "JetBrains Mono, monospace", "$type": "fontFamily" }
+    },
+    "size": {
+      "xs": { "$value": "12px", "$type": "dimension" },
+      "sm": { "$value": "14px", "$type": "dimension" },
+      "base": { "$value": "16px", "$type": "dimension" },
+      "lg": { "$value": "18px", "$type": "dimension" },
+      "xl": { "$value": "20px", "$type": "dimension" },
+      "2xl": { "$value": "24px", "$type": "dimension" },
+      "3xl": { "$value": "30px", "$type": "dimension" },
+      "4xl": { "$value": "36px", "$type": "dimension" }
+    },
+    "weight": {
+      "normal": { "$value": "400", "$type": "fontWeight" },
+      "medium": { "$value": "500", "$type": "fontWeight" },
+      "semibold": { "$value": "600", "$type": "fontWeight" },
+      "bold": { "$value": "700", "$type": "fontWeight" }
+    },
+    "line-height": {
+      "tight": { "$value": "1.25", "$type": "number" },
+      "normal": { "$value": "1.5", "$type": "number" },
+      "loose": { "$value": "1.75", "$type": "number" }
+    }
+  }
+}

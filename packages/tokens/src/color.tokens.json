@@ -1,0 +1,46 @@
+{
+  "color": {
+    "brand": {
+      "primary": {
+        "$value": "#6366F1",
+        "$type": "color",
+        "$description": "Primary interactive colour — buttons, links, focus rings"
+      },
+      "primary-hover": {
+        "$value": "#4F46E5",
+        "$type": "color"
+      },
+      "secondary": {
+        "$value": "#EC4899",
+        "$type": "color",
+        "$description": "Accent colour — badges, highlights, hover states"
+      }
+    },
+    "semantic": {
+      "success": { "$value": "#10B981", "$type": "color" },
+      "warning": { "$value": "#F59E0B", "$type": "color" },
+      "error": { "$value": "#EF4444", "$type": "color" },
+      "info": { "$value": "#3B82F6", "$type": "color" }
+    },
+    "surface": {
+      "background": { "$value": "#FFFFFF", "$type": "color" },
+      "foreground": { "$value": "#111827", "$type": "color" },
+      "muted": { "$value": "#F3F4F6", "$type": "color" },
+      "muted-foreground": { "$value": "#6B7280", "$type": "color" },
+      "border": { "$value": "#E5E7EB", "$type": "color" },
+      "card": { "$value": "#FFFFFF", "$type": "color" },
+      "card-foreground": { "$value": "#111827", "$type": "color" }
+    },
+    "dark": {
+      "surface": {
+        "background": { "$value": "#111827", "$type": "color" },
+        "foreground": { "$value": "#F9FAFB", "$type": "color" },
+        "muted": { "$value": "#1F2937", "$type": "color" },
+        "muted-foreground": { "$value": "#9CA3AF", "$type": "color" },
+        "border": { "$value": "#374151", "$type": "color" },
+        "card": { "$value": "#1F2937", "$type": "color" },
+        "card-foreground": { "$value": "#F9FAFB", "$type": "color" }
+      }
+    }
+  }
+}

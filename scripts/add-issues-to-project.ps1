@@ -52,6 +52,7 @@ foreach ($issue in $issues) {
     elseif ($labels -contains "spec:002-social") { $specValue = "002-Social" }
     elseif ($labels -contains "spec:003-recurring") { $specValue = "003-Recurring" }
     elseif ($labels -contains "spec:005-teachers") { $specValue = "005-Teachers" }
+    elseif ($labels -contains "spec:008-ui-system") { $specValue = "008-UI-System" }
     
     # Determine Priority from labels
     $prioValue = $null

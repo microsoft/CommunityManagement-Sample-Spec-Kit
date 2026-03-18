@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@acroyoga/shared": ["../../packages/shared/src/index.ts"],
+      "@acroyoga/shared/*": ["../../packages/shared/src/*"],
+      "@acroyoga/shared-ui": ["../../packages/shared-ui/src/index.ts"],
+      "@acroyoga/shared-ui/*": ["../../packages/shared-ui/src/*"],
+      "@acroyoga/tokens": ["../../packages/tokens/src/index.ts"],
+      "@acroyoga/tokens/*": ["../../packages/tokens/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "../../../../packages/tokens/build/css/tokens.css";
+@import "../../../../packages/tokens/build/css/tokens-dark.css";
+
+/* Map design-token CSS custom properties → Tailwind utility names.
+   e.g. bg-primary, text-foreground, border-border, bg-muted, etc. */
+@theme inline {
+  --color-primary: var(--color-brand-primary);
+  --color-primary-hover: var(--color-brand-primary-hover);
+  --color-secondary: var(--color-brand-secondary);
+  --color-success: var(--color-semantic-success);
+  --color-warning: var(--color-semantic-warning);
+  --color-danger: var(--color-semantic-error);
+  --color-info: var(--color-semantic-info);
+  --color-background: var(--color-surface-background);
+  --color-foreground: var(--color-surface-foreground);
+  --color-muted: var(--color-surface-muted);
+  --color-muted-foreground: var(--color-surface-muted-foreground);
+  --color-border: var(--color-surface-border);
+  --color-card: var(--color-surface-card);
+  --color-card-foreground: var(--color-surface-card-foreground);
+}
