@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface SocialLinkForm {
@@ -11,7 +10,6 @@ interface SocialLinkForm {
 }
 
 export default function ProfilePage() {
-  const { status: authStatus } = useSession();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [defaultRole, setDefaultRole] = useState<string>("hybrid");
@@ -20,6 +18,7 @@ export default function ProfilePage() {
   const [homeCityName, setHomeCityName] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLinkForm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unauthenticated, setUnauthenticated] = useState(false);
   const [saving, setSaving] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
@@ -27,8 +26,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetch("/api/profiles/me")
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401) {
+          setUnauthenticated(true);
+          setLoading(false);
+          return null;
+        }
+        return r.json();
+      })
       .then((data) => {
+        if (!data) return;
         setDisplayName(data.displayName ?? "");
         setBio(data.bio ?? "");
         setDefaultRole(data.defaultRole ?? "hybrid");
@@ -42,6 +49,10 @@ export default function ProfilePage() {
             visibility: l.visibility,
           })) ?? [],
         );
+        setLoading(false);
+      })
+      .catch(() => {
+        setUnauthenticated(true);
         setLoading(false);
       });
   }, []);
@@ -112,7 +123,7 @@ export default function ProfilePage() {
     setSocialLinks(socialLinks.filter((_, i) => i !== index));
   }
 
-  if (authStatus === "unauthenticated") {
+  if (unauthenticated) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <p className="text-gray-600 text-lg">Please sign in to view your profile.</p>

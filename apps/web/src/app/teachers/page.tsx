@@ -17,6 +17,7 @@ interface TeacherSummary {
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<TeacherSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [badge, setBadge] = useState("");
@@ -27,10 +28,19 @@ export default function TeachersPage() {
     if (specialty) params.set("specialty", specialty);
     if (badge) params.set("badge", badge);
 
+    setLoading(true);
+    setError(null);
     fetch(`/api/teachers?${params.toString()}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load teachers");
+        return r.json();
+      })
       .then((data) => {
         setTeachers(data.teachers ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Unknown error");
         setLoading(false);
       });
   }, [query, specialty, badge]);
@@ -66,7 +76,12 @@ export default function TeachersPage() {
         />
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="text-center py-12">
+          <p className="text-red-600 text-lg">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-indigo-600 hover:underline mt-2">Retry</button>
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse border rounded-lg p-4">

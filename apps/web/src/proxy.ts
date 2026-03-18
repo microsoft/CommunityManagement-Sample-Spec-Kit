@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleMockUserParam } from "@/lib/auth/mock-middleware";
 
-export function middleware(req: NextRequest): NextResponse | undefined {
+export function proxy(req: NextRequest): NextResponse | undefined {
   // Mock auth query parameter handling (dev only — no-op in production)
   const mockResponse = handleMockUserParam(req);
   if (mockResponse) return mockResponse;

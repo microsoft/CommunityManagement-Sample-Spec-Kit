@@ -12,12 +12,13 @@ AcroYoga Community connects practitioners with local events, teachers, and each 
 - **Permissions & Creator Accounts** — Hierarchical role-based access scoped to geographic regions (city → country → global)
 - **Teacher Profiles & Reviews** — Verified instructor profiles, certification tracking, ratings and reviews
 - **Payments & Bookings** — Stripe Connect for creator payouts, concession pricing, credits, and refund policies
+- **Cross-Platform UI** — Shared design token pipeline (CSS, TS, Swift, Kotlin) with 15 reusable components and Storybook 10 component explorer
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | [Next.js 16](https://nextjs.org) (App Router, React 19, Server Components) |
+| Framework | [Next.js 16](https://nextjs.org) (App Router, React 19, Server Components, `proxy.ts`) |
 | Language | TypeScript 5.9 (strict mode) |
 | Styling | Tailwind CSS 4 |
 | Database | PostgreSQL ([node-pg](https://node-postgres.com/)) with raw SQL migrations |
@@ -25,6 +26,7 @@ AcroYoga Community connects practitioners with local events, teachers, and each 
 | Payments | [Stripe](https://stripe.com) + Stripe Connect |
 | Validation | [Zod 4](https://zod.dev) at every API boundary |
 | Testing | [Vitest 4](https://vitest.dev) + [PGlite](https://electric-sql.com/product/pglite) (in-memory Postgres) |
+| Components | [Storybook 10](https://storybook.js.org) with `@storybook/react-vite` |
 | Storage | Azure Blob Storage (media uploads with EXIF stripping) |
 | Recurrence | [rrule](https://github.com/jkbrzt/rrule) for iCal-compliant scheduling |
 

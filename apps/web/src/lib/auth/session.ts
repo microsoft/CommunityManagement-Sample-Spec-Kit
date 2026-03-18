@@ -30,14 +30,12 @@ export async function getServerSession(): Promise<Session | null> {
   return { userId: session.user.id };
 }
 
-function getMockSession(): Session | null {
+async function getMockSession(): Promise<Session | null> {
   // Try cookie first (dev server with browser)
   let userId: string | null = null;
   try {
-    // Dynamic import to avoid build errors in test environments
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { cookies } = require("next/headers");
-    const cookieStore = cookies();
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
     const mockCookie = cookieStore.get("mock-user-id");
     if (mockCookie?.value) {
       userId = mockCookie.value;
