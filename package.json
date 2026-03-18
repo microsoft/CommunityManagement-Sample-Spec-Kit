@@ -3,45 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed:geography": "tsx src/db/seeds/geography.ts",
-    "db:seed:admin": "tsx src/db/seeds/admin.ts"
-  },
-  "dependencies": {
-    "@azure/storage-blob": "^12.31.0",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.2.1",
-    "@tailwindcss/postcss": "^4.2.1",
-    "@types/node": "^25.5.0",
-    "@types/pg": "^8.18.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "ical-generator": "^10.0.0",
-    "next": "^16.1.6",
-    "next-auth": "^5.0.0-beta.30",
-    "pg": "^8.20.0",
-    "postcss": "^8.5.8",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "rrule": "^2.8.1",
-    "sharp": "^0.34.5",
-    "stripe": "^20.4.1",
-    "tailwindcss": "^4.2.1",
-    "typescript": "^5.9.3",
-    "zod": "^4.3.6"
+    "dev": "concurrently -n tokens,web -c blue,green \"npm run tokens:watch -w @acroyoga/tokens\" \"npm run dev -w @acroyoga/web\"",
+    "build": "npm run tokens:build -w @acroyoga/tokens && npm run build -w @acroyoga/web",
+    "start": "npm run start -w @acroyoga/web",
+    "lint": "npm run lint -w @acroyoga/web",
+    "test": "npm run test -w @acroyoga/tokens && npm run test -w @acroyoga/shared-ui && npm run test -w @acroyoga/web",
+    "test:watch": "npm run test:watch -w @acroyoga/web",
+    "typecheck": "tsc -b",
+    "tokens:build": "npm run tokens:build -w @acroyoga/tokens",
+    "tokens:watch": "npm run tokens:watch -w @acroyoga/tokens",
+    "storybook": "npm run storybook -w @acroyoga/web",
+    "build-storybook": "npm run build-storybook -w @acroyoga/web",
+    "db:migrate": "npm run db:migrate -w @acroyoga/web",
+    "db:seed:geography": "npm run db:seed:geography -w @acroyoga/web",
+    "db:seed:admin": "npm run db:seed:admin -w @acroyoga/web"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.16",
-    "eslint": "^9.39.4",
-    "eslint-config-next": "^16.1.6",
+    "concurrently": "^9.2.1",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
-    "vitest": "^4.1.0"
+    "typescript": "^5.9.3"
   }
 }

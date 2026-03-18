@@ -1,0 +1,1 @@
+export * from "@acroyoga/shared/schemas/teachers";

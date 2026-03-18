@@ -1,18 +1,10 @@
 <!--
   Sync Impact Report
-  Version change: 1.2.0 → 1.3.0 (MINOR — material constraint additions from code review, two new quality gates)
-  Modified principles:
-    - I. API-First Design → added error-response shape constraint (Finding 14)
-    - III. Privacy & Data Protection → added cross-spec GDPR deletion mandate (Finding 7)
-    - IV. Server-Side Authority → added Zod-only validation constraint (Finding 15)
-    - VI. Performance Budget → added N+1 / list-endpoint query-complexity constraint (Finding 8-9)
-    - IX. Scoped Permissions → added withPermission() middleware mandate for admin endpoints (Finding 3-6)
-    - XI. Resource Ownership → added per-mutation ownership-verification constraint (Finding 2)
-    - XII. Financial Integrity → added OAuth state-signing constraint (Finding 17)
-  Unchanged principles: II, V, VII, VIII, X
+  Version change: 1.3.0 → 1.4.0 (MINOR — added Principle XIII: Development Environment)
+  Modified principles: (none)
+  Unchanged principles: I–XII
   Added sections:
-    - Quality Gate #11: Auth consistency
-    - Quality Gate #12: Cross-spec data integrity
+    - XIII. Development Environment — WSL-only for installs, builds, and tests
   Removed sections: (none)
   Alignment matrix: filled gaps for II, III, IV, VI, IX, X, XI, XII across all specs
   Templates requiring updates:
@@ -27,7 +19,7 @@
 -->
 # AcroYoga Community — Project Constitution
 
-> Version 1.3.0 — Governing architectural principles for the
+> Version 1.4.0 — Governing architectural principles for the
 > AcroYoga Community Events platform.
 
 ## Core Principles
@@ -212,6 +204,27 @@ the client.
 - Cross-capacity booking (e.g., festival day + full-weekend pass) MUST be validated atomically in a single transaction
 - OAuth flows (e.g., Stripe Connect) MUST use a signed or opaque `state` parameter (e.g., HMAC-signed token); raw user IDs or other guessable values MUST NOT be passed as the OAuth `state`
 
+### XIII. Development Environment
+
+All package installations, dependency management, and build tooling
+MUST be executed inside WSL (Windows Subsystem for Linux), not
+natively on Windows. Windows terminals may be used for read-only
+operations (file browsing, git status) but any command that installs
+packages, runs build scripts, or modifies `node_modules` MUST be
+run in WSL.
+
+**Rationale:** Native Windows environments introduce path-length
+limits, symlink issues, and platform-specific native module
+compilation failures that waste development time. WSL provides a
+consistent Linux environment matching CI/CD and production.
+
+**Constraints:**
+- `npm install`, `npm ci`, and any package manager invocations MUST run in WSL
+- Build scripts (`npm run build`, `tokens:build`, etc.) MUST run in WSL
+- Test suites MUST run in WSL as the primary execution environment
+- CI workflows run on `ubuntu-latest`, so WSL ensures local–CI parity
+- Windows-native Node.js may be used for quick one-off checks but MUST NOT be the authoritative environment for installs or builds
+
 ---
 
 ## Principle–Spec Alignment Matrix
@@ -230,6 +243,7 @@ the client.
 | X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ |
 | XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ |
 | XII. Financial Integrity | | | ✅ | ✅ | ✅ |
+| XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Usage:** Each spec's header SHOULD list the principles that apply.
 > Specs 003, 004, and 005 should be updated to include XI and XII
@@ -296,4 +310,4 @@ Exceptions may be granted for prototyping/spike branches clearly
 labelled as such (branch prefix `spike/` or `prototype/`).
 Exceptions MUST NOT merge to `main`.
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-16
+**Version**: 1.4.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-18

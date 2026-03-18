@@ -1,0 +1,25 @@
+{
+  "global": {
+    "focus-ring": {
+      "$value": "0 0 0 2px {color.brand.primary}",
+      "$type": "shadow",
+      "$description": "Focus ring for interactive elements"
+    },
+    "transition-fast": {
+      "$value": "150ms",
+      "$type": "dimension",
+      "$description": "Quick transitions — hover, focus"
+    },
+    "transition-normal": {
+      "$value": "250ms",
+      "$type": "dimension",
+      "$description": "Standard transitions — expand, collapse"
+    },
+    "breakpoint": {
+      "sm": { "$value": "640px", "$type": "dimension" },
+      "md": { "$value": "768px", "$type": "dimension" },
+      "lg": { "$value": "1024px", "$type": "dimension" },
+      "xl": { "$value": "1280px", "$type": "dimension" }
+    }
+  }
+}

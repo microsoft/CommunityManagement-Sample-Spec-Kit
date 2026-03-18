@@ -4,3 +4,10 @@ node_modules/
 .env.local
 *.tsbuildinfo
 next-env.d.ts
+
+# Package build outputs
+packages/*/dist/
+packages/*/build/
+
+# Storybook
+storybook-static/

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build design tokens
+        run: npm run tokens:build -w @acroyoga/tokens
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (includes jsx-a11y)
+        run: npm run lint -w @acroyoga/web
+
+      - name: Build web app
+        run: npm run build -w @acroyoga/web
+
+      - name: Check bundle size
+        run: |
+          # Check total size of initial JS chunks (first-load)
+          TOTAL=$(find apps/web/.next/static/chunks -name "*.js" -type f -exec wc -c {} + 2>/dev/null | tail -1 | awk '{print $1}')
+          TOTAL_KB=$((TOTAL / 1024))
+          echo "Total JS chunk size: ${TOTAL_KB}KB"
+          if [ "$TOTAL_KB" -gt 200 ]; then
+            echo "::error::JS bundle size (${TOTAL_KB}KB) exceeds 200KB budget (Constitution VI, FR-013)"
+            exit 1
+          fi
+
+      - name: Run token tests
+        run: npm run test -w @acroyoga/tokens
+
+      - name: Run shared-ui tests
+        run: npm run test -w @acroyoga/shared-ui
+
+      - name: Run web tests
+        run: npm run test -w @acroyoga/web
+
+      - name: Build Storybook
+        run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
