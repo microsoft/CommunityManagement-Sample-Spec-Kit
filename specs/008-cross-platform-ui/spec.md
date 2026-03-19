@@ -2,7 +2,7 @@
 
 **Feature Branch**: `008-cross-platform-ui`  
 **Created**: 2026-03-17  
-**Status**: Implemented (Phases 6, 12 deferred — mobile/Expo)  
+**Status**: Implemented (web); FR-009, SC-005, SC-008 deferred with mobile (Phases 6, 9, 12)  
 **Input**: User description: "Cross-Platform Hot-Reloadable UI System — hot-reloadable web interfaces, a UI expert agent, cross-platform delivery (web + iOS + Android), and a shared component architecture with maximum code reuse"
 
 ## Clarifications

@@ -221,6 +221,7 @@ describe("Concessions & Capacity", () => {
         name: "GA",
         cost: 50,
         capacity: 5,
+        coversAllEvents: true,
       });
 
       const cap = await checkTicketCapacity(ticket.id);
@@ -238,6 +239,7 @@ describe("Concessions & Capacity", () => {
         name: "GA",
         cost: 50,
         capacity: 5,
+        coversAllEvents: true,
       });
 
       await createBooking(userId, { ticketTypeId: ticket.id, pricingTier: "standard" });

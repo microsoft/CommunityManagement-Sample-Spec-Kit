@@ -53,5 +53,14 @@ jobs:
       - name: Run web tests
         run: npm run test -w @acroyoga/web
 
+      - name: i18n string lint (Constitution VIII, QG-9)
+        run: bash scripts/lint-i18n.sh
+
       - name: Build Storybook
         run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
+
+      - name: Storybook a11y audit (FR-019, QG-6)
+        run: |
+          npx concurrently -k -s first -n storybook,test \
+            "npx http-server apps/web/storybook-static --port 6006 --silent" \
+            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006"

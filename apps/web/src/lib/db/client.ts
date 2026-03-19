@@ -22,8 +22,9 @@ export function getDb(): DbClient {
 /** For tests: inject a PGlite-compatible client */
 let testClient: DbClient | null = null;
 
-export function setTestDb(client: DbClient): void {
-  testClient = client;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function setTestDb(client: any): void {
+  testClient = client as DbClient;
 }
 
 export function clearTestDb(): void {

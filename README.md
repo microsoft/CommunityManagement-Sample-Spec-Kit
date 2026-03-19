@@ -116,7 +116,7 @@ npm run lint             # ESLint (includes jsx-a11y)
 
 ```bash
 npm run test -w @acroyoga/tokens      # Run token pipeline tests (20 tests)
-npm run test -w @acroyoga/shared-ui   # Run shared-ui component tests (78 tests)
+npm run test -w @acroyoga/shared-ui   # Run shared-ui component tests (85 tests)
 npm run test -w @acroyoga/web         # Run web integration tests (339 tests)
 npm run tokens:build                  # Rebuild design tokens
 npm run tokens:watch                  # Watch token source & rebuild on change

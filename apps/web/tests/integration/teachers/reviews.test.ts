@@ -140,7 +140,7 @@ describe("Reviews", () => {
         rating: 4,
       });
 
-      const profile = await db.query(
+      const profile = await db.query<{ aggregate_rating: string; review_count: number }>(
         `SELECT aggregate_rating, review_count FROM teacher_profiles WHERE id = $1`,
         [profileId],
       );
@@ -293,7 +293,7 @@ describe("Reviews", () => {
       await submitReview(eventId, reviewerUserId, { teacherProfileId: profileId, rating: 5 });
       await submitReview(eventId, u2.rows[0].id, { teacherProfileId: profileId, rating: 3 });
 
-      const profile = await db.query(
+      const profile = await db.query<{ aggregate_rating: string; review_count: number }>(
         `SELECT aggregate_rating, review_count FROM teacher_profiles WHERE id = $1`,
         [profileId],
       );
@@ -308,7 +308,7 @@ describe("Reviews", () => {
       });
       await hideReview(review.id, adminId);
 
-      const profile = await db.query(
+      const profile = await db.query<{ aggregate_rating: string | null; review_count: number }>(
         `SELECT aggregate_rating, review_count FROM teacher_profiles WHERE id = $1`,
         [profileId],
       );
@@ -355,17 +355,17 @@ describe("Reviews", () => {
       await submitReview(eventId, u2.rows[0].id, { teacherProfileId: profileId, rating: 3 });
 
       // Average should be 4.0
-      let p = await db.query(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
+      let p = await db.query<{ aggregate_rating: string }>(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(parseFloat(p.rows[0].aggregate_rating)).toBeCloseTo(4.0);
 
       // Hide the 5-star review — average should become 3.0
       await hideReview(r1.id, adminId);
-      p = await db.query(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
+      p = await db.query<{ aggregate_rating: string }>(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(parseFloat(p.rows[0].aggregate_rating)).toBeCloseTo(3.0);
 
       // Unhide — average back to 4.0
       await unhideReview(r1.id);
-      p = await db.query(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
+      p = await db.query<{ aggregate_rating: string }>(`SELECT aggregate_rating FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(parseFloat(p.rows[0].aggregate_rating)).toBeCloseTo(4.0);
     });
 

@@ -105,7 +105,7 @@ describe("Event Groups & Ticket Types", () => {
 
     it("should get an event group by id", async () => {
       const group = await createEventGroup(
-        { name: "Fest", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP" },
+        { name: "Fest", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP", eventIds: [] },
         creatorId,
       );
       const found = await getEventGroup(group.id);
@@ -120,11 +120,11 @@ describe("Event Groups & Ticket Types", () => {
 
     it("should list event groups", async () => {
       await createEventGroup(
-        { name: "F1", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP" },
+        { name: "F1", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP", eventIds: [] },
         creatorId,
       );
       await createEventGroup(
-        { name: "C1", type: "combo", startDate: "2025-08-01", endDate: "2025-08-03", currency: "USD" },
+        { name: "C1", type: "combo", startDate: "2025-08-01", endDate: "2025-08-03", currency: "USD", eventIds: [] },
         creatorId,
       );
 
@@ -138,7 +138,7 @@ describe("Event Groups & Ticket Types", () => {
 
     it("should update an event group", async () => {
       const group = await createEventGroup(
-        { name: "Orig", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP" },
+        { name: "Orig", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP", eventIds: [] },
         creatorId,
       );
       const updated = await updateEventGroup(group.id, { name: "Updated" });
@@ -160,7 +160,7 @@ describe("Event Groups & Ticket Types", () => {
 
     it("should delete an event group", async () => {
       const group = await createEventGroup(
-        { name: "Del", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP" },
+        { name: "Del", type: "festival", startDate: "2025-07-01", endDate: "2025-07-03", currency: "GBP", eventIds: [] },
         creatorId,
       );
       const deleted = await deleteEventGroup(group.id);
@@ -203,6 +203,7 @@ describe("Event Groups & Ticket Types", () => {
         cost: 100,
         concessionCost: 50,
         capacity: 100,
+        coversAllEvents: true,
       });
       expect(parseFloat(String(ticket.concession_cost))).toBe(50);
     });
@@ -223,22 +224,22 @@ describe("Event Groups & Ticket Types", () => {
     });
 
     it("should list ticket types for a group", async () => {
-      await createTicketType(groupId, { name: "T1", cost: 50, capacity: 100 });
-      await createTicketType(groupId, { name: "T2", cost: 100, capacity: 50 });
+      await createTicketType(groupId, { name: "T1", cost: 50, capacity: 100, coversAllEvents: true });
+      await createTicketType(groupId, { name: "T2", cost: 100, capacity: 50, coversAllEvents: true });
 
       const tickets = await listTicketTypes(groupId);
       expect(tickets.length).toBe(2);
     });
 
     it("should update a ticket type", async () => {
-      const ticket = await createTicketType(groupId, { name: "Old", cost: 50, capacity: 100 });
+      const ticket = await createTicketType(groupId, { name: "Old", cost: 50, capacity: 100, coversAllEvents: true });
       const updated = await updateTicketType(ticket.id, { name: "New", cost: 75 });
       expect(updated!.name).toBe("New");
       expect(parseFloat(String(updated!.cost))).toBe(75);
     });
 
     it("should delete a ticket type", async () => {
-      const ticket = await createTicketType(groupId, { name: "Del", cost: 50, capacity: 100 });
+      const ticket = await createTicketType(groupId, { name: "Del", cost: 50, capacity: 100, coversAllEvents: true });
       const deleted = await deleteTicketType(ticket.id);
       expect(deleted).toBe(true);
       const found = await getTicketType(ticket.id);
@@ -246,7 +247,7 @@ describe("Event Groups & Ticket Types", () => {
     });
 
     it("should get ticket type availability", async () => {
-      const ticket = await createTicketType(groupId, { name: "Avail", cost: 50, capacity: 10 });
+      const ticket = await createTicketType(groupId, { name: "Avail", cost: 50, capacity: 10, coversAllEvents: true });
       const avail = await getTicketTypeAvailability(ticket.id);
       expect(avail).not.toBeNull();
       expect(avail!.capacity).toBe(10);

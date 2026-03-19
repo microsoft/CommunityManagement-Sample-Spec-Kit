@@ -182,7 +182,7 @@ describe("Teacher Profiles", () => {
       expect(deleted).toBe(true);
 
       // Profile should be marked deleted
-      const profile = await db.query(
+      const profile = await db.query<{ is_deleted: boolean; bio: string | null; badge_status: string; review_count: number }>(
         `SELECT * FROM teacher_profiles WHERE id = $1`, [profileId],
       );
       expect(profile.rows[0].is_deleted).toBe(true);
@@ -201,7 +201,7 @@ describe("Teacher Profiles", () => {
 
     it("should anonymise certifications on deletion", async () => {
       await deleteTeacherProfile(profileId);
-      const certs = await db.query(
+      const certs = await db.query<{ name: string; issuing_body: string; status: string }>(
         `SELECT * FROM certifications WHERE teacher_profile_id = $1`, [profileId],
       );
       expect(certs.rows[0].name).toBe("Removed");

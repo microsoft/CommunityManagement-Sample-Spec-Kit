@@ -43,6 +43,7 @@
     "@storybook/addon-themes": "^10.3.0",
     "@storybook/react": "^10.3.0",
     "@storybook/react-vite": "^10.3.0",
+    "@storybook/test-runner": "^0.24.3",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.18.0",
     "@types/react": "^19.2.14",
@@ -50,8 +51,10 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.1.6",
     "eslint-plugin-jsx-a11y": "^6.10.2",
+    "http-server": "^14.1.1",
     "storybook": "^10.3.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "wait-on": "^9.0.4"
   }
 }

@@ -153,7 +153,7 @@ describe("Teacher Applications", () => {
       expect(approved!.reviewed_by).toBe(adminId);
 
       // Verify profile created
-      const profile = await db.query(
+      const profile = await db.query<{ id: string; bio: string; badge_status: string }>(
         `SELECT * FROM teacher_profiles WHERE user_id = $1`, [userId],
       );
       expect(profile.rows).toHaveLength(1);
@@ -161,7 +161,7 @@ describe("Teacher Applications", () => {
       expect(profile.rows[0].badge_status).toBe("verified");
 
       // Verify certifications created
-      const certs = await db.query(
+      const certs = await db.query<{ name: string; status: string }>(
         `SELECT * FROM certifications WHERE teacher_profile_id = $1 ORDER BY name`,
         [profile.rows[0].id],
       );

@@ -22,7 +22,7 @@
 | Phase 9: Performance (US8) | ✅ Partial | Web bundle check done; mobile tasks deferred |
 | Phase 10: Accessibility (US9) | ✅ Partial | Web jsx-a11y + CI done; mobile tasks deferred |
 | Phase 11: Token Migration | ✅ Complete | 6 web components migrated |
-| Phase 12: Mobile CI/CD | ⏭️ Deferred | Skipped per user request |
+| Phase 12: Mobile CI/CD | ⏭️ Deferred | Mobile portions deferred; web i18n lint + a11y audit split out and ✅ |
 | Phase 13: Polish | ✅ Complete | 4 P1 components, docs, validation |
 
 **Organization**: Tasks are grouped by user story. User stories from spec.md are mapped to phases in priority order (P0 first, then P1). Because US1–US5 are all P0, they follow the dependency order dictated by the architecture: tokens → components → mobile app scaffolding → platform adaptation.
@@ -307,7 +307,9 @@
 
 - [-] T103 [P] Create `.github/workflows/mobile-preview.yml` — trigger on PRs touching `apps/mobile/` or `packages/`; run EAS Build preview profile (iOS + Android); post build links as PR comment
 - [-] T104 [P] Create `.github/workflows/mobile-release.yml` — trigger on push to `main` with release tag; run EAS Build production profile; auto-submit to TestFlight (iOS) and Play Internal (Android) via EAS Submit
-- [-] T105 Extend `.github/workflows/ci.yml` — add i18n lint check for raw string literals in `apps/web/`, `apps/mobile/`, and `packages/shared-ui/`; add token build step; add Storybook a11y audit step
+- [x] T105a [US9] Add i18n lint for web — create `scripts/lint-i18n.sh` scanning `apps/web/` and `packages/shared-ui/` for raw string literals in JSX; add to CI workflow (Constitution VIII, QG-9) — split from T105 (mobile portion deferred)
+- [-] T105b Extend i18n lint to `apps/mobile/` — deferred with Phase 6
+- [x] T105c [US9] Add Storybook a11y audit to CI — install `@storybook/test-runner`, serve storybook-static, run `test-storybook` with a11y checks (FR-019, QG-6) — split from T105
 - [-] T106 [P] Add EXIF metadata stripping verification to mobile image upload path — ensure `apps/mobile/` image uploads route through existing API pipeline that strips EXIF/GPS per Constitution III
 
 **Checkpoint**: CI/CD covers monorepo (lint, typecheck, test, token build, bundle analysis, Storybook a11y). Mobile preview builds run on PRs. Production builds and app store submission automated.
@@ -323,7 +325,8 @@
 - [x] T109 [P] Update `specs/008-cross-platform-ui/quickstart.md` with final verified setup steps — run through the complete quickstart on a clean checkout to validate
 - [x] T110 [P] Create component registry documentation in `packages/shared-ui/README.md` — list all components with platform support status, variants, token dependencies, and a11y compliance per data-model.md `ComponentRegistryEntry` schema
 - [-] T111 Verify ≥80% shared code metric — measure shared lines in `packages/shared/` + `packages/shared-ui/` vs platform-specific lines in `apps/web/src/components/` + `apps/mobile/components/`
-- [x] T112 Run full end-to-end validation: `npm install` from clean repo → `tokens:build` → `npm run build -w apps/web` → `npm test` → `npm run storybook` → `npx expo start -w apps/mobile` — all succeed
+- [x] T112 Run full end-to-end validation: `npm install` from clean repo → `tokens:build` → `npm run build -w apps/web` → `npm test` → `npm run storybook` — all succeed (mobile validation deferred with Phase 6)
+- [x] T119 [US1+US5] Add P0 integration test `packages/shared-ui/src/__tests__/token-integration.test.tsx` — validates token pipeline outputs exist, CSS defines all required component custom properties, shared-ui components render with token-based styling (Constitution II, P0 E2E coverage)
 
 **Checkpoint**: All documentation updated. P1 components implemented. Quickstart validated. Shared code ratio measured. Full build pipeline green.
 

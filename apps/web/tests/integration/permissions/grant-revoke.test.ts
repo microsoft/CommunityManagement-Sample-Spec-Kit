@@ -61,7 +61,7 @@ describe("Grant-Revoke Lifecycle", () => {
     expect(grant.revokedAt).toBeNull();
 
     // Check audit log
-    const audit = await db.query(
+    const audit = await db.query<{ performed_by: string }>(
       "SELECT * FROM permission_audit_log WHERE user_id = $1 AND action = 'grant'",
       [userId],
     );
@@ -77,7 +77,7 @@ describe("Grant-Revoke Lifecycle", () => {
     expect(result.error).toBeUndefined();
 
     // Check audit log has both grant and revoke
-    const audit = await db.query(
+    const audit = await db.query<{ action: string }>(
       "SELECT * FROM permission_audit_log WHERE user_id = $1 ORDER BY created_at",
       [userId],
     );

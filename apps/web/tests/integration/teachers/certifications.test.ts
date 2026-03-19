@@ -130,7 +130,7 @@ describe("Certifications", () => {
       const cert = await createCertification(profileId, { name: "C1", issuingBody: "O1" });
       await verifyCertification(cert.id, adminId, "verified");
 
-      const profile = await db.query(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
+      const profile = await db.query<{ badge_status: string }>(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(profile.rows[0].badge_status).toBe("verified");
     });
 
@@ -142,7 +142,7 @@ describe("Certifications", () => {
       await db.query(`UPDATE certifications SET status = 'expired' WHERE id = $1`, [c2.id]);
       await updateBadgeStatus(profileId);
 
-      const profile = await db.query(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
+      const profile = await db.query<{ badge_status: string }>(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(profile.rows[0].badge_status).toBe("expired");
     });
 
@@ -150,7 +150,7 @@ describe("Certifications", () => {
       const cert = await createCertification(profileId, { name: "C1", issuingBody: "O1" });
       await verifyCertification(cert.id, adminId, "revoked");
 
-      const profile = await db.query(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
+      const profile = await db.query<{ badge_status: string }>(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(profile.rows[0].badge_status).toBe("revoked");
     });
 
@@ -158,7 +158,7 @@ describe("Certifications", () => {
       await createCertification(profileId, { name: "C1", issuingBody: "O1" });
       await updateBadgeStatus(profileId);
 
-      const profile = await db.query(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
+      const profile = await db.query<{ badge_status: string }>(`SELECT badge_status FROM teacher_profiles WHERE id = $1`, [profileId]);
       expect(profile.rows[0].badge_status).toBe("pending");
     });
   });

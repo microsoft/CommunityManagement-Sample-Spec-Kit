@@ -83,11 +83,11 @@ describe("Request Lifecycle", () => {
     expect(grants.rows.length).toBe(1);
 
     // Verify audit trail
-    const audit = await db.query(
+    const audit = await db.query<{ action: string }>(
       "SELECT action FROM permission_audit_log WHERE user_id = $1 ORDER BY created_at",
       [memberId],
     );
-    const actions = audit.rows.map((r: { action: string }) => r.action);
+    const actions = audit.rows.map((r) => r.action);
     expect(actions).toContain("request_submitted");
     expect(actions).toContain("request_approved");
     expect(actions).toContain("grant");
