@@ -5,3 +5,4 @@
 //   import { submitApplicationSchema } from "@acroyoga/shared/schemas/teachers"
 //   import { seriesEditSchema } from "@acroyoga/shared/schemas/recurring"
 //   import { submitRequestSchema } from "@acroyoga/shared/schemas/requests"
+//   import { directorySearchSchema } from "@acroyoga/shared/schemas/directory"
