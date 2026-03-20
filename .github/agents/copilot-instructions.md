@@ -1,6 +1,6 @@
 # CommunityManagement-Sample-Spec-Kit Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-16
+Auto-generated from all feature plans. Last updated: 2026-03-19
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Next.js 14+ (App Router — API routes + React frontend), Zod (validation), Stripe SDK (Connect Standard — from 004), next-auth / @auth/core with Microsoft Entra External ID (from 004), ical-generator (.ics files) (001-event-discovery-rsvp)
@@ -15,6 +15,10 @@ Auto-generated from all feature plans. Last updated: 2026-03-16
 - PostgreSQL (production), PGlite (test isolation). No new tables — uses existing `users` and `permission_grants` tables. (007-mock-auth)
 - TypeScript 5.9 / React 19 / Next.js 16 + Next.js App Router, React 19, Tailwind CSS v4 (to be installed), next-auth (007-simple-ui-pages)
 - N/A (all APIs already exist; no new DB tables) (007-simple-ui-pages)
+- TypeScript 5.9 (strict mode) + Next.js 16 (App Router, React 19), Zod 4 (validation), PGlite (test isolation) (009-user-directory)
+- PostgreSQL (production), PGlite (in-memory test isolation via `createTestDb()`) (009-user-directory)
+- TypeScript 5.x (strict mode), React 19, Next.js 16 (App Router) + Next.js 16 (App Router), React 19, Leaflet + react-leaflet (lazy-loaded), Leaflet.markercluster, date-fns (calendar logic), @acroyoga/shared (types), @acroyoga/tokens (design tokens) (010-events-explorer)
+- N/A — reads from existing `/api/events` and `/api/cities` endpoints (010-events-explorer)
 
 - TypeScript 5.x (strict mode) + Next.js 14+ (App Router — API routes + React frontend), Zod (validation), Stripe SDK (Connect Standard), next-auth / @auth/core with Microsoft Entra External ID (004-permissions-creator-accounts)
 
@@ -35,9 +39,9 @@ npm test; npm run lint
 TypeScript 5.x (strict mode): Follow standard conventions
 
 ## Recent Changes
+- 010-events-explorer: Added TypeScript 5.x (strict mode), React 19, Next.js 16 (App Router) + Next.js 16 (App Router), React 19, Leaflet + react-leaflet (lazy-loaded), Leaflet.markercluster, date-fns (calendar logic), @acroyoga/shared (types), @acroyoga/tokens (design tokens)
+- 009-user-directory: Added TypeScript 5.9 (strict mode) + Next.js 16 (App Router, React 19), Zod 4 (validation), PGlite (test isolation)
 - 007-simple-ui-pages: Added TypeScript 5.9 / React 19 / Next.js 16 + Next.js App Router, React 19, Tailwind CSS v4 (to be installed), next-auth
-- 007-mock-auth: Added TypeScript 5.x (strict mode) + Next.js 14+ (App Router), next-auth / @auth/core with Microsoft Entra External ID, Vitest (tests), PGlite (test DB)
-- 006-code-review-fixes: Added TypeScript 5.x (strict mode) + Next.js 15 (App Router), Zod (validation), next-auth / @auth/core (session auth), @azure/storage-blob (photos)
 
 
 <!-- MANUAL ADDITIONS START -->

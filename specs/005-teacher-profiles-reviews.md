@@ -1,7 +1,7 @@
 # Feature Spec 005: Teacher Profiles & Reviews
 
 > Priority: P1 — Required for community trust and teacher discovery
-> Status: Draft
+> Status: Implemented
 > Constitution check: Principles I, III, V, VIII, XI
 
 ## User Scenarios & Testing

@@ -4,7 +4,6 @@ import type {
   Booking,
   BookingDetail,
   BookTicketRequest,
-  BookingStatus,
 } from "@acroyoga/shared/types/recurring";
 
 export async function createBooking(

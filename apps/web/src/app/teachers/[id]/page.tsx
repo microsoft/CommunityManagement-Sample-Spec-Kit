@@ -111,9 +111,9 @@ export default function TeacherProfilePage() {
           >
             {profile.badge_status === "verified" ? "✓ Verified Teacher" : profile.badge_status}
           </span>
-          {profile.aggregate_rating && (
+          {profile.aggregate_rating != null && (
             <p className="text-lg mt-2">
-              ★ {profile.aggregate_rating.toFixed(1)}{" "}
+              ★ {parseFloat(String(profile.aggregate_rating)).toFixed(1)}{" "}
               <span className="text-sm text-gray-500">({profile.review_count} reviews)</span>
             </p>
           )}

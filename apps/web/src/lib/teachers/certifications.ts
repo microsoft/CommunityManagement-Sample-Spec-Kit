@@ -3,7 +3,6 @@ import type {
   Certification,
   CreateCertificationRequest,
   UpdateCertificationRequest,
-  CertificationStatus,
 } from "@acroyoga/shared/types/teachers";
 
 export async function listCertifications(teacherProfileId: string): Promise<Certification[]> {

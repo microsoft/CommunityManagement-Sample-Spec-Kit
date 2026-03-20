@@ -149,19 +149,19 @@ export default function ProfilePage() {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-          <input type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameError(null); }} className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${nameError ? 'border-red-300' : 'border-gray-300'}`} maxLength={255} />
+          <label htmlFor="display-name" className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+          <input id="display-name" type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameError(null); }} className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${nameError ? 'border-red-300' : 'border-gray-300'}`} maxLength={255} />
           {nameError && <p className="text-red-600 text-sm mt-1">{nameError}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Bio</label>
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full border rounded px-3 py-2" rows={3} maxLength={2000} />
+          <label htmlFor="bio" className="block text-sm font-medium mb-1">Bio</label>
+          <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} className="w-full border rounded px-3 py-2" rows={3} maxLength={2000} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Default Role</label>
-          <select value={defaultRole} onChange={(e) => setDefaultRole(e.target.value)} className="w-full border rounded px-3 py-2">
+          <label htmlFor="default-role" className="block text-sm font-medium mb-1">Default Role</label>
+          <select id="default-role" value={defaultRole} onChange={(e) => setDefaultRole(e.target.value)} className="w-full border rounded px-3 py-2">
             <option value="base">Base</option>
             <option value="flyer">Flyer</option>
             <option value="hybrid">Hybrid</option>
@@ -169,12 +169,12 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Avatar URL</label>
-          <input type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="w-full border rounded px-3 py-2" />
+          <label htmlFor="avatar-url" className="block text-sm font-medium mb-1">Avatar URL</label>
+          <input id="avatar-url" type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="w-full border rounded px-3 py-2" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Home City</label>
+          <p className="block text-sm font-medium mb-1">Home City</p>
           <div className="flex gap-2 items-center">
             <span className="text-sm text-gray-600">{homeCityName ?? "Not set"}</span>
             <button onClick={detectCity} disabled={detecting} className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 disabled:opacity-50" aria-label="Detect my city">
@@ -184,7 +184,7 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Social Links</label>
+          <p className="block text-sm font-medium mb-2">Social Links</p>
           {socialLinks.map((link, i) => (
             <div key={i} className="flex gap-2 items-center mb-2">
               <select value={link.platform} onChange={(e) => updateLink(i, "platform", e.target.value)} className="border rounded px-2 py-1" aria-label="Platform">

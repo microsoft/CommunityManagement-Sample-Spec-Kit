@@ -1,7 +1,7 @@
 # Feature Spec 002: Community & Social Features
 
 > Priority: P1 — Required for user retention
-> Status: Draft
+> Status: Implemented
 > Constitution check: Principles I, III, V, VIII, X
 
 ## User Scenarios & Testing

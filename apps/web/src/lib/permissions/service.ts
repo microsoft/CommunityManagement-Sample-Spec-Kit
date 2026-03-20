@@ -3,7 +3,6 @@ import type {
   CheckPermissionRequest,
   CheckPermissionResponse,
   PermissionGrant,
-  PermissionAction,
   Role,
   Scope,
   ScopeType,

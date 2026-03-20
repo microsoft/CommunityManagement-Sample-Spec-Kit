@@ -1,6 +1,6 @@
 import { RRule, Weekday } from "rrule";
 import { db } from "@/lib/db/client";
-import type { RecurrenceRule, Occurrence, DayOfWeek } from "@acroyoga/shared/types/recurring";
+import type { RecurrenceRule, DayOfWeek } from "@acroyoga/shared/types/recurring";
 
 const HORIZON_WEEKS = parseInt(process.env.RECURRENCE_HORIZON_WEEKS ?? "12", 10);
 
@@ -48,7 +48,7 @@ export async function expandOccurrences(
      WHERE e.id = $1`,
     [eventId],
   );
-  const timezone = tzResult.rows[0]?.timezone ?? "UTC";
+  const _timezone = tzResult.rows[0]?.timezone ?? "UTC";
 
   const baseDate = new Date(baseStart);
   const duration = new Date(baseEnd).getTime() - baseDate.getTime();

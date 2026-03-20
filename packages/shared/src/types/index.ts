@@ -1,6 +1,7 @@
 export * from "./cities";
 export * from "./community";
 export * from "./credits";
+export * from "./directory";
 export * from "./events";
 export * from "./payments";
 export * from "./permissions";
@@ -9,3 +10,4 @@ export * from "./requests";
 export * from "./rsvp";
 export * from "./teachers";
 export * from "./venues";
+export * from "./explorer";

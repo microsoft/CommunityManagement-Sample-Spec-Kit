@@ -79,8 +79,9 @@ export default function TeacherApplicationPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block font-medium mb-1">Bio</label>
+          <label htmlFor="teacher-bio" className="block font-medium mb-1">Bio</label>
           <textarea
+            id="teacher-bio"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             className="w-full border rounded p-2"
@@ -90,13 +91,14 @@ export default function TeacherApplicationPage() {
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Specialties</label>
-          <div className="flex flex-wrap gap-2">
+          <p className="block font-medium mb-1">Specialties</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Select specialties">
             {SPECIALTIES.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => toggleSpecialty(s)}
+                aria-pressed={specialties.includes(s)}
                 className={`px-3 py-1 rounded text-sm ${
                   specialties.includes(s)
                     ? "bg-blue-600 text-white"
@@ -110,8 +112,9 @@ export default function TeacherApplicationPage() {
         </div>
 
         <div>
-          <label className="block font-medium mb-1">City</label>
+          <label htmlFor="teacher-city" className="block font-medium mb-1">City</label>
           <input
+            id="teacher-city"
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
@@ -121,7 +124,7 @@ export default function TeacherApplicationPage() {
         </div>
 
         <div>
-          <label className="block font-medium mb-2">Credentials</label>
+          <p className="block font-medium mb-2">Credentials</p>
           {credentials.map((c, i) => (
             <div key={i} className="border rounded p-3 mb-2 space-y-2">
               <input

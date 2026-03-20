@@ -31,6 +31,15 @@
       "card": { "$value": "#FFFFFF", "$type": "color" },
       "card-foreground": { "$value": "#111827", "$type": "color" }
     },
+    "category": {
+      "jam": { "$value": "#6366F1", "$type": "color", "$description": "Jam — Indigo" },
+      "workshop": { "$value": "#10B981", "$type": "color", "$description": "Workshop — Emerald" },
+      "class": { "$value": "#3B82F6", "$type": "color", "$description": "Class — Blue" },
+      "festival": { "$value": "#EC4899", "$type": "color", "$description": "Festival — Pink" },
+      "social": { "$value": "#F59E0B", "$type": "color", "$description": "Social — Amber" },
+      "retreat": { "$value": "#8B5CF6", "$type": "color", "$description": "Retreat — Purple" },
+      "training": { "$value": "#14B8A6", "$type": "color", "$description": "Teacher Training — Teal" }
+    },
     "dark": {
       "surface": {
         "background": { "$value": "#111827", "$type": "color" },
@@ -40,6 +49,15 @@
         "border": { "$value": "#374151", "$type": "color" },
         "card": { "$value": "#1F2937", "$type": "color" },
         "card-foreground": { "$value": "#F9FAFB", "$type": "color" }
+      },
+      "category": {
+        "jam": { "$value": "#818CF8", "$type": "color" },
+        "workshop": { "$value": "#34D399", "$type": "color" },
+        "class": { "$value": "#60A5FA", "$type": "color" },
+        "festival": { "$value": "#F472B6", "$type": "color" },
+        "social": { "$value": "#FBBF24", "$type": "color" },
+        "retreat": { "$value": "#A78BFA", "$type": "color" },
+        "training": { "$value": "#2DD4BF", "$type": "color" }
       }
     }
   }

@@ -69,6 +69,24 @@ This is an **npm workspaces monorepo** with shared packages:
 | `packages/shared-ui` | `@acroyoga/shared-ui` | 15 cross-platform UI components with design tokens |
 | `packages/tokens` | `@acroyoga/tokens` | Design token pipeline (CSS, TS, Swift, Kotlin output) |
 
+### Specifications
+
+Each feature is developed from a full spec (user scenarios, data model, API contracts, implementation plan, and tasks). All specs live in `specs/`:
+
+| Spec | Name | Priority | Status |
+|------|------|----------|--------|
+| 001 | [Event Discovery & RSVP](specs/001-event-discovery-rsvp/) | P0 | Implemented |
+| 002 | [Community & Social](specs/002-community-social/) | P1 | Implemented |
+| 003 | [Recurring & Multi-Day Events](specs/003-recurring-multiday/) | P1 | Implemented |
+| 004 | [Permissions & Creator Accounts](specs/004-permissions-creator-accounts/) | P0 | Implemented |
+| 005 | [Teacher Profiles & Reviews](specs/005-teacher-profiles-reviews/) | P1 | Implemented |
+| 006 | [Code Review Fixes](specs/006-code-review-fixes/) | P0 | Implemented |
+| 007 | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
+| 007 | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
+| 008 | [Cross-Platform UI](specs/008-cross-platform-ui/) | P0 | Implemented (web) |
+
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred.
+
 ## Architectural Principles
 
 The project is governed by a [constitution](specs/constitution.md) (v1.4.0) defining 13 core principles:

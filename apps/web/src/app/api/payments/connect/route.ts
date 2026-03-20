@@ -6,7 +6,7 @@ import { conflict, forbidden, unauthorized } from "@/lib/errors";
 
 // --- POST /api/payments/connect --- (T055)
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   const session = await getServerSession();
   if (!session) return unauthorized();
 

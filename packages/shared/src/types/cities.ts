@@ -8,6 +8,8 @@ export interface City {
   longitude: number;
   timezone: string;
   activeEventCount?: number;
+  continentCode?: string;
+  continentName?: string;
 }
 
 export interface NearestCityResponse {

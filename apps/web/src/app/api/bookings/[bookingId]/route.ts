@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
-import { getBooking, cancelBooking, completeBookingPayment } from "@/lib/bookings/service";
+import { getBooking, cancelBooking } from "@/lib/bookings/service";
 import { unauthorized } from "@/lib/errors";
 
 export async function GET(

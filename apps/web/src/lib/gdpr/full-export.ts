@@ -122,11 +122,10 @@ export async function processExport(exportId: string): Promise<ExportFileSchema>
   };
 
   // Also include permission data from Spec 004
-  let permissionData;
   try {
-    permissionData = await exportPermissionData(userId);
+    await exportPermissionData(userId);
   } catch {
-    permissionData = null;
+    // Ignore permission data export errors — non-critical for GDPR export
   }
 
   await db().query(

@@ -1,21 +1,28 @@
 "use client";
 
-import type { EventSummary } from "@acroyoga/shared/types/events";
+import type { EventSummary, EventCategory } from "@acroyoga/shared/types/events";
 import Link from "next/link";
+import { getCategoryColor } from "@/lib/category-colors";
 
 interface EventCardProps {
   event: EventSummary;
 }
 
-const categoryColors: Record<string, string> = {
-  jam: "bg-purple-100 text-purple-800",
-  workshop: "bg-blue-100 text-blue-800",
-  class: "bg-green-100 text-green-800",
-  festival: "bg-yellow-100 text-yellow-800",
-  social: "bg-pink-100 text-pink-800",
-  retreat: "bg-indigo-100 text-indigo-800",
-  teacher_training: "bg-orange-100 text-orange-800",
-};
+/**
+ * Category badge style using design tokens instead of hardcoded Tailwind classes.
+ */
+function categoryBadgeStyle(category: string): React.CSSProperties {
+  const color = getCategoryColor(category as EventCategory);
+  return {
+    backgroundColor: `${color}1a`, // 10% opacity
+    color,
+    fontSize: "0.75rem",
+    fontWeight: 500,
+    padding: "0.125rem 0.5rem",
+    borderRadius: "9999px",
+    textTransform: "capitalize" as const,
+  };
+}
 
 const skillColors: Record<string, string> = {
   beginner: "bg-green-50 text-green-700",
@@ -64,7 +71,7 @@ export default function EventCard({ event }: EventCardProps) {
       </div>
 
       <div className="flex items-center gap-2 mt-3 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${categoryColors[event.category] ?? "bg-muted"}`}>
+        <span style={categoryBadgeStyle(event.category)}>
           {event.category.replace("_", " ")}
         </span>
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${skillColors[event.skillLevel] ?? "bg-muted"}`}>

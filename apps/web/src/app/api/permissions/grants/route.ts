@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getServerSession } from "@/lib/auth/session";
 import { checkPermission, grantPermission, listGrantsForScope, revokePermission } from "@/lib/permissions/service";
 import { getUserGrants } from "@/lib/permissions/cache";
-import { badRequest, conflict, forbidden, fromZodError, notFound, unauthorized } from "@/lib/errors";
+import { conflict, forbidden, fromZodError, notFound, unauthorized } from "@/lib/errors";
 
 /**
  * @api {post} /api/permissions/grants Create a permission grant

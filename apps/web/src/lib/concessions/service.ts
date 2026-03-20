@@ -3,7 +3,6 @@ import type {
   ConcessionStatus,
   ConcessionApplicationRequest,
   ReviewConcessionRequest,
-  ConcessionStatusValue,
 } from "@acroyoga/shared/types/recurring";
 
 export async function applyConcession(
