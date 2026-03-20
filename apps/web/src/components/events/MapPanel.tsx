@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import type { MapMarkerData } from "@acroyoga/shared/types/explorer";
 import { getCategoryColor } from "@/lib/category-colors";
@@ -24,8 +24,42 @@ interface MapPanelInnerProps {
   onBoundsChange?: (bounds: MapBounds) => void;
 }
 
+interface MarkerCluster {
+  lat: number;
+  lng: number;
+  markers: MapMarkerData[];
+}
+
+/** Group nearby markers into clusters based on pixel distance at current zoom */
+function clusterMarkers(markers: MapMarkerData[], map: L.Map, clusterRadius: number = 60): MarkerCluster[] {
+  if (markers.length === 0) return [];
+  const clusters: MarkerCluster[] = [];
+
+  for (const marker of markers) {
+    const point = map.latLngToContainerPoint([marker.latitude, marker.longitude]);
+    let added = false;
+    for (const cluster of clusters) {
+      const clusterPoint = map.latLngToContainerPoint([cluster.lat, cluster.lng]);
+      const dx = point.x - clusterPoint.x;
+      const dy = point.y - clusterPoint.y;
+      if (Math.sqrt(dx * dx + dy * dy) < clusterRadius) {
+        cluster.markers.push(marker);
+        // Update center to average
+        cluster.lat = cluster.markers.reduce((s, m) => s + m.latitude, 0) / cluster.markers.length;
+        cluster.lng = cluster.markers.reduce((s, m) => s + m.longitude, 0) / cluster.markers.length;
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      clusters.push({ lat: marker.latitude, lng: marker.longitude, markers: [marker] });
+    }
+  }
+  return clusters;
+}
+
 function createCategoryIcon(category: string): L.DivIcon {
-  const color = getCategoryColor(category as any);
+  const color = getCategoryColor(category as Parameters<typeof getCategoryColor>[0]);
   return L.divIcon({
     className: "custom-marker",
     html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.2));"></div>`,
@@ -127,6 +161,63 @@ function BoundsReporter({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds
   return null;
 }
 
+function ClusteredMarkers({ markers }: { markers: MapMarkerData[] }) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+
+  useMapEvents({
+    zoomend: () => setZoom(map.getZoom()),
+    moveend: () => setZoom(map.getZoom()), // re-cluster on pan too
+  });
+
+  const clusters = useMemo(() => clusterMarkers(markers, map), [markers, zoom, map]);
+
+  return (
+    <>
+      {clusters.map((cluster, i) => {
+        if (cluster.markers.length === 1) {
+          const m = cluster.markers[0];
+          return (
+            <Marker
+              key={m.eventId}
+              position={[m.latitude, m.longitude]}
+              icon={createCategoryIcon(m.category)}
+            >
+              <Popup>
+                <MapMarkerPopup marker={m} />
+              </Popup>
+            </Marker>
+          );
+        }
+
+        const radius = Math.min(30, 16 + cluster.markers.length * 2);
+        return (
+          <CircleMarker
+            key={`cluster-${i}`}
+            center={[cluster.lat, cluster.lng]}
+            radius={radius}
+            pathOptions={{
+              fillColor: "var(--color-brand-primary, #6366F1)",
+              fillOpacity: 0.85,
+              color: "#fff",
+              weight: 2,
+            }}
+            eventHandlers={{
+              click: () => {
+                map.flyTo([cluster.lat, cluster.lng], map.getZoom() + 2);
+              },
+            }}
+          >
+            <Tooltip permanent direction="center" className="cluster-count-tooltip">
+              {cluster.markers.length}
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
+    </>
+  );
+}
+
 export default function MapPanelInner({
   markers,
   selectedLocation,
@@ -192,18 +283,23 @@ export default function MapPanelInner({
           />
         )}
 
-        {markers.map((marker) => (
-          <Marker
-            key={marker.eventId}
-            position={[marker.latitude, marker.longitude]}
-            icon={createCategoryIcon(marker.category)}
-          >
-            <Popup>
-              <MapMarkerPopup marker={marker} />
-            </Popup>
-          </Marker>
-        ))}
+        <ClusteredMarkers markers={markers} />
       </MapContainer>
+
+      <style>{`
+        .cluster-count-tooltip {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          color: #fff !important;
+          font-weight: 700;
+          font-size: 13px;
+          text-align: center;
+        }
+        .cluster-count-tooltip::before {
+          display: none !important;
+        }
+      `}</style>
     </div>
   );
 }

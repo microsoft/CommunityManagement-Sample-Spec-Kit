@@ -9,6 +9,7 @@ const CONTINENT_NAMES: Record<string, string> = {
   NA: "North America",
   OC: "Oceania",
   SA: "South America",
+  XX: "Global",
 };
 
 export function buildLocationTree(cities: CityWithContinent[]): LocationNode[] {

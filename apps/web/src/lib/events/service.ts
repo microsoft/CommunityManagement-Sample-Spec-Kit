@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { escapeIlike } from "@/lib/db/utils";
 import type {
   EventSummary,
+  EventSummaryWithCoords,
   EventDetail,
   CreateEventRequest,
   UpdateEventRequest,
@@ -32,6 +33,8 @@ interface EventSummaryRow {
   interested_count: string;
   poster_image_url: string | null;
   is_external: boolean;
+  venue_latitude: string | null;
+  venue_longitude: string | null;
 }
 
 interface EventDetailRow extends EventSummaryRow {
@@ -72,7 +75,7 @@ function buildRoleHint(breakdown: RoleBreakdown): string {
   return "";
 }
 
-function rowToSummary(row: EventSummaryRow): EventSummary {
+function rowToSummary(row: EventSummaryRow): EventSummaryWithCoords {
   return {
     id: row.id,
     title: row.title,
@@ -90,6 +93,8 @@ function rowToSummary(row: EventSummaryRow): EventSummary {
     interestedCount: parseInt(row.interested_count, 10),
     posterImageUrl: row.poster_image_url,
     isExternal: row.is_external,
+    venueLatitude: row.venue_latitude ? parseFloat(row.venue_latitude) : null,
+    venueLongitude: row.venue_longitude ? parseFloat(row.venue_longitude) : null,
   };
 }
 
@@ -171,6 +176,7 @@ export async function listEvents(query: ListEventsQuery): Promise<ListEventsResp
             v.name as venue_name, c.name as city_name, c.slug as city_slug,
             e.category, e.skill_level, e.cost, e.currency, e.capacity,
             e.poster_image_url, e.is_external,
+            v.latitude as venue_latitude, v.longitude as venue_longitude,
             COALESCE(rsvp_counts.cnt, 0) as confirmed_count,
             COALESCE(interest_counts.cnt, 0) as interested_count
      FROM events e

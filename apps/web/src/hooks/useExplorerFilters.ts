@@ -26,7 +26,7 @@ import {
 const VALID_VIEWS: CalendarViewMode[] = ["month", "week", "list", "agenda"];
 
 function parseCategories(param: string | null): EventCategory[] {
-  if (!param) return [];
+  if (!param) return ALL_CATEGORIES;
   return param.split(",").filter((c): c is EventCategory =>
     ALL_CATEGORIES.includes(c as EventCategory)
   );
@@ -99,17 +99,13 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
         const current = parseCategories(params.get("categories"));
         let updated: EventCategory[];
 
-        if (current.length === 0) {
-          // All were active; toggling one means all except that one
-          updated = ALL_CATEGORIES.filter((c) => c !== category);
-        } else if (current.includes(category)) {
+        if (current.includes(category)) {
           updated = current.filter((c) => c !== category);
         } else {
           updated = [...current, category];
         }
 
-        // If all categories are active again, clear the param
-        if (updated.length === 0 || updated.length === ALL_CATEGORIES.length) {
+        if (updated.length === ALL_CATEGORIES.length) {
           params.delete("categories");
         } else {
           params.set("categories", updated.join(","));
@@ -122,6 +118,20 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
   const resetFilters = useCallback(() => {
     router.push(pathname, { scroll: false });
   }, [router, pathname]);
+
+  const setAllCategories = useCallback(
+    (all: boolean) => {
+      updateParams((params) => {
+        params.delete("page");
+        if (all) {
+          params.delete("categories");
+        } else {
+          params.set("categories", "_");
+        }
+      });
+    },
+    [updateParams],
+  );
 
   const applyQuickPick = useCallback(
     (pick: DateQuickPick) => {
@@ -159,5 +169,5 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
     [updateParams]
   );
 
-  return { ...filters, setFilter, toggleCategory, resetFilters, applyQuickPick };
+  return { ...filters, setFilter, toggleCategory, setAllCategories, resetFilters, applyQuickPick };
 }

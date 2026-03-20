@@ -43,9 +43,9 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
     location,
     dateFrom,
     dateTo,
-    view,
     setFilter,
     toggleCategory,
+    setAllCategories,
     applyQuickPick,
   } = useExplorerFilters();
 
@@ -84,7 +84,6 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
 
   const selectedMapLocation = useMemo(() => {
     if (!locationPath.length) return null;
-    // find a marker in the selected location for a zoom target
     const match = markers.find((m) => m.cityName === locationPath[locationPath.length - 1]);
     if (match) return { lat: match.latitude, lng: match.longitude, zoom: 12 };
     return null;
@@ -106,6 +105,15 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
     [setFilter],
   );
 
+  const handleDayClick = useCallback(
+    (from: string, to: string) => {
+      setQuickPick(null);
+      setFilter("dateFrom", from);
+      setFilter("dateTo", to);
+    },
+    [setFilter],
+  );
+
   const handleQuickPick = useCallback(
     (pick: DateQuickPick) => {
       setQuickPick((prev) => (prev === pick ? null : pick));
@@ -118,7 +126,11 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
     <div className="explorer-shell">
       {/* Header row - legend + quick picks */}
       <header className="explorer-shell__header">
-        <CategoryLegendBar enabledCategories={categories} onToggle={toggleCategory} />
+        <CategoryLegendBar
+          enabledCategories={categories}
+          onToggle={toggleCategory}
+          onToggleAll={setAllCategories}
+        />
         <DateQuickPicks activePick={quickPick} onPick={handleQuickPick} />
       </header>
 
@@ -137,7 +149,7 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
         ))}
       </nav>
 
-      {/* 3-panel grid */}
+      {/* 2-column grid: sidebar 1/4, content 3/4 */}
       <div className="explorer-shell__grid">
         {/* Left panel: Location tree */}
         <aside
@@ -149,37 +161,37 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
           <LocationTreePanel selectedPath={locationPath} onSelect={handleLocationSelect} />
         </aside>
 
-        {/* Center panel: Calendar */}
-        <main
-          role="region"
-          aria-label={msg.ariaEventCalendar}
-          tabIndex={0}
-          className={`explorer-shell__main ${mobilePanel !== "list" ? "explorer-shell__main--hidden-mobile" : ""}`}
-        >
-          <CalendarPanel
-            view={view}
-            events={visibleEvents}
-            dateFrom={dateFrom}
-            onViewChange={(v) => setFilter("view", v)}
-            onDateChange={handleDateChange}
-          />
-        </main>
+        {/* Right content: Calendar stacked above Map */}
+        <div className={`explorer-shell__content ${mobilePanel === "filters" ? "explorer-shell__content--hidden-mobile" : ""}`}>
+          <div
+            role="region"
+            aria-label={msg.ariaEventCalendar}
+            tabIndex={0}
+            className={`explorer-shell__calendar ${mobilePanel !== "list" ? "explorer-shell__calendar--hidden-mobile" : ""}`}
+          >
+            <CalendarPanel
+              events={visibleEvents}
+              dateFrom={dateFrom}
+              onDateChange={handleDateChange}
+              onDayClick={handleDayClick}
+            />
+          </div>
 
-        {/* Right panel: Map */}
-        <aside
-          role="region"
-          aria-label={msg.ariaEventMap}
-          tabIndex={0}
-          className={`explorer-shell__map ${mobilePanel !== "map" ? "explorer-shell__map--hidden-mobile" : ""}`}
-        >
-          <MapPanel
-            markers={markers}
-            selectedLocation={selectedMapLocation}
-            syncToList={syncMapToList}
-            onSyncToggle={setSyncMapToList}
-            onBoundsChange={setMapBounds}
-          />
-        </aside>
+          <div
+            role="region"
+            aria-label={msg.ariaEventMap}
+            tabIndex={0}
+            className={`explorer-shell__map ${mobilePanel !== "map" ? "explorer-shell__map--hidden-mobile" : ""}`}
+          >
+            <MapPanel
+              markers={markers}
+              selectedLocation={selectedMapLocation}
+              syncToList={syncMapToList}
+              onSyncToggle={setSyncMapToList}
+              onBoundsChange={setMapBounds}
+            />
+          </div>
+        </div>
       </div>
 
       <style>{`
@@ -201,29 +213,37 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
         }
         .explorer-shell__grid {
           display: grid;
-          grid-template-columns: 250px 1fr 350px;
+          grid-template-columns: 1fr 3fr;
           flex: 1;
           min-height: 0;
           overflow: hidden;
         }
-        .explorer-shell__sidebar,
-        .explorer-shell__main,
-        .explorer-shell__map {
+        .explorer-shell__sidebar {
           overflow-y: auto;
           min-height: 0;
+          border-right: 1px solid var(--color-border, #e5e7eb);
+        }
+        .explorer-shell__content {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          overflow: hidden;
+        }
+        .explorer-shell__calendar {
+          flex: 1;
+          overflow-y: auto;
+          min-height: 200px;
+        }
+        .explorer-shell__map {
+          height: 350px;
+          flex-shrink: 0;
+          border-top: 1px solid var(--color-border, #e5e7eb);
         }
         .explorer-shell__sidebar:focus,
-        .explorer-shell__main:focus,
+        .explorer-shell__calendar:focus,
         .explorer-shell__map:focus {
           outline: 2px solid var(--color-brand-primary, #6366F1);
           outline-offset: -2px;
-        }
-        .explorer-shell__sidebar {
-          border-right: 1px solid var(--color-border, #e5e7eb);
-        }
-        .explorer-shell__map {
-          border-left: 1px solid var(--color-border, #e5e7eb);
-          min-height: 350px;
         }
         .explorer-shell__tab {
           flex: 1;
@@ -238,26 +258,6 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
           font-weight: 600;
           border-bottom-color: var(--color-primary, #6366F1);
         }
-        /* Tablet: stack calendar above map, sidebar full width */
-        @media (max-width: 1024px) {
-          .explorer-shell__grid {
-            grid-template-columns: 220px 1fr;
-            grid-template-rows: 1fr 350px;
-          }
-          .explorer-shell__sidebar {
-            grid-row: 1 / -1;
-          }
-          .explorer-shell__main {
-            grid-column: 2;
-            grid-row: 1;
-          }
-          .explorer-shell__map {
-            grid-column: 2;
-            grid-row: 2;
-            border-left: none;
-            border-top: 1px solid var(--color-border, #e5e7eb);
-          }
-        }
         /* Mobile: single panel with tab bar */
         @media (max-width: 640px) {
           .explorer-shell__tabs {
@@ -268,16 +268,19 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
             display: flex;
             flex-direction: column;
             grid-template-columns: unset;
-            grid-template-rows: unset;
+          }
+          .explorer-shell__content {
+            flex: 1;
           }
           .explorer-shell__sidebar,
-          .explorer-shell__main,
+          .explorer-shell__calendar,
           .explorer-shell__map {
             flex: 1;
             border: none;
           }
           .explorer-shell__sidebar--hidden-mobile,
-          .explorer-shell__main--hidden-mobile,
+          .explorer-shell__content--hidden-mobile,
+          .explorer-shell__calendar--hidden-mobile,
           .explorer-shell__map--hidden-mobile {
             display: none;
           }
