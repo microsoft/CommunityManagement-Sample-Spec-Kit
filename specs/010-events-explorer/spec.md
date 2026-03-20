@@ -2,7 +2,7 @@
 
 **Feature Branch**: `010-events-explorer`  
 **Created**: 2026-03-19  
-**Status**: Draft  
+**Status**: Complete  
 **Input**: User description: "An advanced Events Explorer page with a rich 3-panel exploration interface featuring location tree, calendar views, and interactive map"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -20,24 +20,22 @@
   - Demonstrated to users independently
 -->
 
-### User Story 1 - Browse Events in Calendar Views (Priority: P1)
+### User Story 1 - Browse Events in Compact Month Calendar (Priority: P1)
 
-A community member visits the Events Explorer page and sees events displayed in a calendar format. They can switch between month, week, list, and agenda views to find events that fit their schedule. Events are color-coded by category (Jam, Workshop, Class, Festival, Social, Retreat, Teacher Training) so users can quickly scan for event types they care about. Clicking an event navigates to that event's detail page.
+A community member visits the Events Explorer page and sees events displayed in a compact month calendar. The calendar fits within a fixed-height panel with no scrolling required. Events are color-coded by category (Jam, Workshop, Class, Festival, Social, Retreat, Teacher Training) with small event count bubbles beside each date number. Today's date has a subtle underline indicator. Clicking a day selects it and highlights the cell. Users navigate between months using prev/next arrows.
 
-**Why this priority**: The calendar is the central panel and core value proposition. Without a functional, multi-view calendar showing categorized events, the Explorer has no primary content area. This replaces the current simple list view and delivers immediate improvement.
+**Why this priority**: The calendar is the central panel and core value proposition. A compact month view provides an at-a-glance overview of event distribution across dates, enabling users to quickly identify busy days. This replaces the current simple list view and delivers immediate improvement.
 
-**Independent Test**: Navigate to the Events Explorer page. Verify month view displays as default with event dots colored by category. Switch to week, list, and agenda views — each renders events correctly. Click an event — navigate to the detail page.
+**Independent Test**: Navigate to the Events Explorer page. Verify month view displays with event count bubbles colored by category next to date numbers. Verify today has an underline. Click a day — cell highlights. Navigate to next/prev month. Verify calendar fits in panel without scrolling.
 
 **Acceptance Scenarios**:
 
-1. **Given** the Events Explorer page loads, **When** events exist in the current date range, **Then** month view shows event indicators on the correct dates, colored by category.
-2. **Given** month view is active, **When** the user switches to week view, **Then** events display as time blocks within the week timeline.
-3. **Given** any calendar view is active, **When** the user clicks an event, **Then** they navigate to that event's detail page.
-4. **Given** events of different categories exist, **When** displayed in any view, **Then** each event's visual indicator matches its category color (Jam = Indigo, Workshop = Emerald, Class = Blue, Festival = Pink, Social = Amber, Retreat = Purple, Teacher Training = Teal).
-5. **Given** list view is active, **When** events are displayed, **Then** they appear in dense chronological order grouped by date.
-6. **Given** agenda view is active, **When** events are displayed, **Then** they are grouped by day with expandable event cards showing summary details.
-7. **Given** a recurring event exists, **When** displayed in any view, **Then** it shows a recurrence icon distinguishing it from one-time events.
-8. **Given** a multi-day event exists, **When** displayed in month or week view, **Then** it visually spans across the appropriate date range.
+1. **Given** the Events Explorer page loads, **When** events exist in the current date range, **Then** month view shows event count bubbles next to date numbers on days with events.
+2. **Given** the calendar renders, **When** the current month is displayed, **Then** today's date has a subtle underline indicator.
+3. **Given** a day cell is visible, **When** the user clicks it, **Then** the cell highlights with a light background color and the date is selected.
+4. **Given** events of different categories exist, **When** displayed on the calendar, **Then** each event's count bubble matches its category color (Jam = Indigo, Workshop = Emerald, Class = Blue, Festival = Pink, Social = Amber, Retreat = Purple, Teacher Training = Teal).
+5. **Given** the calendar is displayed, **When** the user clicks prev/next arrows, **Then** the calendar navigates to the adjacent month.
+6. **Given** the calendar panel has a fixed height, **When** any month is displayed, **Then** the grid fits within the panel without requiring scrolling.
 
 ---
 
@@ -58,22 +56,23 @@ A community member sees a category legend bar showing all event types with their
 
 ---
 
-### User Story 3 - Explore Events on an Interactive Map (Priority: P1)
+### User Story 3 - Explore Events on a 3-Level Hierarchical Map (Priority: P1)
 
-A community member sees event locations plotted on an interactive map panel. Markers are color-coded by event category. In areas with many events, markers are clustered with a count badge. Clicking a cluster zooms in to reveal individual markers. Clicking an individual marker shows a popup with an event summary card (name, date, category, location).
+A community member sees event locations on a 3-level hierarchical map that provides progressive drill-down from globe to country to city level. At globe level, country bubbles show the total event count per country, sized proportionally. Clicking a country bubble (or zooming in past the country threshold) transitions to country level showing city bubbles with event counts. At city level, individual event markers appear, clustered by proximity when dense. Zoom levels snap automatically with hysteresis thresholds to prevent flickering between levels. Hovering over a bubble shows the location name in a popup; the bubble itself only displays the count number.
 
-**Why this priority**: The map provides the spatial dimension that differentiates the Explorer from a plain calendar. It enables users to find events near them or in specific locations — a core use case for a geographically distributed community.
+**Why this priority**: The map provides the spatial dimension that differentiates the Explorer from a plain calendar. The 3-level hierarchical approach prevents information overload at global scale while enabling detailed exploration at city level.
 
-**Independent Test**: Load the Explorer with events in multiple cities. Verify markers appear at correct locations with category-appropriate colors. Zoom out until clusters form — verify cluster badges show counts. Click a cluster — map zooms in. Click an individual marker — popup shows event summary.
+**Independent Test**: Load the Explorer with events in multiple countries. At globe level, verify country bubbles appear with count numbers. Click a country bubble — map zooms in and shows city bubbles. Click a city bubble — map zooms to city level showing individual markers. Hover a bubble — popup shows location name. Zoom out past threshold — level snaps back.
 
 **Acceptance Scenarios**:
 
-1. **Given** the Events Explorer loads with geolocated events, **When** the map panel renders, **Then** markers appear at the correct geographic positions for each event.
-2. **Given** markers are displayed, **When** events of different categories exist, **Then** marker colors correspond to their event category.
-3. **Given** a dense area with many events, **When** the map is zoomed out, **Then** nearby markers are grouped into clusters showing an event count.
-4. **Given** a cluster is visible, **When** the user clicks it, **Then** the map zooms in to reveal the individual markers within.
-5. **Given** an individual marker is visible, **When** the user clicks it, **Then** a popup appears showing the event name, date, category, and location.
-6. **Given** the map is loaded, **When** the initial script bundle is measured, **Then** the map library is loaded lazily and does not exceed the page JS budget.
+1. **Given** the Events Explorer loads with geolocated events, **When** the map renders at globe level (zoom < 5), **Then** country bubbles appear showing event counts sized proportionally.
+2. **Given** country level is active (zoom 5–10), **When** city data is available, **Then** city bubbles appear showing event counts for each city.
+3. **Given** city level is active (zoom ≥ 10), **When** events exist in the visible area, **Then** individual event markers appear, clustered by proximity when dense.
+4. **Given** the map is at any level, **When** the user zooms past a threshold, **Then** the level snaps automatically with hysteresis (up-thresholds: 5, 10; down-thresholds: 3, 8) to prevent flickering.
+5. **Given** a bubble is visible, **When** the user hovers over it, **Then** a popup appears showing the location name; the bubble itself only displays the event count number.
+6. **Given** a location node is selected in the tree, **When** the map should zoom to it, **Then** the map uses flyTo for city nodes (avoiding bounds-based zoom reset) and flyToBounds for larger areas.
+7. **Given** the map is loaded, **When** the initial script bundle is measured, **Then** the map library is loaded lazily and does not exceed the page JS budget.
 
 ---
 
@@ -98,11 +97,11 @@ A community member uses the left-side location panel displaying a hierarchical t
 
 ### User Story 5 - Cross-Panel Synchronization (Priority: P2)
 
-All three panels — location tree, calendar, and map — stay synchronized. Selecting a location in the tree updates both the calendar filter and the map viewport. Changing the date range in the calendar updates which events show on the map. Moving the map viewport can optionally filter the event list to show only events visible on the map. Filter controls (category, skill level, status) apply across all panels simultaneously.
+All three panels — location tree, calendar, and map — stay synchronized. Selecting a location in the tree updates both the calendar filter and the map viewport. Changing the date range in the calendar updates which events show on the map. Moving the map viewport can optionally filter the event list to show only events visible on the map. Filter controls (category, skill level, status) apply across all panels simultaneously. A "Reset filters" button appears when any filter is active, allowing the user to clear all filters at once.
 
 **Why this priority**: Synchronization is what transforms three independent panels into a cohesive exploration experience. Without it, users would need to manually re-filter each panel. Depends on all three panels (P1 + P2 stories) being functional.
 
-**Independent Test**: Select "Europe" in the location tree — calendar shows only European events, map zooms to Europe. Navigate calendar to next month — map markers update to show only that month's events. Pan the map to show only Germany — optionally the calendar filters to German events. Apply a "Workshop" category filter — all three panels update.
+**Independent Test**: Select "Europe" in the location tree — calendar shows only European events, map zooms to Europe. Navigate calendar to next month — map markers update to show only that month's events. Pan the map to show only Germany — optionally the calendar filters to German events. Apply a "Workshop" category filter — all three panels update. Click "Reset filters" — all filters cleared.
 
 **Acceptance Scenarios**:
 
@@ -111,6 +110,42 @@ All three panels — location tree, calendar, and map — stay synchronized. Sel
 3. **Given** the user pans or zooms the map, **When** a "sync map to list" option is enabled, **Then** the calendar/list filters to show only events within the visible map bounds.
 4. **Given** a filter is applied (category, skill level, or status), **When** the filter state changes, **Then** all three panels reflect the updated filter simultaneously.
 5. **Given** any combination of filters is active, **When** the URL is inspected, **Then** all filter state is encoded as URL search parameters and the page can be bookmarked/shared.
+6. **Given** one or more filters are active, **When** the user clicks "Reset filters", **Then** all filters (location, dates, categories) are cleared and all panels show unfiltered data.
+
+---
+
+### User Story 5a - Event Count Toggles (Priority: P2)
+
+Each visual panel (map, calendar, filters) has an independent "#" toggle button that controls whether event count numbers are displayed within that panel. The toggle state is persisted in localStorage as a user preference so it survives page reloads. Map toggles count labels on bubbles/clusters; calendar toggles count bubbles next to date numbers; filters toggle count numbers next to category labels.
+
+**Why this priority**: Count numbers add information density but can feel cluttered for users who prefer a cleaner view. Independent toggles per panel give users control over their preferred information density.
+
+**Independent Test**: Click the "#" button on the map panel — count labels disappear from bubbles. Reload the page — toggle state persists. Toggle calendar counts off — date count bubbles disappear but map counts are unaffected. Toggle filter counts — category count numbers appear/disappear next to labels.
+
+**Acceptance Scenarios**:
+
+1. **Given** the map panel renders, **When** the user clicks the "#" toggle button, **Then** event count labels on map bubbles/clusters are shown or hidden.
+2. **Given** the calendar panel renders, **When** the user clicks the "#" toggle button, **Then** event count bubbles next to date numbers are shown or hidden.
+3. **Given** the filter panel renders, **When** the user clicks the "#" toggle button, **Then** event count numbers next to category labels are shown or hidden.
+4. **Given** a toggle has been changed, **When** the page is reloaded, **Then** the toggle state is restored from localStorage.
+5. **Given** one panel's count toggle is off, **When** another panel's toggle is on, **Then** the toggles operate independently.
+
+---
+
+### User Story 5b - City-Level Event List (Priority: P2)
+
+When a user drills down to city level in the location tree (either by clicking a city node or zooming the map to city level), the left navigation panel expands to display a list of individual events in that city below the tree. Each event in the list shows a category color dot, event title, date, and venue name. This provides an event-level detail view directly in the sidebar without leaving the Explorer.
+
+**Why this priority**: When users drill to a specific city, they want to see what events are there. Showing events directly in the sidebar eliminates the need to cross-reference the calendar or map markers.
+
+**Independent Test**: Click a city in the location tree — below the tree, a bordered section appears with the heading "Events in {City Name}" listing all events in that city. Each event shows a color dot, title, date, and venue. Click a country or continent — the event list disappears.
+
+**Acceptance Scenarios**:
+
+1. **Given** a city is selected in the location tree, **When** the location panel renders, **Then** a list of events in that city appears below the tree hierarchy.
+2. **Given** the city event list is visible, **When** events exist, **Then** each event displays a category color dot, event title, formatted date, and venue name.
+3. **Given** the city event list is visible, **When** no events match the current filters, **Then** a "No events found" message is displayed.
+4. **Given** a non-city node (country or continent) is selected, **When** the location panel renders, **Then** no event list is shown.
 
 ---
 
@@ -196,31 +231,34 @@ A community member toggles a "heatmap" option on the map that overlays an event 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST display events in four view modes — month, week, list, and agenda — with the ability to switch between them.
+- **FR-001**: System MUST display events in a compact month calendar view with event count bubbles next to date numbers, prev/next month navigation, today underline, and day selection highlighting.
 - **FR-002**: System MUST color-code events by category using the defined category-color mapping (Jam = Indigo, Workshop = Emerald, Class = Blue, Festival = Pink, Social = Amber, Retreat = Purple, Teacher Training = Teal).
 - **FR-003**: System MUST display recurring events with a visual recurrence indicator and multi-day events spanning across their full date range.
-- **FR-004**: System MUST render an interactive map with event markers positioned at event coordinates.
-- **FR-005**: System MUST cluster nearby map markers in dense areas, showing event count on the cluster badge.
-- **FR-006**: System MUST display a popup with event summary (name, date, category, location) when a map marker is clicked.
+- **FR-004**: System MUST render an interactive 3-level hierarchical map with globe (country bubbles), country (city bubbles), and city (individual markers) levels.
+- **FR-005**: System MUST implement zoom-level snapping with hysteresis thresholds (up: 5, 10; down: 3, 8) to prevent flickering between levels, with count-sized bubbles at globe/country levels and proximity-based clustering at city level.
+- **FR-006**: System MUST display location name in a hover popup on map bubbles and show event summary (name, date, category, location) when an individual city-level marker is clicked.
 - **FR-007**: System MUST display a hierarchical location tree showing Continent → Country → City with event counts at each level.
-- **FR-008**: System MUST filter the calendar and map when a location tree node is selected, and zoom the map to the selected area.
+- **FR-008**: System MUST filter the calendar and map when a location tree node is selected, and zoom the map to the selected area using flyTo for city nodes and flyToBounds for larger areas.
 - **FR-009**: System MUST support search/filter within the location tree to find specific locations.
 - **FR-010**: System MUST synchronize filters across all three panels — applying a filter in any panel updates the other two.
-- **FR-011**: System MUST encode all filter state (categories, location, date range, view mode) in URL search parameters for bookmarkability.
-- **FR-012**: System MUST display a category legend bar that also functions as quick filter toggles.
-- **FR-013**: System MUST adapt layout responsively — three-panel on desktop (≥1024px), stacked with collapsed tree on tablet (768–1023px), single panel with tab navigation on mobile (<768px).
+- **FR-011**: System MUST encode all filter state (categories, location, date range) in URL search parameters for bookmarkability.
+- **FR-012**: System MUST display a category legend bar that also functions as quick filter toggles, with optional event count numbers next to each category label.
+- **FR-013**: System MUST adapt layout responsively — sidebar + content on desktop (≥1024px), stacked with collapsed tree on tablet (768–1023px), single panel with tab navigation (Calendar/Map/Filters) on mobile (<768px).
 - **FR-014**: System MUST navigate to the event detail page when an event is clicked in any panel.
 - **FR-015**: System MUST use the existing events API endpoint with its query filter capabilities.
 - **FR-016**: System MUST support all user-facing strings as i18n-extractable.
 - **FR-017**: System MUST be fully keyboard navigable and meet WCAG 2.1 AA accessibility requirements.
 - **FR-018**: System MUST use design tokens exclusively for all colors and spacing values.
 - **FR-019**: System MUST provide date range quick pick buttons: "This week", "This weekend", "This month", "Next 30 days".
-- **FR-020**: System MUST provide a "Near me" geolocation button that centers the map on the user's position when permission is granted.
-- **FR-021**: System MUST gracefully handle geolocation denial or unavailability with a user-friendly message.
-- **FR-022**: System MUST provide an optional event density heatmap overlay on the map.
+- **FR-020**: ~~System MUST provide a "Near me" geolocation button~~ — **Deferred to future iteration**.
+- **FR-021**: ~~System MUST gracefully handle geolocation denial~~ — **Deferred with FR-020**.
+- **FR-022**: ~~System MUST provide an optional event density heatmap overlay~~ — **Deferred to future iteration**.
 - **FR-023**: System MUST lazy-load the map library to keep initial JS bundle within budget.
 - **FR-024**: System MUST display an appropriate empty state when no events match the active filters.
-- **FR-025**: System MUST handle events without geographic coordinates by showing them in calendar/list but excluding them from the map.
+- **FR-025**: System MUST handle events without geographic coordinates by showing them in calendar but excluding them from the map.
+- **FR-026**: System MUST provide independent event count toggle buttons ("#") for map, calendar, and filter panels, persisted in localStorage as user preferences.
+- **FR-027**: System MUST display a city-level event list in the location tree panel when a city node is selected, showing category dot, title, date, and venue for each event.
+- **FR-028**: System MUST provide a "Reset filters" button that clears all active filters (location, dates, categories) when visible.
 
 ### Key Entities
 
@@ -235,7 +273,7 @@ A community member toggles a "heatmap" option on the map that overlays an event 
 ### Measurable Outcomes
 
 - **SC-001**: Users can find and click an event in a specific city within 15 seconds using either the location tree or the map.
-- **SC-002**: Users can switch between all four calendar views (month, week, list, agenda) and see events update within 1 second.
+- **SC-002**: ~~Users can switch between all four calendar views~~ — Calendar uses a compact month-only view; the metric now applies to month navigation speed (< 1 second).
 - **SC-003**: All filtering actions (category toggle, location select, date change) update all visible panels within 1 second.
 - **SC-004**: 90% of users can successfully locate a specific event using category filters and date navigation on their first attempt.
 - **SC-005**: The Events Explorer page loads and becomes interactive within 3 seconds on a standard broadband connection.

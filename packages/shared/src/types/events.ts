@@ -76,6 +76,7 @@ export interface MapLinks {
 
 export interface ListEventsQuery {
   city?: string;
+  country?: string;
   category?: EventCategory;
   skillLevel?: SkillLevel;
   dateFrom?: string;

@@ -6,6 +6,7 @@ export interface CategoryLegendProps {
   categories: readonly CategoryColorConfig[];
   enabledCategories: EventCategory[];
   onToggle: (category: EventCategory) => void;
+  categoryCounts?: Record<string, number>;
 }
 
 export interface WebCategoryLegendProps extends CategoryLegendProps {

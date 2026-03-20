@@ -17,8 +17,20 @@ export default function ExplorerPage() {
     setLoading(true);
     setError(null);
     try {
-      const qs = searchParams.toString();
-      const res = await fetch(`/api/events?${qs ? `${qs}&` : ""}pageSize=100`);
+      const params = new URLSearchParams(searchParams.toString());
+      // Parse hierarchical location into API-compatible city/country params
+      const location = params.get("location");
+      params.delete("location");
+      if (location) {
+        const parts = location.split("/");
+        if (parts.length >= 3) params.set("city", parts[2]);
+        else if (parts.length === 2) params.set("country", parts[1]);
+      }
+      // Strip UI-only params the API doesn't understand
+      params.delete("view");
+      params.delete("categories");
+      params.set("pageSize", "100");
+      const res = await fetch(`/api/events?${params.toString()}`);
       if (!res.ok) throw new Error(msg.loadingEventsError);
       const data = await res.json();
       setEvents(data.events ?? []);

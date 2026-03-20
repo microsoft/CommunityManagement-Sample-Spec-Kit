@@ -2,43 +2,39 @@
 
 import React, { useMemo } from "react";
 import type { EventSummary } from "@acroyoga/shared/types/events";
-import type { CalendarViewMode, MonthGrid, AgendaDayGroup } from "@acroyoga/shared/types/explorer";
+import type { MonthGrid } from "@acroyoga/shared/types/explorer";
 import { useCalendarData } from "@/hooks/useCalendarData";
-import { getCategoryColor } from "@/lib/category-colors";
 import { navigateMonth } from "@/lib/calendar-utils";
-import { format, parseISO } from "date-fns";
-import EventCard from "@/components/events/EventCard";
+import { useCountToggle } from "@/hooks/useCountToggle";
+import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { EXPLORER_MESSAGES as msg } from "./explorer-messages";
 
 interface CalendarPanelProps {
-  view: CalendarViewMode;
   events: EventSummary[];
   dateFrom: string | null;
-  onViewChange: (view: CalendarViewMode) => void;
   onDateChange: (dateFrom: string, dateTo: string) => void;
+  onDayClick?: (dateFrom: string, dateTo: string) => void;
 }
-
-const VIEW_LABELS: Record<CalendarViewMode, string> = {
-  month: msg.viewMonth,
-  week: msg.viewWeek,
-  list: msg.viewList,
-  agenda: msg.viewAgenda,
-};
 
 const DAY_HEADERS = [msg.dayMon, msg.dayTue, msg.dayWed, msg.dayThu, msg.dayFri, msg.daySat, msg.daySun];
 
 export default function CalendarPanel({
-  view,
   events,
   dateFrom,
-  onViewChange,
   onDateChange,
+  onDayClick,
 }: CalendarPanelProps) {
-  const { monthGrid, weekSlots, agendaGroups } = useCalendarData(view, events, dateFrom);
+  const { monthGrid } = useCalendarData("month", events, dateFrom);
+  const [showCounts, toggleCounts] = useCountToggle("explorer.showCounts.calendar");
 
   const referenceDate = useMemo(() => {
     if (dateFrom) return parseISO(dateFrom);
     return new Date();
+  }, [dateFrom]);
+
+  const selectedDay = useMemo(() => {
+    if (!dateFrom) return null;
+    return parseISO(dateFrom);
   }, [dateFrom]);
 
   function handleMonthNav(direction: "prev" | "next") {
@@ -48,89 +44,76 @@ export default function CalendarPanel({
       direction
     );
     const newDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0);
-    onDateChange(format(newDate, "yyyy-MM-dd"), format(endDate, "yyyy-MM-dd"));
+    onDateChange(newDate.toISOString(), new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString());
+  }
+
+  function handleDayClick(date: Date) {
+    if (onDayClick) {
+      onDayClick(startOfDay(date).toISOString(), endOfDay(date).toISOString());
+    }
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ minHeight: 0 }}>
-      {/* Header with view switcher */}
-      <div className="flex items-center justify-between" style={{ padding: "var(--spacing-3)" }}>
-        <div className="flex items-center gap-2">
-          {view === "month" && (
-            <>
-              <button
-                onClick={() => handleMonthNav("prev")}
-                aria-label={msg.ariaPreviousMonth}
-                style={{ padding: "var(--spacing-1) var(--spacing-2)", minWidth: 44, minHeight: 44 }}
-              >
-                ←
-              </button>
-              <h2 className="text-lg font-semibold" style={{ minWidth: 160, textAlign: "center" }}>
-                {format(referenceDate, "MMMM yyyy")}
-              </h2>
-              <button
-                onClick={() => handleMonthNav("next")}
-                aria-label={msg.ariaNextMonth}
-                style={{ padding: "var(--spacing-1) var(--spacing-2)", minWidth: 44, minHeight: 44 }}
-              >
-                →
-              </button>
-            </>
-          )}
-          {view !== "month" && (
-            <h2 className="text-lg font-semibold">
-              {format(referenceDate, "MMMM yyyy")}
-            </h2>
-          )}
-        </div>
-
-        <div className="flex gap-1" role="tablist" aria-label={msg.ariaCalendarView}>
-          {(Object.keys(VIEW_LABELS) as CalendarViewMode[]).map((v) => (
-            <button
-              key={v}
-              role="tab"
-              aria-selected={v === view}
-              onClick={() => onViewChange(v)}
-              style={{
-                padding: "var(--spacing-1) var(--spacing-3)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "var(--font-size-sm)",
-                fontWeight: v === view ? "var(--font-weight-semibold)" : "var(--font-weight-normal)",
-                backgroundColor: v === view ? "var(--color-brand-primary)" : "transparent",
-                color: v === view ? "#fff" : "var(--color-surface-foreground)",
-                border: "none",
-                cursor: "pointer",
-                minWidth: 44,
-                minHeight: 44,
-              }}
-            >
-              {VIEW_LABELS[v]}
-            </button>
-          ))}
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      {/* Header with month nav */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 8px", gap: 4 }}>
+        <button
+          onClick={toggleCounts}
+          aria-label={msg.ariaToggleCalendarCounts}
+          aria-pressed={showCounts}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "var(--radius-md, 6px)",
+            border: "1px solid var(--color-border, #d1d5db)",
+            background: showCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+            color: showCounts ? "#fff" : "var(--color-surface-foreground, #333)",
+            cursor: "pointer",
+            fontWeight: 700,
+            fontSize: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {msg.toggleCounts}
+        </button>
+        <button
+          onClick={() => handleMonthNav("prev")}
+          aria-label={msg.ariaPreviousMonth}
+          style={{ padding: "2px 6px", minWidth: 32, minHeight: 32, background: "none", border: "none", cursor: "pointer", fontSize: 16 }}
+        >
+          ←
+        </button>
+        <span style={{ minWidth: 130, textAlign: "center", fontWeight: 600, fontSize: 14 }}>
+          {format(referenceDate, "MMMM yyyy")}
+        </span>
+        <button
+          onClick={() => handleMonthNav("next")}
+          aria-label={msg.ariaNextMonth}
+          style={{ padding: "2px 6px", minWidth: 32, minHeight: 32, background: "none", border: "none", cursor: "pointer", fontSize: 16 }}
+        >
+          →
+        </button>
       </div>
 
-      {/* View content */}
-      <div className="flex-1 overflow-auto" style={{ padding: "0 var(--spacing-3) var(--spacing-3)" }}>
-        {view === "month" && monthGrid && <MonthView grid={monthGrid} />}
-        {view === "week" && <WeekView slots={weekSlots} referenceDate={referenceDate} events={events} />}
-        {view === "list" && <ListView groups={agendaGroups} />}
-        {view === "agenda" && <AgendaView groups={agendaGroups} />}
+      {/* Month view — fills remaining space, no scroll */}
+      <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }}>
+        {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} />}
       </div>
     </div>
   );
 }
 
-function MonthView({ grid }: { grid: MonthGrid }) {
+function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthGrid; selectedDay: Date | null; onDayClick: (date: Date) => void; showCounts: boolean }) {
   return (
-    <div role="grid" aria-label={msg.ariaMonthView}>
+    <div role="grid" aria-label={msg.ariaMonthView} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div
         role="row"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: "1px",
         }}
       >
         {DAY_HEADERS.map((d) => (
@@ -139,9 +122,9 @@ function MonthView({ grid }: { grid: MonthGrid }) {
             role="columnheader"
             style={{
               textAlign: "center",
-              fontSize: "var(--font-size-xs)",
-              fontWeight: "var(--font-weight-semibold)",
-              padding: "var(--spacing-1)",
+              fontSize: 10,
+              fontWeight: 600,
+              padding: "2px 0",
               color: "var(--color-surface-muted-foreground)",
             }}
           >
@@ -149,242 +132,88 @@ function MonthView({ grid }: { grid: MonthGrid }) {
           </div>
         ))}
       </div>
-      {grid.weeks.map((week) => (
-        <div
-          key={week.weekNumber}
-          role="row"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: "1px",
-          }}
-        >
-          {week.days.map((day) => (
-            <div
-              key={day.date.toISOString()}
-              role="gridcell"
-              aria-label={msg.dayEventCount(format(day.date, "EEEE, MMMM d"), day.events.length)}
-              style={{
-                padding: "var(--spacing-1)",
-                minHeight: 80,
-                border: "1px solid var(--color-surface-border)",
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: day.isToday
-                  ? "var(--color-brand-primary)"
-                  : day.isCurrentMonth
-                  ? "var(--color-surface-background)"
-                  : "var(--color-surface-muted)",
-                opacity: day.isCurrentMonth ? 1 : 0.5,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "var(--font-size-xs)",
-                  fontWeight: day.isToday ? "var(--font-weight-bold)" : "var(--font-weight-normal)",
-                  color: day.isToday ? "#fff" : "var(--color-surface-foreground)",
-                  marginBottom: "var(--spacing-1)",
-                }}
-              >
-                {day.date.getDate()}
-              </div>
-              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                {day.events.map((event) => (
-                  <span
-                    key={event.id}
-                    title={event.title}
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      backgroundColor: getCategoryColor(event.category),
-                      display: "inline-block",
-                    }}
-                  />
-                ))}
-              </div>
-              {day.overflowCount > 0 && (
-                <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-surface-muted-foreground)" }}>
-                  +{day.overflowCount} more
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function WeekView({
-  slots,
-  referenceDate,
-  events,
-}: {
-  slots: { startTime: string; endTime: string; events: EventSummary[] }[];
-  referenceDate: Date;
-  events: EventSummary[];
-}) {
-  // Show only 6am-10pm slots for readability
-  const visibleSlots = slots.filter((s) => {
-    const hour = parseInt(s.startTime.split(":")[0], 10);
-    return hour >= 6 && hour < 22;
-  });
-
-  return (
-    <div role="grid" aria-label={msg.ariaWeekView}>
-      {visibleSlots.map((slot) => (
-        <div
-          key={slot.startTime}
-          role="row"
-          style={{
-            display: "flex",
-            alignItems: "stretch",
-            borderBottom: "1px solid var(--color-surface-border)",
-            minHeight: 32,
-          }}
-        >
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+        {grid.weeks.map((week) => (
           <div
+            key={week.weekNumber}
+            role="row"
             style={{
-              width: 60,
-              fontSize: "var(--font-size-xs)",
-              color: "var(--color-surface-muted-foreground)",
-              padding: "var(--spacing-1)",
-              flexShrink: 0,
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              flex: 1,
+              minHeight: 0,
             }}
           >
-            {slot.startTime}
-          </div>
-          <div style={{ flex: 1, display: "flex", gap: 4, padding: "var(--spacing-1)", flexWrap: "wrap" }}>
-            {slot.events.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  backgroundColor: getCategoryColor(event.category),
-                  color: "#fff",
-                  fontSize: "var(--font-size-xs)",
-                  padding: "2px 6px",
-                  borderRadius: "var(--radius-sm)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  maxWidth: 200,
-                }}
-                title={event.title}
-              >
-                {event.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ListView({ groups }: { groups: AgendaDayGroup[] }) {
-  if (groups.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "var(--spacing-8)", color: "var(--color-surface-muted-foreground)" }}>
-        {msg.noEventsInPeriod}
-      </div>
-    );
-  }
-
-  return (
-    <div role="list" aria-label="Events list">
-      {groups.map((group) => (
-        <div key={group.date.toISOString()} role="listitem" style={{ marginBottom: "var(--spacing-4)" }}>
-          <h3
-            style={{
-              fontSize: "var(--font-size-sm)",
-              fontWeight: "var(--font-weight-semibold)",
-              color: "var(--color-surface-muted-foreground)",
-              padding: "var(--spacing-2) 0",
-              borderBottom: "1px solid var(--color-surface-border)",
-            }}
-          >
-            {format(group.date, "EEEE, MMMM d, yyyy")}
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-2)", marginTop: "var(--spacing-2)" }}>
-            {group.events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AgendaView({ groups }: { groups: AgendaDayGroup[] }) {
-  if (groups.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "var(--spacing-8)", color: "var(--color-surface-muted-foreground)" }}>
-        {msg.noEventsInPeriod}
-      </div>
-    );
-  }
-
-  return (
-    <div role="list" aria-label="Agenda view">
-      {groups.map((group) => (
-        <details
-          key={group.date.toISOString()}
-          role="listitem"
-          open
-          style={{ marginBottom: "var(--spacing-3)" }}
-        >
-          <summary
-            style={{
-              fontSize: "var(--font-size-sm)",
-              fontWeight: "var(--font-weight-semibold)",
-              cursor: "pointer",
-              padding: "var(--spacing-2)",
-              backgroundColor: "var(--color-surface-muted)",
-              borderRadius: "var(--radius-sm)",
-              minHeight: 44,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {format(group.date, "EEEE, MMMM d")} — {group.events.length} event{group.events.length !== 1 ? "s" : ""}
-          </summary>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-2)", marginTop: "var(--spacing-2)", paddingLeft: "var(--spacing-4)" }}>
-            {group.events.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--spacing-2)",
-                  padding: "var(--spacing-2)",
-                  borderLeft: `3px solid ${getCategoryColor(event.category)}`,
-                  borderRadius: "var(--radius-sm)",
-                }}
-              >
-                <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-surface-muted-foreground)", width: 50 }}>
-                  {format(parseISO(event.startDatetime), "HH:mm")}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: "var(--font-weight-medium)", fontSize: "var(--font-size-sm)" }}>{event.title}</div>
-                  <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-surface-muted-foreground)" }}>
-                    {event.venueName} · {event.cityName}
-                  </div>
-                </div>
-                <span
+            {week.days.map((day) => {
+              const isSelected = selectedDay != null && isSameDay(day.date, selectedDay);
+              const totalEvents = day.events.length + day.overflowCount;
+              return (
+                <div
+                  key={day.date.toISOString()}
+                  role="gridcell"
+                  aria-label={msg.dayEventCount(format(day.date, "EEEE, MMMM d"), totalEvents)}
+                  aria-selected={isSelected}
+                  onClick={() => onDayClick(day.date)}
                   style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    backgroundColor: getCategoryColor(event.category),
-                    flexShrink: 0,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 2,
+                    borderRadius: 4,
+                    backgroundColor: isSelected
+                      ? "var(--color-brand-primary-light, #e0e7ff)"
+                      : day.isCurrentMonth
+                      ? "var(--color-surface-background)"
+                      : "var(--color-surface-muted)",
+                    opacity: day.isCurrentMonth ? 1 : 0.4,
+                    cursor: "pointer",
+                    position: "relative",
+                    overflow: "hidden",
                   }}
-                />
-              </div>
-            ))}
+                >
+                  {/* Day number */}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: isSelected ? 700 : day.isToday ? 600 : 400,
+                      color: isSelected
+                        ? "var(--color-brand-primary, #6366F1)"
+                        : "var(--color-surface-foreground)",
+                      lineHeight: 1,
+                      borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #6366F1)" : "2px solid transparent",
+                      paddingBottom: 1,
+                    }}
+                  >
+                    {day.date.getDate()}
+                  </span>
+                  {/* Event count bubble — next to date number */}
+                  {showCounts && totalEvents > 0 && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minWidth: 14,
+                        height: 14,
+                        borderRadius: 7,
+                        backgroundColor: "var(--color-brand-primary, #6366F1)",
+                        color: "#fff",
+                        fontSize: 8,
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        padding: "0 2px",
+                      }}
+                    >
+                      {totalEvents}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </details>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

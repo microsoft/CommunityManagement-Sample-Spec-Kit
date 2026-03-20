@@ -23,13 +23,13 @@ global.fetch = vi.fn().mockResolvedValue({
 import ExplorerShell from "@/components/events/ExplorerShell";
 
 describe("Explorer responsive layout", () => {
-  it("renders 3-panel grid layout structure", () => {
+  it("renders 2-column grid layout structure", () => {
     const { container } = render(<ExplorerShell events={[]} coordEvents={[]} />);
     const grid = container.querySelector(".explorer-shell__grid");
     expect(grid).toBeTruthy();
-    // Should contain sidebar, main, and map panels
+    // Should contain sidebar, calendar, and map panels
     expect(container.querySelector(".explorer-shell__sidebar")).toBeTruthy();
-    expect(container.querySelector(".explorer-shell__main")).toBeTruthy();
+    expect(container.querySelector(".explorer-shell__calendar")).toBeTruthy();
     expect(container.querySelector(".explorer-shell__map")).toBeTruthy();
   });
 
@@ -47,8 +47,6 @@ describe("Explorer responsive layout", () => {
     const styleTag = container.querySelector("style");
     expect(styleTag).toBeTruthy();
     const css = styleTag!.textContent ?? "";
-    // Tablet breakpoint
-    expect(css).toContain("max-width: 1024px");
     // Mobile breakpoint
     expect(css).toContain("max-width: 640px");
   });

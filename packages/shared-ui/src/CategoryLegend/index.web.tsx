@@ -5,6 +5,7 @@ export function CategoryLegend({
   categories,
   enabledCategories,
   onToggle,
+  categoryCounts,
   className,
   style,
 }: WebCategoryLegendProps) {
@@ -59,6 +60,11 @@ export function CategoryLegend({
               }}
             />
             {config.category.replace("_", " ")}
+            {categoryCounts?.[config.category] != null && (
+              <span style={{ opacity: 0.8, fontSize: "10px", marginLeft: 2 }}>
+                ({categoryCounts[config.category]})
+              </span>
+            )}
           </button>
         );
       })}

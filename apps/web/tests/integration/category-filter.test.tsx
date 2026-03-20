@@ -61,10 +61,10 @@ describe("Category filter integration", () => {
 
   it("clicking a category toggle updates URL with categories param", () => {
     render(<ExplorerShell events={events} coordEvents={[]} />);
-    // Find any category toggle button from the legend
-    const buttons = screen.getAllByRole("button");
-    // Find a button that looks like a category (has aria-pressed)
-    const categoryBtn = buttons.find((b) => b.getAttribute("aria-pressed") !== null);
+    // Find a category toggle button (has aria-label ending with "category filter")
+    const categoryBtn = screen.getAllByRole("button").find(
+      (b) => b.getAttribute("aria-label")?.includes("category filter")
+    );
     if (categoryBtn) {
       fireEvent.click(categoryBtn);
       expect(mockPush).toHaveBeenCalled();

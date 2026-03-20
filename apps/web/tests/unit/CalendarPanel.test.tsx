@@ -36,43 +36,22 @@ function makeEvent(overrides: Partial<EventSummary> = {}): EventSummary {
 
 describe("CalendarPanel", () => {
   const defaultProps = {
-    view: "month" as const,
     events: [makeEvent()],
     dateFrom: "2025-01-01",
-    onViewChange: vi.fn(),
     onDateChange: vi.fn(),
+    onDayClick: vi.fn(),
   };
 
-  it("renders view switcher tabs", () => {
-    render(<CalendarPanel {...defaultProps} />);
-    expect(screen.getByRole("tab", { name: /month/i })).toBeDefined();
-    expect(screen.getByRole("tab", { name: /week/i })).toBeDefined();
-    expect(screen.getByRole("tab", { name: /list/i })).toBeDefined();
-    expect(screen.getByRole("tab", { name: /agenda/i })).toBeDefined();
-  });
-
-  it("calls onViewChange when a different tab is clicked", () => {
-    const onViewChange = vi.fn();
-    render(<CalendarPanel {...defaultProps} onViewChange={onViewChange} />);
-    fireEvent.click(screen.getByRole("tab", { name: /week/i }));
-    expect(onViewChange).toHaveBeenCalledWith("week");
-  });
-
-  it("renders month navigation buttons in month view", () => {
+  it("renders month navigation buttons", () => {
     render(<CalendarPanel {...defaultProps} />);
     expect(screen.getByRole("button", { name: /previous month/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /next month/i })).toBeDefined();
   });
 
-  it("renders in list view", () => {
-    render(<CalendarPanel {...defaultProps} view="list" />);
-    expect(screen.getByTestId("event-card-e1")).toBeDefined();
-  });
-
-  it("renders in agenda view grouping by date", () => {
-    render(<CalendarPanel {...defaultProps} view="agenda" />);
-    // Agenda view uses details/summary expandable sections; event cards are inside
-    const details = document.querySelectorAll("details");
-    expect(details.length).toBeGreaterThanOrEqual(1);
+  it("renders the month grid with day cells", () => {
+    render(<CalendarPanel {...defaultProps} />);
+    expect(screen.getByRole("grid")).toBeDefined();
+    const cells = screen.getAllByRole("gridcell");
+    expect(cells.length).toBeGreaterThanOrEqual(28);
   });
 });
