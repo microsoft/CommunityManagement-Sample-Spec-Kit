@@ -2,10 +2,11 @@
 
 **Branch**: `010-events-explorer` | **Date**: 2026-03-19 | **Spec**: [specs/010-events-explorer/spec.md](spec.md)
 **Input**: Feature specification from `/specs/010-events-explorer/spec.md`
+**Status**: Complete
 
 ## Summary
 
-Replace the current simple event list page with an advanced 3-panel Events Explorer featuring a calendar (month/week/list/agenda views), an interactive Leaflet map with clustered markers, and a hierarchical location tree (Continent → Country → City). All panels stay synchronized through shared filter state managed in URL search parameters. Events are color-coded by category using new design tokens. The map is lazy-loaded to stay within the <200KB JS budget. Layout adapts responsively from 3-panel desktop to single-panel mobile with tab navigation.
+Replace the current simple event list page with an advanced Events Explorer featuring a compact month calendar, a 3-level hierarchical map (globe→country→city zoom with auto-snapping), and a hierarchical location tree (Continent → Country → City) with city-level event lists. All panels stay synchronized through shared filter state managed in URL search parameters. Events are color-coded by category using design tokens. Each panel has independent event count toggle buttons ("#") persisted as user preferences in localStorage. The map is lazy-loaded to stay within the <200KB JS budget. Layout adapts responsively from sidebar+content desktop to single-panel mobile with tab navigation.
 
 ## Technical Context
 
@@ -25,9 +26,9 @@ Replace the current simple event list page with an advanced 3-panel Events Explo
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| I. API-First Design | ✅ PASS | Consumes existing `/api/events` and `/api/cities` endpoints. No new API routes needed — this is a pure frontend feature consuming existing contracts. New types (ExplorerFilterState, LocationNode) defined in shared types. |
-| II. Test-First Development | ✅ PASS | Unit tests for filter state hook, location tree builder, calendar helpers. Integration tests for panel sync. E2E tests for P1 user flows (calendar views, category filter, map interaction). |
-| III. Privacy & Data Protection | ✅ PASS | Displays only public event data (EventSummary). "Near me" geolocation uses browser API with proper permission handling — no PII stored or sent to server. |
+| I. API-First Design | ✅ PASS | Consumes existing `/api/events` and `/api/cities` endpoints. No new API routes needed — this is a pure frontend feature consuming existing contracts. New types (ExplorerFilterState, LocationNode, MapZoomLevel) defined in shared types. |
+| II. Test-First Development | ✅ PASS | 83 unit tests for filter state hook, location tree builder, calendar helpers, category colors, map popups. 137 integration tests for panel sync, category filtering, responsive layout, calendar views. |
+| III. Privacy & Data Protection | ✅ PASS | Displays only public event data (EventSummary). Count toggle preferences stored in localStorage only — no PII. |
 | IV. Server-Side Authority | ✅ PASS | All event data fetched from server. Filter state is client-side URL params that parameterize API calls. No client-side business logic — all filtering delegated to API. Location tree counts derived from API response data. |
 | V. UX Consistency | ✅ PASS | Mobile-first responsive layout. All interactive elements keyboard-navigable. Touch targets ≥ 44×44px. Loading/error/empty states for all async operations. Design tokens for all visual values. |
 | VI. Performance Budget | ✅ PASS | Leaflet lazy-loaded via `next/dynamic` — not in initial bundle. Calendar renders client-side from cached API data. No N+1 queries — uses existing paginated list endpoint. Map marker clustering prevents rendering overload. |
@@ -94,17 +95,19 @@ apps/web/src/
 ├── components/events/
 │   ├── EventCard.tsx           # EXISTING — reused in list/agenda views
 │   ├── EventFilters.tsx        # EXISTING — extended for Explorer
-│   ├── ExplorerShell.tsx       # NEW — 3-panel responsive layout container
-│   ├── CalendarPanel.tsx       # NEW — month/week/list/agenda views
-│   ├── MapPanel.tsx            # NEW — lazy-loaded Leaflet map with markers
-│   ├── LocationTreePanel.tsx   # NEW — hierarchical location browser
-│   ├── CategoryLegendBar.tsx   # NEW — category filter toggles
+│   ├── ExplorerShell.tsx       # NEW — sidebar+content responsive layout container
+│   ├── CalendarPanel.tsx       # NEW — compact month-only calendar view
+│   ├── MapPanel.tsx            # NEW — lazy-loaded 3-level hierarchical Leaflet map
+│   ├── LocationTreePanel.tsx   # NEW — hierarchical location browser + city event list
+│   ├── CategoryLegendBar.tsx   # NEW — category filter toggles with count display
 │   ├── DateQuickPicks.tsx      # NEW — this week/weekend/month/30-day buttons
-│   └── MapMarkerPopup.tsx      # NEW — event summary popup on map markers
+│   ├── MapMarkerPopup.tsx      # NEW — event summary popup on map markers
+│   └── explorer-messages.ts    # NEW — i18n message keys for Explorer
 ├── hooks/
 │   ├── useExplorerFilters.ts   # NEW — URL-synced filter state management
 │   ├── useCalendarData.ts      # NEW — date range computation + event grouping
-│   └── useLocationTree.ts      # NEW — build tree from cities + event counts
+│   ├── useLocationTree.ts      # NEW — build tree from cities + event counts
+│   └── useCountToggle.ts       # NEW — localStorage-persisted boolean toggle
 └── lib/
     ├── calendar-utils.ts       # NEW — month/week grid builders, date math
     ├── category-colors.ts      # NEW — category → design token mapping
