@@ -6,6 +6,7 @@ import type { EventSummary, EventSummaryWithCoords } from "@acroyoga/shared/type
 import type { MapMarkerData, MobilePanel, DateQuickPick } from "@acroyoga/shared/types/explorer";
 import { useExplorerFilters } from "@/hooks/useExplorerFilters";
 import { useLocationTree } from "@/hooks/useLocationTree";
+import { useCountToggle } from "@/hooks/useCountToggle";
 import { extractMapMarkers } from "@/lib/explorer-api";
 import { recomputeCounts } from "@/lib/location-hierarchy";
 import CalendarPanel from "./CalendarPanel";
@@ -57,12 +58,22 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
 
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("list");
   const [quickPick, setQuickPick] = useState<DateQuickPick | null>(null);
+  const [showFilterCounts, toggleFilterCounts] = useCountToggle("explorer.showCounts.filters");
 
   // Client-side category filter for events the API returned
   const filteredEvents = useMemo(() => {
     if (categories.length === ALL_CATEGORIES.length) return events;
     return events.filter((e) => categories.includes(e.category));
   }, [events, categories]);
+
+  // Per-category counts (from API results, before category filter)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const e of events) {
+      counts[e.category] = (counts[e.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [events]);
 
   // Recompute tree with filtered counts
   const treeWithCounts = useMemo(
@@ -168,27 +179,53 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
             </div>
 
             <div className="explorer-shell__filters">
-              {hasActiveFilters && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-2, 8px)" }}>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleReset}
+                    style={{
+                      flex: 1,
+                      padding: "var(--spacing-2, 8px)",
+                      borderRadius: "var(--radius-md, 6px)",
+                      border: "1px solid var(--color-border, #e5e7eb)",
+                      background: "var(--color-surface-background, #fff)",
+                      cursor: "pointer",
+                      fontSize: "var(--font-size-sm, 14px)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {msg.resetFilters}
+                  </button>
+                )}
                 <button
-                  onClick={handleReset}
+                  onClick={toggleFilterCounts}
+                  aria-label={msg.ariaToggleFilterCounts}
+                  aria-pressed={showFilterCounts}
                   style={{
-                    width: "100%",
-                    padding: "var(--spacing-2, 8px)",
+                    width: 28,
+                    height: 28,
                     borderRadius: "var(--radius-md, 6px)",
-                    border: "1px solid var(--color-border, #e5e7eb)",
-                    background: "var(--color-surface-background, #fff)",
+                    border: "1px solid var(--color-border, #d1d5db)",
+                    background: showFilterCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+                    color: showFilterCounts ? "#fff" : "var(--color-surface-foreground, #333)",
                     cursor: "pointer",
-                    fontSize: "var(--font-size-sm, 14px)",
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  {msg.resetFilters}
+                  {msg.toggleCounts}
                 </button>
-              )}
+              </div>
               <CategoryLegendBar
                 enabledCategories={categories}
                 onToggle={toggleCategory}
                 onToggleAll={setAllCategories}
+                categoryCounts={categoryCounts}
+                showCounts={showFilterCounts}
               />
               <DateQuickPicks activePick={quickPick} onPick={handleQuickPick} />
             </div>

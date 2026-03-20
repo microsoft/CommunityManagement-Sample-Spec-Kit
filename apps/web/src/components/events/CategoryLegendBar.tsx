@@ -9,9 +9,11 @@ interface CategoryLegendBarProps {
   enabledCategories: EventCategory[];
   onToggle: (category: EventCategory) => void;
   onToggleAll?: (all: boolean) => void;
+  categoryCounts?: Record<string, number>;
+  showCounts?: boolean;
 }
 
-export default function CategoryLegendBar({ enabledCategories, onToggle, onToggleAll }: CategoryLegendBarProps) {
+export default function CategoryLegendBar({ enabledCategories, onToggle, onToggleAll, categoryCounts, showCounts = true }: CategoryLegendBarProps) {
   const allSelected = enabledCategories.length === ALL_CATEGORIES.length;
 
   return (
@@ -38,6 +40,7 @@ export default function CategoryLegendBar({ enabledCategories, onToggle, onToggl
         categories={CATEGORY_COLORS}
         enabledCategories={enabledCategories}
         onToggle={onToggle}
+        categoryCounts={showCounts ? categoryCounts : undefined}
       />
     </div>
   );

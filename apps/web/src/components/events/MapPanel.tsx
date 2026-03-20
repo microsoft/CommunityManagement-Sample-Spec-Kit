@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import type { LocationNode, MapMarkerData, MapZoomLevel } from "@acroyoga/shared/types/explorer";
 import { getCategoryColor } from "@/lib/category-colors";
 import { findNode, getNodeBounds } from "@/lib/location-hierarchy";
+import { useCountToggle } from "@/hooks/useCountToggle";
 import MapMarkerPopup from "./MapMarkerPopup";
 import { EXPLORER_MESSAGES as msg } from "./explorer-messages";
 import "leaflet/dist/leaflet.css";
@@ -93,11 +94,16 @@ function LocationSync({
       const node = findNode(tree, selectedLocation);
       if (!node) { isSnapping.current = false; return; }
 
-      const bounds = getNodeBounds([node]);
-      if (bounds) {
-        map.flyToBounds(bounds, { padding: [30, 30], maxZoom: 14, duration: 0.6 });
-      } else if (node.latitude != null && node.longitude != null) {
-        map.flyTo([node.latitude, node.longitude], node.type === "city" ? 12 : 6, { duration: 0.6 });
+      // Cities: fly directly to point at zoom 12 (bounds would be too wide for a single coord)
+      if (node.type === "city" && node.latitude != null && node.longitude != null) {
+        map.flyTo([node.latitude, node.longitude], 12, { duration: 0.6 });
+      } else {
+        const bounds = getNodeBounds([node]);
+        if (bounds) {
+          map.flyToBounds(bounds, { padding: [30, 30], maxZoom: 14, duration: 0.6 });
+        } else if (node.latitude != null && node.longitude != null) {
+          map.flyTo([node.latitude, node.longitude], 6, { duration: 0.6 });
+        }
       }
     }
 
@@ -185,11 +191,13 @@ function LevelRenderer({
   markers,
   selectedLocation,
   onLocationSelect,
+  showCounts,
 }: {
   tree: LocationNode[];
   markers: MapMarkerData[];
   selectedLocation: string | null;
   onLocationSelect: (id: string | null) => void;
+  showCounts: boolean;
 }) {
   const map = useMap();
   const level = levelFromLocation(selectedLocation);
@@ -227,9 +235,11 @@ function LevelRenderer({
                 mouseout: (e) => e.target.closePopup(),
               }}
             >
-              <Tooltip permanent direction="center" className="bubble-count-tooltip">
-                {country.eventCount}
-              </Tooltip>
+              {showCounts && (
+                <Tooltip permanent direction="center" className="bubble-count-tooltip">
+                  {country.eventCount}
+                </Tooltip>
+              )}
               <Popup closeButton={false} autoPan={false} className="map-hover-popup">
                 {country.name}
               </Popup>
@@ -259,9 +269,11 @@ function LevelRenderer({
                 mouseout: (e) => e.target.closePopup(),
               }}
             >
-              <Tooltip permanent direction="center" className="bubble-count-tooltip">
-                {city.eventCount}
-              </Tooltip>
+              {showCounts && (
+                <Tooltip permanent direction="center" className="bubble-count-tooltip">
+                  {city.eventCount}
+                </Tooltip>
+              )}
               <Popup closeButton={false} autoPan={false} className="map-hover-popup">
                 {city.name}
               </Popup>
@@ -291,9 +303,11 @@ function LevelRenderer({
             pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.85, color: "#fff", weight: 2 }}
             eventHandlers={{ click: () => map.flyTo([cluster.lat, cluster.lng], map.getZoom() + 2) }}
           >
-            <Tooltip permanent direction="center" className="bubble-count-tooltip">
-              {cluster.markers.length}
-            </Tooltip>
+            {showCounts && (
+              <Tooltip permanent direction="center" className="bubble-count-tooltip">
+                {cluster.markers.length}
+              </Tooltip>
+            )}
           </CircleMarker>
         );
       })}
@@ -331,9 +345,36 @@ function findClosestChild(parent: LocationNode, lat: number, lng: number): Locat
 
 export default function MapPanelInner({ tree, markers, selectedLocation, onLocationSelect }: MapPanelProps) {
   const isSnapping = useRef(false);
+  const [showCounts, toggleCounts] = useCountToggle("explorer.showCounts.map");
 
   return (
     <div style={{ height: "100%", width: "100%", position: "relative" }} role="img" aria-label={msg.mapLabel(markers.length)}>
+      <button
+        onClick={toggleCounts}
+        aria-label={msg.ariaToggleMapCounts}
+        aria-pressed={showCounts}
+        style={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          zIndex: 1000,
+          width: 32,
+          height: 32,
+          borderRadius: "var(--radius-md, 6px)",
+          border: "1px solid var(--color-border, #d1d5db)",
+          background: showCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+          color: showCounts ? "#fff" : "var(--color-surface-foreground, #333)",
+          cursor: "pointer",
+          fontWeight: 700,
+          fontSize: 14,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+        }}
+      >
+        {msg.toggleCounts}
+      </button>
       <MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -341,7 +382,7 @@ export default function MapPanelInner({ tree, markers, selectedLocation, onLocat
         />
         <LocationSync tree={tree} selectedLocation={selectedLocation} isSnapping={isSnapping} />
         <ZoomSnapper tree={tree} selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} isSnapping={isSnapping} />
-        <LevelRenderer tree={tree} markers={markers} selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} />
+        <LevelRenderer tree={tree} markers={markers} selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} showCounts={showCounts} />
       </MapContainer>
 
       <style>{`
