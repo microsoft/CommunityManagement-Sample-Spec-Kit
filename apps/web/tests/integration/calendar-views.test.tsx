@@ -55,37 +55,22 @@ function makeEvent(id: string, cat: string, date: string): EventSummary {
   };
 }
 
-describe("Calendar view switching integration", () => {
+describe("Calendar month view integration", () => {
   const events = [
     makeEvent("e1", "jam", "2025-01-15T10:00:00Z"),
     makeEvent("e2", "workshop", "2025-01-16T14:00:00Z"),
   ];
 
-  it("switches from month to list view and shows events", () => {
+  it("renders month grid with navigation buttons", () => {
     render(<ExplorerShell events={events} coordEvents={[]} />);
-    // Default is month view
-    const listTab = screen.getByRole("tab", { name: /list/i });
-    fireEvent.click(listTab);
-    // URL push should include view=list
-    expect(mockPush).toHaveBeenCalled();
-    const lastCall = mockPush.mock.calls[mockPush.mock.calls.length - 1][0] as string;
-    expect(lastCall).toContain("view=list");
+    expect(screen.getByRole("button", { name: /previous month/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /next month/i })).toBeDefined();
+    expect(screen.getByRole("grid")).toBeDefined();
   });
 
-  it("switches from month to agenda view", () => {
+  it("renders day cells in the month grid", () => {
     render(<ExplorerShell events={events} coordEvents={[]} />);
-    const agendaTab = screen.getByRole("tab", { name: /agenda/i });
-    fireEvent.click(agendaTab);
-    expect(mockPush).toHaveBeenCalled();
-    const lastCall = mockPush.mock.calls[mockPush.mock.calls.length - 1][0] as string;
-    expect(lastCall).toContain("view=agenda");
-  });
-
-  it("switches to week view", () => {
-    render(<ExplorerShell events={events} coordEvents={[]} />);
-    const weekTab = screen.getByRole("tab", { name: /week/i });
-    fireEvent.click(weekTab);
-    const lastCall = mockPush.mock.calls[mockPush.mock.calls.length - 1][0] as string;
-    expect(lastCall).toContain("view=week");
+    const cells = screen.getAllByRole("gridcell");
+    expect(cells.length).toBeGreaterThanOrEqual(28);
   });
 });

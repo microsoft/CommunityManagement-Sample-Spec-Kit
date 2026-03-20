@@ -25,7 +25,9 @@ describe("useExplorerFilters", () => {
 
   it("returns default filter state", () => {
     const { result } = renderHook(() => useExplorerFilters());
-    expect(result.current.categories).toEqual([]);
+    expect(result.current.categories).toEqual([
+      "jam", "workshop", "class", "festival", "social", "retreat", "teacher_training",
+    ]);
     expect(result.current.location).toBeNull();
     expect(result.current.view).toBe("month");
     expect(result.current.page).toBe(1);

@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   buildLocationTree,
-  computeEventCounts,
+  recomputeCounts,
+  findNode,
+  getNodeBounds,
   filterTree,
   sortAlphabetically,
 } from "@/lib/location-hierarchy";
@@ -83,38 +85,66 @@ describe("buildLocationTree", () => {
   });
 });
 
-describe("computeEventCounts", () => {
-  it("returns own count for leaf nodes", () => {
-    const leaf = {
-      id: "EU/GB/bristol",
-      type: "city" as const,
-      name: "Bristol",
-      slug: "bristol",
-      code: "bristol",
-      eventCount: 5,
-      latitude: 51.45,
-      longitude: -2.58,
-      children: [],
-    };
-    expect(computeEventCounts(leaf)).toBe(5);
+describe("recomputeCounts", () => {
+  it("sets city count from matching events", () => {
+    const tree = buildLocationTree([
+      makeCity({ slug: "bristol", activeEventCount: 99 }),
+    ]);
+    const events = [
+      { citySlug: "bristol" },
+      { citySlug: "bristol" },
+    ] as { citySlug: string }[];
+    const result = recomputeCounts(tree, events as any);
+    const city = result[0].children[0].children[0];
+    expect(city.eventCount).toBe(2);
   });
 
-  it("sums children counts", () => {
-    const parent = {
-      id: "EU/GB",
-      type: "country" as const,
-      name: "United Kingdom",
-      slug: null,
-      code: "GB",
-      eventCount: 0,
-      latitude: null,
-      longitude: null,
-      children: [
-        { id: "EU/GB/bristol", type: "city" as const, name: "Bristol", slug: "bristol", code: "bristol", eventCount: 5, latitude: null, longitude: null, children: [] },
-        { id: "EU/GB/london", type: "city" as const, name: "London", slug: "london", code: "london", eventCount: 10, latitude: null, longitude: null, children: [] },
-      ],
-    };
-    expect(computeEventCounts(parent)).toBe(15);
+  it("rolls up to parent nodes", () => {
+    const tree = buildLocationTree([
+      makeCity({ slug: "bristol", activeEventCount: 1 }),
+      makeCity({ id: "c2", name: "London", slug: "london", activeEventCount: 1 }),
+    ]);
+    const events = [
+      { citySlug: "bristol" },
+      { citySlug: "london" },
+      { citySlug: "london" },
+    ] as { citySlug: string }[];
+    const result = recomputeCounts(tree, events as any);
+    const country = result[0].children[0];
+    expect(country.eventCount).toBe(3); // 1 bristol + 2 london
+  });
+});
+
+describe("findNode", () => {
+  it("finds a node by hierarchical id", () => {
+    const tree = buildLocationTree([makeCity()]);
+    const node = findNode(tree, "EU/GB/bristol");
+    expect(node).toBeTruthy();
+    expect(node!.name).toBe("Bristol");
+  });
+
+  it("returns null when not found", () => {
+    const tree = buildLocationTree([makeCity()]);
+    expect(findNode(tree, "NA/US/sf")).toBeNull();
+  });
+});
+
+describe("getNodeBounds", () => {
+  it("returns bounding box with padding", () => {
+    const tree = buildLocationTree([
+      makeCity({ slug: "bristol", latitude: 51.45, longitude: -2.58 }),
+      makeCity({ id: "c2", name: "London", slug: "london", latitude: 51.51, longitude: -0.13 }),
+    ]);
+    const country = tree[0].children[0];
+    const bounds = getNodeBounds(country.children);
+    expect(bounds).toBeTruthy();
+    // south should be ~50.45 (51.45 - 1 pad)
+    expect(bounds![0][0]).toBeCloseTo(50.45, 1);
+  });
+
+  it("returns null for nodes without coordinates", () => {
+    const node = { id: "test", type: "continent" as const, name: "Test", slug: null, code: "T", eventCount: 0, latitude: null, longitude: null, children: [] };
+    expect(getNodeBounds([node])).toBeNull();
   });
 });
 

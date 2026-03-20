@@ -74,4 +74,17 @@ export const EXPLORER_MESSAGES = {
 
   // Sync map toggle
   syncMapToList: "Sync map to list",
+
+  // Reset filters
+  resetFilters: "Reset filters",
+
+  // Count toggles
+  toggleCounts: "#",
+  ariaToggleMapCounts: "Toggle event counts on map",
+  ariaToggleCalendarCounts: "Toggle event counts on calendar",
+  ariaToggleFilterCounts: "Toggle event counts on filters",
+
+  // City-level event list
+  cityEventsTitle: (city: string) => `Events in ${city}`,
+  noCityEvents: "No events found.",
 } as const;

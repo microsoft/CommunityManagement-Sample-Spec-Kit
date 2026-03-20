@@ -5,6 +5,10 @@ import type { City } from "./cities";
 
 export type CalendarViewMode = "month" | "week" | "list" | "agenda";
 
+// ─── Map Zoom Levels ────────────────────────────────────────────────
+
+export type MapZoomLevel = "globe" | "country" | "city";
+
 // ─── Explorer Filter State (URL-synced) ─────────────────────────────
 
 export interface ExplorerFilterState {
@@ -22,6 +26,7 @@ export interface ExplorerFilterState {
 export interface ExplorerFilterActions {
   setFilter: <K extends keyof ExplorerFilterState>(key: K, value: ExplorerFilterState[K]) => void;
   toggleCategory: (category: EventCategory) => void;
+  setAllCategories: (all: boolean) => void;
   resetFilters: () => void;
   applyQuickPick: (pick: DateQuickPick) => void;
 }

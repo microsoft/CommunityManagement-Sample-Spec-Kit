@@ -1,5 +1,6 @@
 import type { City } from "@acroyoga/shared/types/cities";
 import type { LocationNode, CityWithContinent } from "@acroyoga/shared/types/explorer";
+import type { EventSummary } from "@acroyoga/shared/types/events";
 
 const CONTINENT_NAMES: Record<string, string> = {
   AF: "Africa",
@@ -9,6 +10,7 @@ const CONTINENT_NAMES: Record<string, string> = {
   NA: "North America",
   OC: "Oceania",
   SA: "South America",
+  XX: "Global",
 };
 
 export function buildLocationTree(cities: CityWithContinent[]): LocationNode[] {
@@ -49,8 +51,8 @@ export function buildLocationTree(cities: CityWithContinent[]): LocationNode[] {
         }));
 
       const countryEventCount = cityNodes.reduce((sum, c) => sum + c.eventCount, 0);
-      const countryLat = countryCities[0]?.latitude ?? null;
-      const countryLng = countryCities[0]?.longitude ?? null;
+      const countryLat = countryCities.reduce((s, c) => s + c.latitude, 0) / countryCities.length;
+      const countryLng = countryCities.reduce((s, c) => s + c.longitude, 0) / countryCities.length;
 
       continentChildren.push({
         id: `${continentCode}/${countryCode}`,
@@ -85,12 +87,49 @@ export function buildLocationTree(cities: CityWithContinent[]): LocationNode[] {
   return sortAlphabetically(tree);
 }
 
-export function computeEventCounts(node: LocationNode): number {
-  if (node.children.length === 0) {
-    return node.eventCount;
+/** Recompute event counts on each node based on the current (filtered) events array. */
+export function recomputeCounts(tree: LocationNode[], events: EventSummary[]): LocationNode[] {
+  const cityCounts = new Map<string, number>();
+  for (const e of events) {
+    cityCounts.set(e.citySlug, (cityCounts.get(e.citySlug) ?? 0) + 1);
   }
-  const childSum = node.children.reduce((sum, child) => sum + computeEventCounts(child), 0);
-  return childSum;
+
+  function update(node: LocationNode): LocationNode {
+    if (node.type === "city") {
+      return { ...node, eventCount: cityCounts.get(node.slug ?? "") ?? 0 };
+    }
+    const children = node.children.map(update);
+    const count = children.reduce((sum, c) => sum + c.eventCount, 0);
+    return { ...node, children, eventCount: count };
+  }
+
+  return tree.map(update);
+}
+
+/** Find a node by its id path (e.g. "EU/GB" or "EU/GB/london"). */
+export function findNode(tree: LocationNode[], id: string): LocationNode | null {
+  for (const node of tree) {
+    if (node.id === id) return node;
+    const found = findNode(node.children, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Get the bounding box of a set of nodes with coordinates. */
+export function getNodeBounds(nodes: LocationNode[]): [[number, number], [number, number]] | null {
+  const coords = nodes.flatMap(function collect(n: LocationNode): { lat: number; lng: number }[] {
+    if (n.latitude != null && n.longitude != null) return [{ lat: n.latitude, lng: n.longitude }];
+    return n.children.flatMap(collect);
+  });
+  if (coords.length === 0) return null;
+  const lats = coords.map((c) => c.lat);
+  const lngs = coords.map((c) => c.lng);
+  const pad = 1; // degree padding
+  return [
+    [Math.min(...lats) - pad, Math.min(...lngs) - pad],
+    [Math.max(...lats) + pad, Math.max(...lngs) + pad],
+  ];
 }
 
 export function filterTree(nodes: LocationNode[], searchTerm: string): LocationNode[] {
