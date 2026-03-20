@@ -1,7 +1,7 @@
 # Feature Spec 001: Event Discovery & RSVP
 
 > Priority: P0 — Core feature, required for MVP
-> Status: Draft
+> Status: Implemented
 > Constitution check: Principles I, II, III, IV, V, VI, VIII
 
 ## User Scenarios & Testing

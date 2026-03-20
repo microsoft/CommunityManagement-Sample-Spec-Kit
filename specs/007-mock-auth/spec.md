@@ -2,7 +2,7 @@
 
 **Feature Branch**: `007-mock-auth`  
 **Created**: 2026-03-16  
-**Status**: Draft  
+**Status**: Implemented  
 **Input**: User description: "Build a mock authentication system with sample users for local development and testing. Provide a mock auth provider that bypasses real Entra ID in development mode. Define sample users with different roles, scopes, and attributes. Allow switching between users via a dev-only UI component or query parameter. Provide test helper functions to seed sample users and permission grants. Respect the existing session/permission architecture. Include sample users covering all permission levels with realistic attributes."
 
 ## User Scenarios & Testing *(mandatory)*

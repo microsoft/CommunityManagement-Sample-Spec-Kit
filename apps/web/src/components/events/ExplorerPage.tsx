@@ -17,7 +17,8 @@ export default function ExplorerPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/events?${searchParams.toString()}&pageSize=200`);
+      const qs = searchParams.toString();
+      const res = await fetch(`/api/events?${qs ? `${qs}&` : ""}pageSize=100`);
       if (!res.ok) throw new Error(msg.loadingEventsError);
       const data = await res.json();
       setEvents(data.events ?? []);

@@ -115,6 +115,11 @@ export interface CreateEventRequest {
   recurrenceRule?: string;
 }
 
+export interface EventSummaryWithCoords extends EventSummary {
+  venueLatitude?: number | null;
+  venueLongitude?: number | null;
+}
+
 export interface UpdateEventRequest {
   title?: string;
   description?: string;

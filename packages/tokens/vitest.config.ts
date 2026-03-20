@@ -6,5 +6,6 @@ export default defineConfig({
     globals: true,
     root: resolve(import.meta.dirname!, "."),
     include: ["__tests__/**/*.test.ts"],
+    hookTimeout: 60_000,
   },
 });

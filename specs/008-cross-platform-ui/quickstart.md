@@ -8,16 +8,10 @@
 
 | Tool | Version | Required For | Install |
 |------|---------|-------------|---------|
-| Node.js | 22+ LTS | All development | [nodejs.org](https://nodejs.org) |
-| npm | 10+ | Package management (ships with Node) | — |
-| Xcode | 16+ | iOS simulator + builds | Mac App Store |
-| Android Studio | 2024+ | Android emulator + builds | [developer.android.com](https://developer.android.com/studio) |
-| Expo CLI | Latest | Mobile development | `npm install -g expo-cli` |
-| EAS CLI | Latest | Cloud builds | `npm install -g eas-cli` |
-| Watchman | Latest | File watching (macOS) | `brew install watchman` |
-| CocoaPods | Latest | iOS native deps | `sudo gem install cocoapods` |
+| Node.js | 24+ LTS | All development | [nodejs.org](https://nodejs.org) |
+| npm | 11+ | Package management (ships with Node) | — |
 
-> **Note**: For CI builds, only Node.js and EAS CLI are required. EAS Build handles native compilation in the cloud.
+> **Note**: Mobile prerequisites (Xcode, Android Studio, Expo CLI, EAS CLI, Watchman, CocoaPods) are deferred until mobile phases are implemented.
 
 ## Setup
 
@@ -73,32 +67,6 @@ npm run dev
 
 Design token hot-swap: Edit any `*.tokens.json` file → CSS custom properties rebuild → Next.js HMR picks up the change → browser updates without page reload.
 
-## Running the iOS App (Development)
-
-```bash
-# Start the Expo dev server
-npm run --workspace apps/mobile start
-
-# Press 'i' to open iOS simulator
-# — or scan the QR code with Expo Go on a physical device —
-```
-
-Requirements: macOS with Xcode installed and an iOS simulator configured.
-
-**Fast Refresh**: Edit any React component → Expo Fast Refresh updates the simulator in ~300ms while preserving component state.
-
-## Running the Android App (Development)
-
-```bash
-# Start the Expo dev server (if not already running)
-npm run --workspace apps/mobile start
-
-# Press 'a' to open Android emulator
-# — or scan the QR code with Expo Go on a physical device —
-```
-
-Requirements: Android Studio with an emulator configured (recommended: Pixel 6a API 34).
-
 ## Design Token Workflow
 
 ```bash
@@ -107,9 +75,6 @@ npm run tokens:build
 
 # Watch mode (rebuilds on file change)
 npm run tokens:watch
-
-# Run contrast check (WCAG AA validation)
-npm run tokens:check-contrast
 ```
 
 **Adding a new token:**
@@ -138,39 +103,13 @@ The UI Agent is defined in `.agent.md` at the project root. To invoke it in VS C
 ```bash
 # Production build
 npm run --workspace apps/web build
-
-# Bundle analysis (opens report in browser)
-npm run --workspace apps/web analyze
 ```
 
-### iOS
-
-```bash
-# EAS Build for TestFlight
-eas build --platform ios --profile production
-
-# Submit to App Store Connect
-eas submit --platform ios
-```
-
-### Android
-
-```bash
-# EAS Build for Play Store
-eas build --platform android --profile production
-
-# Submit to Play Store
-eas submit --platform android
-```
-
-### All Design Tokens
+### Design Tokens
 
 ```bash
 # Rebuild all token outputs
 npm run tokens:build
-
-# Verify no WCAG contrast violations
-npm run tokens:check-contrast
 ```
 
 ## Workspace Scripts Summary
@@ -181,9 +120,6 @@ npm run tokens:check-contrast
 | `npm run storybook` | Launch Storybook component environment |
 | `npm run tokens:build` | Build all token platform outputs |
 | `npm run tokens:watch` | Watch token files and rebuild on change |
-| `npm run tokens:check-contrast` | Validate WCAG AA contrast ratios |
-| `npm run --workspace apps/mobile start` | Start Expo dev server |
 | `npm run --workspace apps/web build` | Production web build |
-| `npm run --workspace apps/web analyze` | Bundle size analysis |
 | `npm test` | Run all tests across workspaces |
 | `npm run lint` | Lint all workspaces |

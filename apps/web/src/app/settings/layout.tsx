@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 const settingsLinks = [
   { href: "/settings", label: "Overview" },
@@ -17,9 +17,25 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { status } = useSession();
+  const [authStatus, setAuthStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
-  if (status === "unauthenticated") {
+  useEffect(() => {
+    fetch("/api/profiles/me")
+      .then((r) => {
+        setAuthStatus(r.status === 401 ? "unauthenticated" : "authenticated");
+      })
+      .catch(() => setAuthStatus("unauthenticated"));
+  }, []);
+
+  if (authStatus === "loading") {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <p className="text-gray-500">Loading…</p>
+      </div>
+    );
+  }
+
+  if (authStatus === "unauthenticated") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <p className="text-gray-600 text-lg">Please sign in to access settings.</p>
