@@ -48,8 +48,7 @@ export default function CalendarPanel({
       direction
     );
     const newDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0);
-    onDateChange(format(newDate, "yyyy-MM-dd"), format(endDate, "yyyy-MM-dd"));
+    onDateChange(newDate.toISOString(), new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString());
   }
 
   return (

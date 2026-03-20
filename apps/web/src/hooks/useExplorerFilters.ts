@@ -15,8 +15,9 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  startOfDay,
+  endOfDay,
   addDays,
-  format,
   nextSaturday,
   nextSunday,
   isSaturday,
@@ -151,8 +152,8 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
 
       updateParams((params) => {
         params.delete("page");
-        params.set("dateFrom", format(dateFrom, "yyyy-MM-dd"));
-        params.set("dateTo", format(dateTo, "yyyy-MM-dd"));
+        params.set("dateFrom", startOfDay(dateFrom).toISOString());
+        params.set("dateTo", endOfDay(dateTo).toISOString());
       });
     },
     [updateParams]
