@@ -1,7 +1,7 @@
 # Feature Spec 004: Permissions & Creator Accounts
 
 > Priority: P0 — Required for multi-organiser platform
-> Status: Draft
+> Status: Implemented
 > Constitution check: Principles IV, IX, XI, XII
 
 ## User Scenarios & Testing

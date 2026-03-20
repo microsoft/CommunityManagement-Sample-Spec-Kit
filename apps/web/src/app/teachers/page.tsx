@@ -133,9 +133,9 @@ export default function TeachersPage() {
                   ))}
                 </div>
               )}
-              {t.aggregate_rating && (
+              {t.aggregate_rating != null && (
                 <p className="text-sm text-gray-500">
-                  ★ {t.aggregate_rating.toFixed(1)} ({t.review_count})
+                  ★ {parseFloat(String(t.aggregate_rating)).toFixed(1)} ({t.review_count})
                 </p>
               )}
             </Link>

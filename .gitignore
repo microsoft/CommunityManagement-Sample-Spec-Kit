@@ -5,6 +5,9 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 .pglite/
+.pglite.bak/
+test-output.txt
+_test-*.mjs
 
 # Package build outputs
 packages/*/dist/

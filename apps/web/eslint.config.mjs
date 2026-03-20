@@ -1,6 +1,7 @@
 import tseslint from "typescript-eslint";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import nextPlugin from "@next/eslint-plugin-next";
+import reactHooks from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
   // Globally ignore generated/build output directories
@@ -33,6 +34,16 @@ export default tseslint.config(
     },
     rules: {
       ...jsxA11y.configs.recommended.rules,
+    },
+  },
+  // React Hooks rules (only stable rules, not v7 experimental)
+  {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
   // Custom rule overrides matching the original .eslintrc.json

@@ -76,6 +76,7 @@ export interface MapLinks {
 
 export interface ListEventsQuery {
   city?: string;
+  country?: string;
   category?: EventCategory;
   skillLevel?: SkillLevel;
   dateFrom?: string;
@@ -113,6 +114,11 @@ export interface CreateEventRequest {
   externalUrl?: string;
   posterImageUrl?: string;
   recurrenceRule?: string;
+}
+
+export interface EventSummaryWithCoords extends EventSummary {
+  venueLatitude?: number | null;
+  venueLongitude?: number | null;
 }
 
 export interface UpdateEventRequest {

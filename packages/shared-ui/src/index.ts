@@ -18,51 +18,58 @@
 //   import { Button } from "@acroyoga/shared-ui/Button"
 
 // Primitives
-export { Button } from "./Button/index.web.js";
-export type { ButtonProps, ButtonVariant, ButtonSize } from "./Button/Button.js";
+export { Button } from "./Button/index.web";
+export type { ButtonProps, ButtonVariant, ButtonSize } from "./Button/Button";
 
-export { Card } from "./Card/index.web.js";
-export type { CardProps, CardVariant } from "./Card/Card.js";
+export { Card } from "./Card/index.web";
+export type { CardProps, CardVariant } from "./Card/Card";
 
-export { Avatar } from "./Avatar/index.web.js";
-export type { AvatarProps, AvatarSize } from "./Avatar/Avatar.js";
+export { Avatar } from "./Avatar/index.web";
+export type { AvatarProps, AvatarSize } from "./Avatar/Avatar";
 
-export { Badge } from "./Badge/index.web.js";
-export type { BadgeProps, BadgeVariant } from "./Badge/Badge.js";
+export { Badge } from "./Badge/index.web";
+export type { BadgeProps, BadgeVariant } from "./Badge/Badge";
 
-export { Input } from "./Input/index.web.js";
-export type { InputProps, InputState } from "./Input/Input.js";
+export { Input } from "./Input/index.web";
+export type { InputProps, InputState } from "./Input/Input";
 
-export { LoadingSpinner } from "./LoadingSpinner/index.web.js";
-export type { LoadingSpinnerProps, SpinnerSize } from "./LoadingSpinner/LoadingSpinner.js";
+export { LoadingSpinner } from "./LoadingSpinner/index.web";
+export type { LoadingSpinnerProps, SpinnerSize } from "./LoadingSpinner/LoadingSpinner";
 
 // Domain cards
-export { EventCard } from "./EventCard/index.web.js";
-export type { EventCardProps, EventCardData } from "./EventCard/EventCard.js";
+export { EventCard } from "./EventCard/index.web";
+export type { EventCardProps, EventCardData } from "./EventCard/EventCard";
 
-export { TeacherCard } from "./TeacherCard/index.web.js";
-export type { TeacherCardProps, TeacherCardData } from "./TeacherCard/TeacherCard.js";
+export { TeacherCard } from "./TeacherCard/index.web";
+export type { TeacherCardProps, TeacherCardData } from "./TeacherCard/TeacherCard";
 
 // Feedback / states
-export { OfflineBanner } from "./OfflineBanner/index.web.js";
-export type { OfflineBannerProps } from "./OfflineBanner/OfflineBanner.js";
+export { OfflineBanner } from "./OfflineBanner/index.web";
+export type { OfflineBannerProps } from "./OfflineBanner/OfflineBanner";
 
-export { EmptyState } from "./EmptyState/index.web.js";
-export type { EmptyStateProps } from "./EmptyState/EmptyState.js";
+export { EmptyState } from "./EmptyState/index.web";
 
-export { Skeleton } from "./Skeleton/index.web.js";
-export type { SkeletonProps, SkeletonVariant } from "./Skeleton/Skeleton.js";
+// Explorer components
+export { CategoryLegend } from "./CategoryLegend/index.web";
+export type { CategoryLegendProps, WebCategoryLegendProps } from "./CategoryLegend/CategoryLegend";
+
+export { LocationTree } from "./LocationTree/index.web";
+export type { LocationTreeProps, WebLocationTreeProps } from "./LocationTree/LocationTree";
+export type { EmptyStateProps } from "./EmptyState/EmptyState";
+
+export { Skeleton } from "./Skeleton/index.web";
+export type { SkeletonProps, SkeletonVariant } from "./Skeleton/Skeleton";
 
 // Form controls (P1)
-export { TextArea } from "./TextArea/index.web.js";
-export type { TextAreaProps, TextAreaState } from "./TextArea/TextArea.js";
+export { TextArea } from "./TextArea/index.web";
+export type { TextAreaProps, TextAreaState } from "./TextArea/TextArea";
 
-export { Select } from "./Select/index.web.js";
-export type { SelectProps, SelectOption, SelectState } from "./Select/Select.js";
+export { Select } from "./Select/index.web";
+export type { SelectProps, SelectOption, SelectState } from "./Select/Select";
 
 // Overlays (P1)
-export { Modal } from "./Modal/index.web.js";
-export type { ModalProps } from "./Modal/Modal.js";
+export { Modal } from "./Modal/index.web";
+export type { ModalProps } from "./Modal/Modal";
 
-export { Toast } from "./Toast/index.web.js";
-export type { ToastProps, ToastVariant } from "./Toast/Toast.js";
+export { Toast } from "./Toast/index.web";
+export type { ToastProps, ToastVariant } from "./Toast/Toast";
