@@ -1,59 +1,48 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import type { MapMarkerData } from "@acroyoga/shared/types/explorer";
+import type { LocationNode, MapMarkerData, MapZoomLevel } from "@acroyoga/shared/types/explorer";
 import { getCategoryColor } from "@/lib/category-colors";
+import { findNode, getNodeBounds } from "@/lib/location-hierarchy";
 import MapMarkerPopup from "./MapMarkerPopup";
 import { EXPLORER_MESSAGES as msg } from "./explorer-messages";
 import "leaflet/dist/leaflet.css";
 
-interface MapBounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-}
+/* ── Zoom thresholds (with hysteresis) ──────────────────────────── */
+const ZOOM_UP_TO_COUNTRY = 5;
+const ZOOM_UP_TO_CITY = 10;
+const ZOOM_DOWN_TO_COUNTRY = 8;
+const ZOOM_DOWN_TO_GLOBE = 3;
 
-interface MapPanelInnerProps {
+/* ── Props ──────────────────────────────────────────────────────── */
+interface MapPanelProps {
+  tree: LocationNode[];
   markers: MapMarkerData[];
-  selectedLocation?: { lat: number; lng: number; zoom: number } | null;
-  syncToList?: boolean;
-  onSyncToggle?: (enabled: boolean) => void;
-  onBoundsChange?: (bounds: MapBounds) => void;
+  selectedLocation: string | null;
+  onLocationSelect: (id: string | null) => void;
 }
 
-interface MarkerCluster {
-  lat: number;
-  lng: number;
-  markers: MapMarkerData[];
-}
+/* ── Clustering helper (city-level only) ────────────────────────── */
+interface MarkerCluster { lat: number; lng: number; markers: MapMarkerData[] }
 
-/** Group nearby markers into clusters based on pixel distance at current zoom */
-function clusterMarkers(markers: MapMarkerData[], map: L.Map, clusterRadius: number = 60): MarkerCluster[] {
-  if (markers.length === 0) return [];
+function clusterMarkers(markers: MapMarkerData[], map: L.Map, radius = 60): MarkerCluster[] {
   const clusters: MarkerCluster[] = [];
-
-  for (const marker of markers) {
-    const point = map.latLngToContainerPoint([marker.latitude, marker.longitude]);
+  for (const m of markers) {
+    const pt = map.latLngToContainerPoint([m.latitude, m.longitude]);
     let added = false;
-    for (const cluster of clusters) {
-      const clusterPoint = map.latLngToContainerPoint([cluster.lat, cluster.lng]);
-      const dx = point.x - clusterPoint.x;
-      const dy = point.y - clusterPoint.y;
-      if (Math.sqrt(dx * dx + dy * dy) < clusterRadius) {
-        cluster.markers.push(marker);
-        // Update center to average
-        cluster.lat = cluster.markers.reduce((s, m) => s + m.latitude, 0) / cluster.markers.length;
-        cluster.lng = cluster.markers.reduce((s, m) => s + m.longitude, 0) / cluster.markers.length;
+    for (const c of clusters) {
+      const cp = map.latLngToContainerPoint([c.lat, c.lng]);
+      if (Math.hypot(pt.x - cp.x, pt.y - cp.y) < radius) {
+        c.markers.push(m);
+        c.lat = c.markers.reduce((s, x) => s + x.latitude, 0) / c.markers.length;
+        c.lng = c.markers.reduce((s, x) => s + x.longitude, 0) / c.markers.length;
         added = true;
         break;
       }
     }
-    if (!added) {
-      clusters.push({ lat: marker.latitude, lng: marker.longitude, markers: [marker] });
-    }
+    if (!added) clusters.push({ lat: m.latitude, lng: m.longitude, markers: [m] });
   }
   return clusters;
 }
@@ -62,115 +51,211 @@ function createCategoryIcon(category: string): L.DivIcon {
   const color = getCategoryColor(category as Parameters<typeof getCategoryColor>[0]);
   return L.divIcon({
     className: "custom-marker",
-    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.2));"></div>`,
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,0.2);"></div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -12],
   });
 }
 
-function MapViewUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+/* ── Derive current zoom level from a location id ────────────── */
+function levelFromLocation(loc: string | null): MapZoomLevel {
+  if (!loc) return "globe";
+  const depth = loc.split("/").length;
+  if (depth >= 3) return "city";
+  if (depth >= 2) return "country";
+  return "globe";
+}
+
+/* ── Sub-components rendered inside MapContainer ─────────────── */
+
+/** Fly the map when selectedLocation changes (driven by tree clicks). */
+function LocationSync({
+  tree,
+  selectedLocation,
+  isSnapping,
+}: {
+  tree: LocationNode[];
+  selectedLocation: string | null;
+  isSnapping: React.RefObject<boolean>;
+}) {
   const map = useMap();
+  const prevLoc = useRef(selectedLocation);
+
   useEffect(() => {
-    map.flyTo(center, zoom);
-  }, [map, center, zoom]);
+    if (prevLoc.current === selectedLocation) return;
+    prevLoc.current = selectedLocation;
+    isSnapping.current = true;
+
+    if (!selectedLocation) {
+      map.flyTo([20, 0], 2, { duration: 0.6 });
+    } else {
+      const node = findNode(tree, selectedLocation);
+      if (!node) { isSnapping.current = false; return; }
+
+      const bounds = getNodeBounds([node]);
+      if (bounds) {
+        map.flyToBounds(bounds, { padding: [30, 30], maxZoom: 14, duration: 0.6 });
+      } else if (node.latitude != null && node.longitude != null) {
+        map.flyTo([node.latitude, node.longitude], node.type === "city" ? 12 : 6, { duration: 0.6 });
+      }
+    }
+
+    const timer = setTimeout(() => { isSnapping.current = false; }, 800);
+    return () => clearTimeout(timer);
+  }, [map, tree, selectedLocation, isSnapping]);
+
   return null;
 }
 
-function NearMeButton() {
+/** Detect zoom threshold crossings and snap to the nearest hierarchical level. */
+function ZoomSnapper({
+  tree,
+  selectedLocation,
+  onLocationSelect,
+  isSnapping,
+}: {
+  tree: LocationNode[];
+  selectedLocation: string | null;
+  onLocationSelect: (id: string | null) => void;
+  isSnapping: React.RefObject<boolean>;
+}) {
   const map = useMap();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const prevLevel = useRef<MapZoomLevel>(levelFromLocation(selectedLocation));
 
-  function handleNearMe() {
-    if (!navigator.geolocation) {
-      setError(msg.nearMeUnsupported);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        map.flyTo([pos.coords.latitude, pos.coords.longitude], 12);
-        setLoading(false);
-      },
-      (err) => {
-        setError(err.code === 1 ? msg.nearMeDenied : msg.nearMeFailed);
-        setLoading(false);
-        setTimeout(() => setError(null), 3000);
-      },
-      { timeout: 10000 }
+  useMapEvents({
+    zoomend: () => {
+      if (isSnapping.current) return;
+      const zoom = map.getZoom();
+      const center = map.getCenter();
+      const curLevel = prevLevel.current;
+
+      // Globe → Country
+      if (curLevel === "globe" && zoom >= ZOOM_UP_TO_COUNTRY) {
+        const closest = findClosestCountry(tree, center.lat, center.lng);
+        if (closest) {
+          prevLevel.current = "country";
+          onLocationSelect(closest.id);
+          return;
+        }
+      }
+
+      // Country → City
+      if (curLevel === "country" && zoom >= ZOOM_UP_TO_CITY) {
+        const countryNode = selectedLocation ? findNode(tree, selectedLocation) : null;
+        if (countryNode) {
+          const closest = findClosestChild(countryNode, center.lat, center.lng);
+          if (closest) {
+            prevLevel.current = "city";
+            onLocationSelect(closest.id);
+            return;
+          }
+        }
+      }
+
+      // City → Country
+      if (curLevel === "city" && zoom < ZOOM_DOWN_TO_COUNTRY && selectedLocation) {
+        const parts = selectedLocation.split("/");
+        if (parts.length >= 3) {
+          prevLevel.current = "country";
+          onLocationSelect(parts.slice(0, 2).join("/"));
+          return;
+        }
+      }
+
+      // Country → Globe
+      if (curLevel === "country" && zoom < ZOOM_DOWN_TO_GLOBE) {
+        prevLevel.current = "globe";
+        onLocationSelect(null);
+      }
+    },
+  });
+
+  // Keep prevLevel in sync with external location changes
+  useEffect(() => {
+    prevLevel.current = levelFromLocation(selectedLocation);
+  }, [selectedLocation]);
+
+  return null;
+}
+
+/** Renders country/city bubbles or event markers depending on the level. */
+function LevelRenderer({
+  tree,
+  markers,
+  selectedLocation,
+  onLocationSelect,
+}: {
+  tree: LocationNode[];
+  markers: MapMarkerData[];
+  selectedLocation: string | null;
+  onLocationSelect: (id: string | null) => void;
+}) {
+  const map = useMap();
+  const level = levelFromLocation(selectedLocation);
+  const [tick, setTick] = useState(0);
+
+  // Re-render when zoom/pan changes (for clustering)
+  useMapEvents({
+    zoomend: () => setTick((t) => t + 1),
+    moveend: () => setTick((t) => t + 1),
+  });
+
+  // Globe level: show country bubbles
+  if (level === "globe") {
+    const countries = tree.flatMap((continent) => continent.children);
+    return (
+      <>
+        {countries
+          .filter((c) => c.eventCount > 0 && c.latitude != null && c.longitude != null)
+          .map((country) => (
+            <CircleMarker
+              key={country.id}
+              center={[country.latitude!, country.longitude!]}
+              radius={Math.min(30, 12 + country.eventCount)}
+              pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.8, color: "#fff", weight: 2 }}
+              eventHandlers={{ click: () => onLocationSelect(country.id) }}
+            >
+              <Tooltip permanent direction="top" offset={[0, -8]} className="map-label-tooltip">
+                {country.name} ({country.eventCount})
+              </Tooltip>
+            </CircleMarker>
+          ))}
+      </>
     );
   }
 
-  return (
-    <div style={{ position: "absolute", top: 10, right: 10, zIndex: 1000 }}>
-      <button
-        onClick={handleNearMe}
-        disabled={loading}
-        aria-label={msg.ariaNearMe}
-        style={{
-          padding: "var(--spacing-2) var(--spacing-3)",
-          backgroundColor: "var(--color-surface-background)",
-          border: "1px solid var(--color-surface-border)",
-          borderRadius: "var(--radius-md)",
-          fontSize: "var(--font-size-sm)",
-          cursor: loading ? "wait" : "pointer",
-          minWidth: 44,
-          minHeight: 44,
-          boxShadow: "var(--shadow-md)",
-        }}
-      >
-        {loading ? msg.nearMeLocating : msg.nearMeButton}
-      </button>
-      {error && (
-        <div
-          role="alert"
-          style={{
-            marginTop: "var(--spacing-1)",
-            padding: "var(--spacing-2)",
-            backgroundColor: "var(--color-semantic-warning)",
-            color: "#fff",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "var(--font-size-xs)",
-          }}
-        >
-          {error}
-        </div>
-      )}
-    </div>
+  // Country level: show city bubbles within the selected country
+  if (level === "country" && selectedLocation) {
+    const countryNode = findNode(tree, selectedLocation);
+    const cities = countryNode?.children ?? [];
+    return (
+      <>
+        {cities
+          .filter((c) => c.eventCount > 0 && c.latitude != null && c.longitude != null)
+          .map((city) => (
+            <CircleMarker
+              key={city.id}
+              center={[city.latitude!, city.longitude!]}
+              radius={Math.min(30, 12 + city.eventCount)}
+              pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.8, color: "#fff", weight: 2 }}
+              eventHandlers={{ click: () => onLocationSelect(city.id) }}
+            >
+              <Tooltip permanent direction="top" offset={[0, -8]} className="map-label-tooltip">
+                {city.name} ({city.eventCount})
+              </Tooltip>
+            </CircleMarker>
+          ))}
+      </>
+    );
+  }
+
+  // City level: show clustered event markers
+  const clusters = useMemo(
+    () => clusterMarkers(markers, map),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [markers, tick, map],
   );
-}
-
-function BoundsReporter({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
-  const reportBounds = useCallback((map: L.Map) => {
-    const b = map.getBounds();
-    onBoundsChange({
-      north: b.getNorth(),
-      south: b.getSouth(),
-      east: b.getEast(),
-      west: b.getWest(),
-    });
-  }, [onBoundsChange]);
-
-  useMapEvents({
-    moveend: (e) => reportBounds(e.target as L.Map),
-    zoomend: (e) => reportBounds(e.target as L.Map),
-  });
-
-  return null;
-}
-
-function ClusteredMarkers({ markers }: { markers: MapMarkerData[] }) {
-  const map = useMap();
-  const [zoom, setZoom] = useState(map.getZoom());
-
-  useMapEvents({
-    zoomend: () => setZoom(map.getZoom()),
-    moveend: () => setZoom(map.getZoom()), // re-cluster on pan too
-  });
-
-  const clusters = useMemo(() => clusterMarkers(markers, map), [markers, zoom, map]);
 
   return (
     <>
@@ -178,35 +263,18 @@ function ClusteredMarkers({ markers }: { markers: MapMarkerData[] }) {
         if (cluster.markers.length === 1) {
           const m = cluster.markers[0];
           return (
-            <Marker
-              key={m.eventId}
-              position={[m.latitude, m.longitude]}
-              icon={createCategoryIcon(m.category)}
-            >
-              <Popup>
-                <MapMarkerPopup marker={m} />
-              </Popup>
+            <Marker key={m.eventId} position={[m.latitude, m.longitude]} icon={createCategoryIcon(m.category)}>
+              <Popup><MapMarkerPopup marker={m} /></Popup>
             </Marker>
           );
         }
-
-        const radius = Math.min(30, 16 + cluster.markers.length * 2);
         return (
           <CircleMarker
-            key={`cluster-${i}`}
+            key={`cl-${i}`}
             center={[cluster.lat, cluster.lng]}
-            radius={radius}
-            pathOptions={{
-              fillColor: "var(--color-brand-primary, #6366F1)",
-              fillOpacity: 0.85,
-              color: "#fff",
-              weight: 2,
-            }}
-            eventHandlers={{
-              click: () => {
-                map.flyTo([cluster.lat, cluster.lng], map.getZoom() + 2);
-              },
-            }}
+            radius={Math.min(30, 14 + cluster.markers.length * 2)}
+            pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.85, color: "#fff", weight: 2 }}
+            eventHandlers={{ click: () => map.flyTo([cluster.lat, cluster.lng], map.getZoom() + 2) }}
           >
             <Tooltip permanent direction="center" className="cluster-count-tooltip">
               {cluster.markers.length}
@@ -218,75 +286,63 @@ function ClusteredMarkers({ markers }: { markers: MapMarkerData[] }) {
   );
 }
 
-export default function MapPanelInner({
-  markers,
-  selectedLocation,
-  syncToList = false,
-  onSyncToggle,
-  onBoundsChange,
-}: MapPanelInnerProps) {
-  const defaultCenter: [number, number] = [48, 10]; // Europe center default
-  const defaultZoom = 4;
+/* ── Helpers ────────────────────────────────────────────────────── */
+
+function findClosestCountry(tree: LocationNode[], lat: number, lng: number): LocationNode | null {
+  let best: LocationNode | null = null;
+  let bestDist = Infinity;
+  for (const continent of tree) {
+    for (const country of continent.children) {
+      if (country.latitude == null || country.longitude == null || country.eventCount === 0) continue;
+      const d = Math.hypot(country.latitude - lat, country.longitude - lng);
+      if (d < bestDist) { bestDist = d; best = country; }
+    }
+  }
+  return best;
+}
+
+function findClosestChild(parent: LocationNode, lat: number, lng: number): LocationNode | null {
+  let best: LocationNode | null = null;
+  let bestDist = Infinity;
+  for (const child of parent.children) {
+    if (child.latitude == null || child.longitude == null || child.eventCount === 0) continue;
+    const d = Math.hypot(child.latitude - lat, child.longitude - lng);
+    if (d < bestDist) { bestDist = d; best = child; }
+  }
+  return best;
+}
+
+/* ── Main component ─────────────────────────────────────────────── */
+
+export default function MapPanelInner({ tree, markers, selectedLocation, onLocationSelect }: MapPanelProps) {
+  const isSnapping = useRef(false);
 
   return (
-    <div
-      style={{ height: "100%", width: "100%", position: "relative" }}
-      role="img"
-      aria-label={msg.mapLabel(markers.length)}
-    >
-      {onSyncToggle && (
-        <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--spacing-1)",
-              padding: "var(--spacing-1) var(--spacing-2)",
-              backgroundColor: "var(--color-surface-background)",
-              border: "1px solid var(--color-surface-border)",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--font-size-xs)",
-              boxShadow: "var(--shadow-md)",
-              cursor: "pointer",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={syncToList}
-              onChange={(e) => onSyncToggle(e.target.checked)}
-            />
-            {msg.syncMapToList}
-          </label>
-        </div>
-      )}
-
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
-      >
+    <div style={{ height: "100%", width: "100%", position: "relative" }} role="img" aria-label={msg.mapLabel(markers.length)}>
+      <MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <NearMeButton />
-
-        {onBoundsChange && syncToList && (
-          <BoundsReporter onBoundsChange={onBoundsChange} />
-        )}
-
-        {selectedLocation && (
-          <MapViewUpdater
-            center={[selectedLocation.lat, selectedLocation.lng]}
-            zoom={selectedLocation.zoom}
-          />
-        )}
-
-        <ClusteredMarkers markers={markers} />
+        <LocationSync tree={tree} selectedLocation={selectedLocation} isSnapping={isSnapping} />
+        <ZoomSnapper tree={tree} selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} isSnapping={isSnapping} />
+        <LevelRenderer tree={tree} markers={markers} selectedLocation={selectedLocation} onLocationSelect={onLocationSelect} />
       </MapContainer>
 
       <style>{`
+        .map-label-tooltip {
+          background: rgba(0,0,0,0.75) !important;
+          color: #fff !important;
+          border: none !important;
+          border-radius: 4px !important;
+          font-size: 12px !important;
+          font-weight: 600;
+          padding: 2px 6px !important;
+          white-space: nowrap;
+        }
+        .map-label-tooltip::before {
+          border-top-color: rgba(0,0,0,0.75) !important;
+        }
         .cluster-count-tooltip {
           background: transparent !important;
           border: none !important;

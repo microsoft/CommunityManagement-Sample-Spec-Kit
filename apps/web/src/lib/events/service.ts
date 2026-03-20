@@ -109,6 +109,10 @@ export async function listEvents(query: ListEventsQuery): Promise<ListEventsResp
     conditions.push(`c.slug = $${idx++}`);
     params.push(query.city);
   }
+  if (query.country) {
+    conditions.push(`co.code = $${idx++}`);
+    params.push(query.country);
+  }
   if (query.category) {
     conditions.push(`e.category = $${idx++}`);
     params.push(query.category);
@@ -164,6 +168,7 @@ export async function listEvents(query: ListEventsQuery): Promise<ListEventsResp
      FROM events e
      JOIN venues v ON e.venue_id = v.id
      JOIN cities c ON v.city_id = c.id
+     JOIN countries co ON c.country_id = co.id
      ${where}`,
     countParams,
   );
@@ -182,6 +187,7 @@ export async function listEvents(query: ListEventsQuery): Promise<ListEventsResp
      FROM events e
      JOIN venues v ON e.venue_id = v.id
      JOIN cities c ON v.city_id = c.id
+     JOIN countries co ON c.country_id = co.id
      LEFT JOIN (
        SELECT event_id, COUNT(*) as cnt FROM rsvps WHERE status IN ('confirmed','pending_payment') GROUP BY event_id
      ) rsvp_counts ON rsvp_counts.event_id = e.id

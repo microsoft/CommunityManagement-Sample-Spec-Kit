@@ -5,6 +5,10 @@ import type { City } from "./cities";
 
 export type CalendarViewMode = "month" | "week" | "list" | "agenda";
 
+// ─── Map Zoom Levels ────────────────────────────────────────────────
+
+export type MapZoomLevel = "globe" | "country" | "city";
+
 // ─── Explorer Filter State (URL-synced) ─────────────────────────────
 
 export interface ExplorerFilterState {

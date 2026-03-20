@@ -34,9 +34,12 @@ function TreeNode({
   onSelect: (node: LocationNode) => void;
   level: number;
 }) {
-  const [expanded, setExpanded] = useState(level === 0);
+  const [manualExpanded, setManualExpanded] = useState<boolean | null>(null);
   const hasChildren = node.children.length > 0;
   const isSelected = node.id === selectedId;
+  // Auto-expand if this node is an ancestor of the selected node
+  const isAncestor = selectedId != null && selectedId.startsWith(node.id + "/");
+  const expanded = manualExpanded ?? (isSelected || isAncestor || level === 0);
 
   return (
     <div role="treeitem" aria-expanded={hasChildren ? expanded : undefined} aria-selected={isSelected}>
@@ -51,7 +54,7 @@ function TreeNode({
       >
         {hasChildren ? (
           <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            onClick={(e) => { e.stopPropagation(); setManualExpanded(!expanded); }}
             aria-label={expanded ? "Collapse" : "Expand"}
             style={{
               width: 24,

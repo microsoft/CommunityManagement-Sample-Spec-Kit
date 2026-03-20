@@ -41,6 +41,7 @@ export const updateEventSchema = z.object({
 
 export const listEventsSchema = z.object({
   city: z.string().optional(),
+  country: z.string().optional(),
   category: z.enum(["jam", "workshop", "class", "festival", "social", "retreat", "teacher_training"]).optional(),
   skillLevel: z.enum(["beginner", "intermediate", "advanced", "all_levels"]).optional(),
   dateFrom: z.string().datetime().optional(),

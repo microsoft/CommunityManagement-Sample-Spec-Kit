@@ -74,4 +74,7 @@ export const EXPLORER_MESSAGES = {
 
   // Sync map toggle
   syncMapToList: "Sync map to list",
+
+  // Reset filters
+  resetFilters: "Reset filters",
 } as const;

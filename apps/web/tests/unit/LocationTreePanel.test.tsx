@@ -25,8 +25,9 @@ import LocationTreePanel from "@/components/events/LocationTreePanel";
 
 describe("LocationTreePanel", () => {
   const defaultProps = {
-    selectedPath: [],
-    onSelect: vi.fn(),
+    selectedLocation: null as string | null,
+    onLocationSelect: vi.fn(),
+    events: [],
   };
 
   it("renders a search input after loading", async () => {

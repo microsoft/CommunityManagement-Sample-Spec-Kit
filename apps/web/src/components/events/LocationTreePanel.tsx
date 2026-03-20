@@ -4,22 +4,41 @@ import React, { useMemo, useCallback } from "react";
 import { LocationTree } from "@acroyoga/shared-ui";
 import { useLocationTree } from "@/hooks/useLocationTree";
 import type { LocationNode } from "@acroyoga/shared/types/explorer";
+import type { EventSummary } from "@acroyoga/shared/types/events";
+import { recomputeCounts } from "@/lib/location-hierarchy";
 import { EXPLORER_MESSAGES as msg } from "./explorer-messages";
 
 interface LocationTreePanelProps {
-  selectedPath: string[];
-  onSelect: (path: string[]) => void;
+  selectedLocation: string | null;
+  onLocationSelect: (locationId: string | null) => void;
+  events: EventSummary[];
 }
 
-export default function LocationTreePanel({ selectedPath, onSelect }: LocationTreePanelProps) {
+export default function LocationTreePanel({ selectedLocation, onLocationSelect, events }: LocationTreePanelProps) {
   const { filteredTree, loading, searchTerm, setSearchTerm } = useLocationTree();
+
+  // Recompute event counts based on the filtered events
+  const treeWithCounts = useMemo(
+    () => recomputeCounts(filteredTree, events),
+    [filteredTree, events],
+  );
 
   const handleSelect = useCallback(
     (node: LocationNode) => {
-      const path = node.id === "all" ? [] : [node.id];
-      onSelect(path);
+      // Deselect if clicking the already-selected node
+      if (node.id === selectedLocation) {
+        // Go to parent level
+        const parts = node.id.split("/");
+        if (parts.length > 1) {
+          onLocationSelect(parts.slice(0, -1).join("/"));
+        } else {
+          onLocationSelect(null);
+        }
+      } else {
+        onLocationSelect(node.id);
+      }
     },
-    [onSelect],
+    [selectedLocation, onLocationSelect],
   );
 
   if (loading) {
@@ -45,8 +64,8 @@ export default function LocationTreePanel({ selectedPath, onSelect }: LocationTr
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         <LocationTree
-          nodes={filteredTree}
-          selectedId={selectedPath[selectedPath.length - 1] ?? null}
+          nodes={treeWithCounts}
+          selectedId={selectedLocation}
           onSelect={handleSelect}
         />
       </div>
