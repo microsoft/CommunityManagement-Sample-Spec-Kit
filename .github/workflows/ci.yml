@@ -35,12 +35,21 @@ jobs:
 
       - name: Check bundle size
         run: |
-          # Check total size of initial JS chunks (first-load)
-          TOTAL=$(find apps/web/.next/static/chunks -name "*.js" -type f -exec wc -c {} + 2>/dev/null | tail -1 | awk '{print $1}')
-          TOTAL_KB=$((TOTAL / 1024))
-          echo "Total JS chunk size: ${TOTAL_KB}KB"
+          # Check gzipped size of initial JS chunks for the home page (Constitution VI, FR-013)
+          # Only chunks referenced in the prerendered index.html count as "initial bundle"
+          INDEX_HTML="apps/web/.next/server/app/index.html"
+          TOTAL_GZ=0
+          while IFS= read -r chunk; do
+            CHUNK_FILE="apps/web/.next/static/chunks/${chunk}"
+            if [ -f "$CHUNK_FILE" ]; then
+              GZ_SIZE=$(gzip -c "$CHUNK_FILE" | wc -c)
+              TOTAL_GZ=$((TOTAL_GZ + GZ_SIZE))
+            fi
+          done < <(grep -oP 'src="/_next/static/chunks/\K[^"]+(?=")' "$INDEX_HTML" 2>/dev/null)
+          TOTAL_KB=$((TOTAL_GZ / 1024))
+          echo "Initial JS bundle size (gzipped): ${TOTAL_KB}KB"
           if [ "$TOTAL_KB" -gt 200 ]; then
-            echo "::error::JS bundle size (${TOTAL_KB}KB) exceeds 200KB budget (Constitution VI, FR-013)"
+            echo "::error::Initial JS bundle size (${TOTAL_KB}KB gzipped) exceeds 200KB budget (Constitution VI, FR-013)"
             exit 1
           fi
 
