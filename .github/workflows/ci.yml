@@ -68,6 +68,9 @@ jobs:
       - name: Build Storybook
         run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Storybook a11y audit (FR-019, QG-6)
         run: |
           npx concurrently -k -s first -n storybook,test \
