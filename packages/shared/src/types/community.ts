@@ -255,6 +255,8 @@ export interface ExportFileSchema {
   follows: { followers: string[]; following: string[] };
   blocks: string[];
   mutes: string[];
+  /** Spec 011: Linked social provider accounts */
+  linkedAccounts?: Array<{ provider: string; linkedAt: string }>;
 }
 
 export interface DeleteAccountRequest {

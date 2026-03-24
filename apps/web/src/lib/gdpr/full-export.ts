@@ -101,6 +101,16 @@ export async function processExport(exportId: string): Promise<ExportFileSchema>
     [userId],
   );
 
+  // Spec 011: Fetch linked social accounts for GDPR export
+  // provider_oid is excluded (internal identifier not meaningful to user)
+  const linkedAccountsResult = await db().query<{
+    provider: string;
+    linked_at: string;
+  }>(
+    `SELECT provider, linked_at FROM linked_accounts WHERE user_id = $1 ORDER BY linked_at`,
+    [userId],
+  );
+
   const exportData: ExportFileSchema = {
     profile,
     socialLinks: socialLinks.rows.map((r) => ({
@@ -120,6 +130,11 @@ export async function processExport(exportId: string): Promise<ExportFileSchema>
     },
     blocks: blocks.rows.map((r) => r.blocked_id),
     mutes: mutes.rows.map((r) => r.muted_id),
+    // Spec 011: Include linked social accounts
+    linkedAccounts: linkedAccountsResult.rows.map((r) => ({
+      provider: r.provider,
+      linkedAt: r.linked_at,
+    })),
   };
 
   // Also include permission data from Spec 004

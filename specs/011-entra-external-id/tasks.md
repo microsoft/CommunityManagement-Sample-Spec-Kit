@@ -34,11 +34,11 @@
 
 **Purpose**: Environment config, SQL migrations, and shared type definitions that all user stories depend on.
 
-- [ ] T001 Add `ENTRA_TENANT_DOMAIN` to the Zod env schema in `apps/web/src/lib/config.ts` — validates string min(1); add to `.env.example` with a placeholder comment
-- [ ] T002 [P] Create SQL migration `apps/web/src/db/migrations/011-001-add-social-auth-columns.sql` — adds `provider`, `provider_oid` (unique where not null), `avatar_url`, `updated_at` columns to the `users` table per data-model.md
-- [ ] T003 [P] Create SQL migration `apps/web/src/db/migrations/011-002-create-linked-accounts.sql` — creates `linked_accounts` table with `UNIQUE (provider_oid)` and `REFERENCES users(id) ON DELETE CASCADE` per data-model.md
-- [ ] T004 [P] Add `LinkedAccount`, `SocialUserProfile`, `SocialProvider`, `UserSocialFields`, `ProviderButtonConfig`, `SOCIAL_PROVIDERS` to `packages/shared/src/types/auth.ts` per `contracts/auth-types.ts`
-- [ ] T005 Re-export new auth types from `packages/shared/src/index.ts`
+- [X] T001 Add `ENTRA_TENANT_DOMAIN` to the Zod env schema in `apps/web/src/lib/config.ts` — validates string min(1); add to `.env.example` with a placeholder comment
+- [X] T002 [P] Create SQL migration `apps/web/src/db/migrations/011-001-add-social-auth-columns.sql` — adds `provider`, `provider_oid` (unique where not null), `avatar_url`, `updated_at` columns to the `users` table per data-model.md
+- [X] T003 [P] Create SQL migration `apps/web/src/db/migrations/011-002-create-linked-accounts.sql` — creates `linked_accounts` table with `UNIQUE (provider_oid)` and `REFERENCES users(id) ON DELETE CASCADE` per data-model.md
+- [X] T004 [P] Add `LinkedAccount`, `SocialUserProfile`, `SocialProvider`, `UserSocialFields`, `ProviderButtonConfig`, `SOCIAL_PROVIDERS` to `packages/shared/src/types/auth.ts` per `contracts/auth-types.ts`
+- [X] T005 Re-export new auth types from `packages/shared/src/index.ts`
 
 ---
 
@@ -52,7 +52,7 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T006 [P] Integration tests for `upsertSocialUser` in `apps/web/tests/integration/social-user.test.ts`:
+- [X] T006 [P] Integration tests for `upsertSocialUser` in `apps/web/tests/integration/social-user.test.ts`:
   - New user → inserts row in users table with correct fields
   - Existing user (same oid) → updates email, displayName, avatarUrl; does NOT create duplicate
   - Apple user with null email → inserts without error, email column is null
@@ -61,10 +61,10 @@
 
 ### Implementation for Foundational Phase
 
-- [ ] T007 Create `apps/web/src/lib/auth/social-user.ts`:
+- [X] T007 Create `apps/web/src/lib/auth/social-user.ts`:
   - `upsertSocialUser(profile: SocialUserProfile): Promise<string>` — INSERT ON CONFLICT (provider_oid) DO UPDATE, returns `users.id`
   - `getUserIdByOid(oid: string): Promise<string | null>` — checks `users.provider_oid` UNION `linked_accounts.provider_oid`, returns platform userId or null
-- [ ] T008 Update `apps/web/src/lib/auth/config.ts`:
+- [X] T008 Update `apps/web/src/lib/auth/config.ts`:
   - Change `MicrosoftEntraID` issuer from `login.microsoftonline.com/{ENTRA_TENANT_ID}/v2.0` to `https://${ENTRA_TENANT_DOMAIN}.ciamlogin.com/${ENTRA_TENANT_ID}/v2.0`
   - Add `signIn` callback: extract `profile.oid`, call `upsertSocialUser()`, return false if no oid
   - Update `jwt` callback: set `token.userId` from `profile.oid` (via `getUserIdByOid()` to map oid → platform UUID)
@@ -84,25 +84,25 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [P] Integration test for protected route redirect in `apps/web/tests/integration/login-redirect.test.ts`:
+- [X] T009 [P] Integration test for protected route redirect in `apps/web/tests/integration/login-redirect.test.ts`:
   - GET protected route with no session → 401 (API) or redirect to `/login?callbackUrl=...` (page)
   - GET `/login` → renders login page (200)
-- [ ] T010 [P] Integration test for account continuity in `apps/web/tests/integration/social-user.test.ts` (extend T006 file):
+- [X] T010 [P] Integration test for account continuity in `apps/web/tests/integration/social-user.test.ts` (extend T006 file):
   - Call `upsertSocialUser` twice with the same oid → second call returns the same userId
   - Verify only one row in users table after two upserts
 
 ### Implementation for User Stories 1, 2, 6
 
-- [ ] T011 Create login page `apps/web/src/app/login/page.tsx` — server component that resolves `callbackUrl` from search params (validates same-origin), passes `LoginPageConfig` to client sub-component
-- [ ] T012 Create `apps/web/src/components/auth/LoginButtons.tsx` — client component:
+- [X] T011 Create login page `apps/web/src/app/login/page.tsx` — server component that resolves `callbackUrl` from search params (validates same-origin), passes `LoginPageConfig` to client sub-component
+- [X] T012 Create `apps/web/src/components/auth/LoginButtons.tsx` — client component:
   - When `entraConfigured = false` (no `NEXT_PUBLIC_AUTH_CONFIGURED`): renders Spec 007 MockUserSwitcher
   - When `entraConfigured = true`: renders social provider buttons (Google, Facebook, Apple) using `SOCIAL_PROVIDERS` from shared types
   - Each button calls `signIn('microsoft-entra-id', { callbackUrl })` via next-auth/react
   - Loading state: disable button + show spinner during sign-in redirect
   - Error state: display i18n error message if `error` search param present
-- [ ] T013 Create `apps/web/src/components/auth/auth-messages.ts` — i18n message keys: `auth.signInWithGoogle`, `auth.signInWithFacebook`, `auth.signInWithApple`, `auth.signInError`, `auth.signInLoading`, `auth.loginPageTitle`, `auth.loginPageSubtitle`
-- [ ] T014 [P] Update NextAuth middleware (`apps/web/src/middleware.ts` or equivalent) to redirect unauthenticated users accessing page routes to `/login?callbackUrl=[path]`
-- [ ] T015 [P] Verify `callbackUrl` validation in login page server component: only allow same-origin URLs; redirect to `/` if `callbackUrl` is absent or external
+- [X] T013 Create `apps/web/src/components/auth/auth-messages.ts` — i18n message keys: `auth.signInWithGoogle`, `auth.signInWithFacebook`, `auth.signInWithApple`, `auth.signInError`, `auth.signInLoading`, `auth.loginPageTitle`, `auth.loginPageSubtitle`
+- [X] T014 [P] Update NextAuth middleware (`apps/web/src/middleware.ts` or equivalent) to redirect unauthenticated users accessing page routes to `/login?callbackUrl=[path]`
+- [X] T015 [P] Verify `callbackUrl` validation in login page server component: only allow same-origin URLs; redirect to `/` if `callbackUrl` is absent or external
 
 **Checkpoint**: Google sign-in works end-to-end. Unauthenticated users are redirected to `/login`. Returning users receive the same userId. User Stories 1, 2, and 6 are complete and independently testable.
 
@@ -120,15 +120,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T016 [P] Unit test for `upsertSocialUser` with `email = null` in `apps/web/tests/integration/social-user.test.ts` — verifies no DB error and user is created with null email (covers Apple relay email scenario)
-- [ ] T017 [P] Unit test for `getUserIdByOid` — Apple oid matches after second sign-in despite null email
+- [X] T016 [P] Unit test for `upsertSocialUser` with `email = null` in `apps/web/tests/integration/social-user.test.ts` — verifies no DB error and user is created with null email (covers Apple relay email scenario)
+- [X] T017 [P] Unit test for `getUserIdByOid` — Apple oid matches after second sign-in despite null email
 
 ### Implementation for User Stories 3, 4
 
-- [ ] T018 Verify `LoginButtons.tsx` already renders Facebook and Apple buttons via `SOCIAL_PROVIDERS` array (implemented in T012 — confirm all three are present and accessible)
-- [ ] T019 Verify `upsertSocialUser` handles `null` email without error (confirmed by T016 test) — no additional code changes if T007 handles nullable email
-- [ ] T020 Add Apple-specific display name fallback: if `profile.name` is null (Apple sometimes omits it after first consent), use `profile.email` prefix or "Apple User" as the default display name in `upsertSocialUser`
-- [ ] T021 [P] Accessibility audit of `LoginButtons.tsx`: verify all three provider buttons have accessible labels (`aria-label` includes provider name), meet 44×44 px touch target, and pass axe-core
+- [X] T018 Verify `LoginButtons.tsx` already renders Facebook and Apple buttons via `SOCIAL_PROVIDERS` array (implemented in T012 — confirm all three are present and accessible)
+- [X] T019 Verify `upsertSocialUser` handles `null` email without error (confirmed by T016 test) — no additional code changes if T007 handles nullable email
+- [X] T020 Add Apple-specific display name fallback: if `profile.name` is null (Apple sometimes omits it after first consent), use `profile.email` prefix or "Apple User" as the default display name in `upsertSocialUser`
+- [X] T021 [P] Accessibility audit of `LoginButtons.tsx`: verify all three provider buttons have accessible labels (`aria-label` includes provider name), meet 44×44 px touch target, and pass axe-core
 
 **Checkpoint**: All three social providers (Google, Facebook, Apple) produce valid sessions. User Stories 3 and 4 are complete.
 
@@ -144,37 +144,37 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T022 [P] Integration tests for `POST /api/auth/link` in `apps/web/tests/integration/link-account.test.ts`:
+- [X] T022 [P] Integration tests for `POST /api/auth/link` in `apps/web/tests/integration/link-account.test.ts`:
   - Unauthenticated request → 401
   - Valid link with unused oid → 200 + linked_accounts row created
   - Same oid linked to same userId again → 200 (idempotent, no second row)
   - Same oid already linked to different userId → 409 Conflict
   - Invalid/expired linkToken → 422
   - Non-owner attempt (user A tries to link to user B's account via tampered token) → 401/403
-- [ ] T023 Integration test for cross-provider login after linking in `apps/web/tests/integration/social-user.test.ts`:
+- [X] T023 Integration test for cross-provider login after linking in `apps/web/tests/integration/social-user.test.ts`:
   - Link Apple oid to user with Google oid
   - `getUserIdByOid(appleOid)` → returns the Google user's platform userId
 
 ### Implementation for User Story 5
 
-- [ ] T024 Create `apps/web/src/app/api/auth/link/route.ts` — `POST /api/auth/link`:
+- [X] T024 Create `apps/web/src/app/api/auth/link/route.ts` — `POST /api/auth/link`:
   - `requireAuth()` guard → 401 if unauthenticated
   - Zod validation of request body (`LinkAccountRequestBody` from contracts)
   - Verify `linkToken` against server-side session storage → 422 if invalid/expired
   - Check `linked_accounts` for `provider_oid` uniqueness → 409 if already linked to different user
   - INSERT into `linked_accounts` (idempotent: ON CONFLICT DO NOTHING for same user+oid)
   - Return `LinkAccountSuccessResponse`
-- [ ] T025 Create `apps/web/src/app/api/auth/link/init/route.ts` — `GET /api/auth/link/init`:
+- [X] T025 Create `apps/web/src/app/api/auth/link/init/route.ts` — `GET /api/auth/link/init`:
   - `requireAuth()` guard
   - Generate UUID link token, store in user session with 10-minute expiry
   - Return `LinkInitResponse`
-- [ ] T026 Create `apps/web/src/app/api/auth/link/[id]/route.ts` — `DELETE /api/auth/link/:id`:
+- [X] T026 Create `apps/web/src/app/api/auth/link/[id]/route.ts` — `DELETE /api/auth/link/:id`:
   - `requireAuth()` guard
   - Verify the linked_accounts row belongs to the authenticated user → 403 if not
   - Guard against removing last identity: count (users.provider_oid + linked_accounts rows) — if 1, return 409
   - DELETE from linked_accounts
   - Return `UnlinkAccountSuccessResponse`
-- [ ] T027 Create `apps/web/src/components/auth/LinkedAccountsList.tsx` — profile settings UI:
+- [X] T027 Create `apps/web/src/components/auth/LinkedAccountsList.tsx` — profile settings UI:
   - Fetch `/api/profile/linked-accounts` (or derive from session/page props)
   - List linked accounts with provider icon and "Remove" button
   - "Add account" button: calls `/api/auth/link/init` then `signIn()` with link callback
@@ -192,28 +192,28 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T028 [P] Integration test for GDPR deletion in `apps/web/tests/integration/gdpr-social.test.ts`:
+- [X] T028 [P] Integration test for GDPR deletion in `apps/web/tests/integration/gdpr-social.test.ts`:
   - Seed user with provider_oid, email, avatar_url, and linked_accounts rows
   - Call GDPR deletion function
   - Verify `linked_accounts` rows are deleted
   - Verify `users.provider_oid`, `users.avatar_url`, `users.email`, `users.display_name` are anonymised
-- [ ] T029 [P] Integration test for GDPR export in `apps/web/tests/integration/gdpr-social.test.ts`:
+- [X] T029 [P] Integration test for GDPR export in `apps/web/tests/integration/gdpr-social.test.ts`:
   - Seed user with linked accounts
   - Call GDPR export function
   - Verify export JSON includes `linked_accounts` array and social fields from `users`
 
 ### Implementation for Phase 6
 
-- [ ] T030 Update GDPR deletion service to include:
+- [X] T030 Update GDPR deletion service to include:
   - `DELETE FROM linked_accounts WHERE user_id = $userId`
   - `UPDATE users SET provider_oid = NULL, avatar_url = NULL, email = '[deleted]', display_name = '[deleted]', provider = NULL WHERE id = $userId`
-- [ ] T031 Update GDPR data-export service to include `linked_accounts` rows and social fields from `users` in the export JSON
-- [ ] T032 [P] i18n audit: verify all strings in `LoginButtons.tsx`, `LinkedAccountsList.tsx`, and error messages use keys from `auth-messages.ts` — zero raw string literals
-- [ ] T033 [P] Accessibility audit of login page and linked accounts UI:
+- [X] T031 Update GDPR data-export service to include `linked_accounts` rows and social fields from `users` in the export JSON
+- [X] T032 [P] i18n audit: verify all strings in `LoginButtons.tsx`, `LinkedAccountsList.tsx`, and error messages use keys from `auth-messages.ts` — zero raw string literals
+- [X] T033 [P] Accessibility audit of login page and linked accounts UI:
   - Run axe-core → zero violations
   - Verify all provider buttons: `aria-label` set, 44×44 px touch target
   - Verify error messages announced via `role="alert"` or `aria-live`
-- [ ] T034 [P] Update `specs/constitution.md` Principle–Spec Alignment Matrix to include Spec 011 row
+- [X] T034 [P] Update `specs/constitution.md` Principle–Spec Alignment Matrix to include Spec 011 row
 
 **Checkpoint**: All GDPR, i18n, and accessibility requirements met. Spec 011 is fully complete.
 
