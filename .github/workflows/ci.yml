@@ -35,14 +35,30 @@ jobs:
 
       - name: Check bundle size
         run: |
-          # Check total size of initial JS chunks (first-load)
-          TOTAL=$(find apps/web/.next/static/chunks -name "*.js" -type f -exec wc -c {} + 2>/dev/null | tail -1 | awk '{print $1}')
-          TOTAL_KB=$((TOTAL / 1024))
-          echo "Total JS chunk size: ${TOTAL_KB}KB"
-          if [ "$TOTAL_KB" -gt 200 ]; then
-            echo "::error::JS bundle size (${TOTAL_KB}KB) exceeds 200KB budget (Constitution VI, FR-013)"
-            exit 1
-          fi
+          # Check gzipped size of initial (first-load) JS chunks only.
+          # Uses build-manifest.json rootMainFiles — these are the chunks loaded
+          # on every page navigation, matching the Constitution VI 200KB compressed budget.
+          node -e "
+            const fs = require('fs');
+            const zlib = require('zlib');
+            const path = require('path');
+            const manifest = JSON.parse(fs.readFileSync('apps/web/.next/build-manifest.json', 'utf8'));
+            const initial = manifest.rootMainFiles || [];
+            let totalGz = 0;
+            for (const rel of initial) {
+              const p = path.join('apps/web/.next', rel);
+              if (fs.existsSync(p)) {
+                const buf = fs.readFileSync(p);
+                totalGz += zlib.gzipSync(buf, { level: 9 }).length;
+              }
+            }
+            const kb = Math.ceil(totalGz / 1024);
+            console.log('Initial JS bundle (gzipped): ' + kb + 'KB');
+            if (kb > 200) {
+              console.error('::error::Initial JS bundle (' + kb + 'KB gzipped) exceeds 200KB budget (Constitution VI)');
+              process.exit(1);
+            }
+          "
 
       - name: Run token tests
         run: npm run test -w @acroyoga/tokens

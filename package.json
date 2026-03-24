@@ -32,7 +32,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "@tailwindcss/oxide-win32-x64-msvc": "^4.2.2",
     "lightningcss-win32-x64-msvc": "^1.32.0"
   }

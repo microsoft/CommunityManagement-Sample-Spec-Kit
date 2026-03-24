@@ -12,10 +12,19 @@
  */
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { signIn } from "next-auth/react";
 import { SOCIAL_PROVIDERS } from "@acroyoga/shared/types/auth";
 import { AUTH_MESSAGES } from "./auth-messages";
 import type { LoginPageConfig } from "@acroyoga/shared/types/auth";
+
+const MockUserSwitcher = dynamic(
+  () =>
+    import("@/components/dev/MockUserSwitcher").then(
+      (m) => ({ default: m.MockUserSwitcher }),
+    ),
+  { ssr: false },
+);
 
 interface LoginButtonsProps extends LoginPageConfig {
   /** Optional error code from the `error` search param (NextAuth error) */
@@ -93,7 +102,6 @@ export default function LoginButtons({
 
   // Dev environment: show mock user switcher
   if (!entraConfigured) {
-    const MockUserSwitcher = require("@/components/dev/MockUserSwitcher").default;
     return <MockUserSwitcher />;
   }
 
