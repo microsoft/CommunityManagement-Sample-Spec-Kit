@@ -55,7 +55,7 @@ export function MockUserSwitcher() {
     }
   };
 
-  if (loading) return null;
+  if (loading || users.length === 0) return null;
 
   const displayName = activeUser?.name ?? "Anonymous";
   const displayRole = activeUser?.displayRole ?? "Visitor";

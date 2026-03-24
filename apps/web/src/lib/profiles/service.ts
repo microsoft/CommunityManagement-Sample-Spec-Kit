@@ -188,6 +188,10 @@ export async function upsertProfile(
     fields.push(`avatar_url = $${idx++}`);
     values.push(data.avatarUrl);
   }
+  if (data.directoryVisible !== undefined) {
+    fields.push(`directory_visible = $${idx++}`);
+    values.push(data.directoryVisible);
+  }
 
   if (fields.length === 0) {
     const existing = await db().query<ProfileRow>(

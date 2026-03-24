@@ -50,6 +50,7 @@ export async function processExport(exportId: string): Promise<ExportFileSchema>
         homeCityId: profileResult.rows[0].home_city_id,
         defaultRole: profileResult.rows[0].default_role,
         avatarUrl: profileResult.rows[0].avatar_url,
+        directoryVisible: profileResult.rows[0].directory_visible,
         createdAt: profileResult.rows[0].created_at,
         updatedAt: profileResult.rows[0].updated_at,
       }

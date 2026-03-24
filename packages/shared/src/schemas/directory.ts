@@ -1,17 +1,19 @@
 import { z } from "zod";
 
 export const directorySearchSchema = z.object({
-  q: z.string().max(200).optional(),
-  cityId: z.string().uuid().optional(),
+  search: z.string().max(200).optional(),
+  city: z.string().uuid().optional(),
+  country: z.string().max(255).optional(),
+  continent: z.string().max(100).optional(),
   role: z.enum(["base", "flyer", "hybrid"]).optional(),
-  verifiedTeacher: z
+  teachersOnly: z
     .enum(["true", "false"])
     .transform((v) => v === "true")
     .optional(),
-  relationship: z.enum(["following", "followers", "friends"]).optional(),
-  sort: z.enum(["name", "proximity"]).optional(),
+  relationship: z.enum(["following", "followers", "friends", "blocked"]).optional(),
+  sort: z.enum(["alphabetical", "recent", "proximity"]).optional(),
   cursor: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(50).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 export const setDirectoryVisibilitySchema = z.object({

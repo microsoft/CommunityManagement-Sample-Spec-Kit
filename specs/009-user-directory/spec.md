@@ -2,7 +2,7 @@
 
 **Feature Branch**: `009-user-directory`  
 **Created**: 2026-03-19  
-**Status**: Draft  
+**Status**: In Progress (core service, types, schemas, shared-ui, tests merged to main 2026-03-22)  
 **Input**: User description: "A comprehensive user directory for the AcroYoga Community platform that allows members to discover, search, filter, and browse other community members. The directory builds on top of existing user profile infrastructure (Spec 002) and permissions (Spec 004) to provide a discovery layer."
 
 ## User Scenarios & Testing *(mandatory)*
@@ -259,7 +259,7 @@ A member selects the "People near me" sort/filter option. Results are grouped by
 - **VI (Performance)**: Cursor-based pagination, no N+1 queries, database indexes on filter columns.
 - **VIII (i18n)**: All user-facing strings extractable for translation.
 - **IX (Scoped Permissions)**: Directory is read-only for members; admin visibility override scoped out for v1 (members self-manage via opt-in toggle).
-- **XIII (WSL)**: All build/test commands via WSL.
+- **XIII (Dev Environment)**: All build/test commands via Codespaces.
 
 ## Success Criteria *(mandatory)*
 

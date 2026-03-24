@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { DirectoryEntry, DirectorySearchResponse } from "@acroyoga/shared/types/directory";
+import type { DirectoryEntry, DirectoryResponse } from "@acroyoga/shared/types/directory";
 import { DIRECTORY_MESSAGES as msg } from "./directory-messages";
 
 const DEBOUNCE_MS = 300;
@@ -13,9 +13,11 @@ const RELATIONSHIP_OPTIONS = [
   { value: "friends", label: msg.tabFriends },
   { value: "following", label: msg.tabFollowing },
   { value: "followers", label: msg.tabFollowers },
+  { value: "blocked", label: msg.tabBlocked },
 ] as const;
 const SORT_OPTIONS = [
-  { value: "name", label: msg.sortName },
+  { value: "alphabetical", label: msg.sortName },
+  { value: "recent", label: msg.sortRecent },
   { value: "proximity", label: msg.sortNearMe },
 ] as const;
 
@@ -23,16 +25,29 @@ const SOCIAL_ICONS: Record<string, string> = {
   instagram: "IG",
   youtube: "YT",
   facebook: "FB",
-  website: "🌐",
+  website: "\uD83C\uDF10",
+  tiktok: "TT",
+  twitter_x: "X",
+  linkedin: "in",
+  threads: "@",
 };
 
 function MemberCard({
   entry,
-  isOwn,
+  onFollow,
+  onUnfollow,
+  onBlock,
+  onUnblock,
 }: {
   entry: DirectoryEntry;
-  isOwn: boolean;
+  onFollow?: (userId: string) => void;
+  onUnfollow?: (userId: string) => void;
+  onBlock?: (userId: string) => void;
+  onUnblock?: (userId: string) => void;
 }) {
+  const isFollowing = entry.relationshipStatus === "following" || entry.relationshipStatus === "friend";
+  const isBlocked = entry.relationshipStatus === "blocked";
+
   return (
     <article
       className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-3 hover:shadow-md transition-shadow"
@@ -62,8 +77,10 @@ function MemberCard({
           <h2 className="text-sm font-semibold text-gray-900 truncate">
             {entry.displayName ?? msg.unnamedMember}
           </h2>
-          {entry.homeCityName && (
-            <p className="text-xs text-gray-500 truncate">{entry.homeCityName}</p>
+          {(entry.homeCity || entry.homeCountry) && (
+            <p className="text-xs text-gray-500 truncate">
+              {[entry.homeCity, entry.homeCountry].filter(Boolean).join(", ")}
+            </p>
           )}
           <div className="flex flex-wrap gap-1 mt-1">
             {entry.defaultRole && (
@@ -76,22 +93,18 @@ function MemberCard({
                 {msg.verifiedTeacher}
               </span>
             )}
-            {entry.relationship !== "none" && entry.relationship !== "self" && (
+            {entry.relationshipStatus !== "none" && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 capitalize">
-                {entry.relationship === "friend" ? "Friends" : entry.relationship}
+                {entry.relationshipStatus === "friend" ? "Friends" : entry.relationshipStatus === "follows_me" ? "Follows you" : entry.relationshipStatus}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {entry.bio && (
-        <p className="text-xs text-gray-600 line-clamp-2">{entry.bio}</p>
-      )}
-
-      {entry.socialLinks.length > 0 && (
+      {entry.visibleSocialLinks.length > 0 && (
         <ul className="flex gap-2 list-none p-0 m-0" aria-label="Social links">
-          {entry.socialLinks.map((link) => (
+          {entry.visibleSocialLinks.map((link) => (
             <li key={link.platform}>
               <a
                 href={link.url}
@@ -107,29 +120,45 @@ function MemberCard({
         </ul>
       )}
 
-      {isOwn && (
-        <div className="mt-auto pt-2 border-t border-gray-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">
-              Profile: {entry.profileCompleteness}% complete
-            </span>
-            {entry.profileCompleteness < 100 && (
-              <Link
-                href="/settings/profile"
-                className="text-xs text-indigo-600 hover:underline"
+      <div className="flex gap-2 mt-auto pt-1 border-t border-gray-100">
+        {isBlocked ? (
+          <button
+            onClick={() => onUnblock?.(entry.userId)}
+            className="text-xs text-red-600 hover:text-red-800 hover:underline"
+            aria-label={`${msg.unblock} ${entry.displayName ?? "member"}`}
+          >
+            {msg.unblock}
+          </button>
+        ) : (
+          <>
+            {isFollowing ? (
+              <button
+                onClick={() => onUnfollow?.(entry.userId)}
+                className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                aria-label={`${msg.unfollow} ${entry.displayName ?? "member"}`}
               >
-                {msg.completeProfile}
-              </Link>
+                {msg.unfollow}
+              </button>
+            ) : (
+              <button
+                onClick={() => onFollow?.(entry.userId)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                aria-label={`${msg.follow} ${entry.displayName ?? "member"}`}
+              >
+                {msg.follow}
+              </button>
             )}
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1 mt-1" role="progressbar" aria-valuenow={entry.profileCompleteness} aria-valuemin={0} aria-valuemax={100}>
-            <div
-              className="bg-indigo-500 h-1 rounded-full transition-all"
-              style={{ width: `${entry.profileCompleteness}%` }}
-            />
-          </div>
-        </div>
-      )}
+            <button
+              onClick={() => onBlock?.(entry.userId)}
+              className="text-xs text-gray-400 hover:text-red-600 hover:underline ml-auto"
+              aria-label={`${msg.block} ${entry.displayName ?? "member"}`}
+            >
+              {msg.block}
+            </button>
+          </>
+        )}
+      </div>
+
     </article>
   );
 }
@@ -137,7 +166,7 @@ function MemberCard({
 export default function DirectoryPage() {
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [total, setTotal] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,24 +175,14 @@ export default function DirectoryPage() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [role, setRole] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [continent, setContinent] = useState("");
   const [relationship, setRelationship] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [sort, setSort] = useState("name");
+  const [sort, setSort] = useState("alphabetical");
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // My own userId (from session — we compare relationship === 'self')
-  const [myUserId, setMyUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Fetch session info to know which card is "own"
-    fetch("/api/profiles/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.userId) setMyUserId(data.userId);
-      })
-      .catch(() => null);
-  }, []);
 
   // Debounce search query
   useEffect(() => {
@@ -176,18 +195,34 @@ export default function DirectoryPage() {
     };
   }, [query]);
 
+  const hasActiveFilters = !!(debouncedQuery || role || city || country || continent || relationship || verifiedOnly);
+
+  const clearAllFilters = useCallback(() => {
+    setQuery("");
+    setDebouncedQuery("");
+    setRole("");
+    setCity("");
+    setCountry("");
+    setContinent("");
+    setRelationship("");
+    setVerifiedOnly(false);
+  }, []);
+
   const buildParams = useCallback(
     (cursor?: string) => {
       const params = new URLSearchParams();
-      if (debouncedQuery) params.set("q", debouncedQuery);
+      if (debouncedQuery) params.set("search", debouncedQuery);
       if (role) params.set("role", role);
+      if (city) params.set("city", city);
+      if (country) params.set("country", country);
+      if (continent) params.set("continent", continent);
       if (relationship) params.set("relationship", relationship);
-      if (verifiedOnly) params.set("verifiedTeacher", "true");
-      if (sort !== "name") params.set("sort", sort);
+      if (verifiedOnly) params.set("teachersOnly", "true");
+      if (sort !== "alphabetical") params.set("sort", sort);
       if (cursor) params.set("cursor", cursor);
       return params;
     },
-    [debouncedQuery, role, relationship, verifiedOnly, sort],
+    [debouncedQuery, role, city, country, continent, relationship, verifiedOnly, sort],
   );
 
   const fetchDirectory = useCallback(async () => {
@@ -201,10 +236,10 @@ export default function DirectoryPage() {
         return;
       }
       if (!res.ok) throw new Error("Failed to load directory");
-      const data = (await res.json()) as DirectorySearchResponse;
+      const data = (await res.json()) as DirectoryResponse;
       setEntries(data.entries);
       setNextCursor(data.nextCursor);
-      setTotal(data.total);
+      setHasNextPage(data.hasNextPage);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -219,9 +254,10 @@ export default function DirectoryPage() {
       const params = buildParams(nextCursor);
       const res = await fetch(`/api/directory?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load more");
-      const data = (await res.json()) as DirectorySearchResponse;
+      const data = (await res.json()) as DirectoryResponse;
       setEntries((prev) => [...prev, ...data.entries]);
       setNextCursor(data.nextCursor);
+      setHasNextPage(data.hasNextPage);
     } catch (err) {
       console.error(err);
     } finally {
@@ -233,16 +269,79 @@ export default function DirectoryPage() {
     void fetchDirectory();
   }, [fetchDirectory]);
 
+  const handleFollow = useCallback(async (targetUserId: string) => {
+    // Optimistic update
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.userId === targetUserId
+          ? { ...e, relationshipStatus: e.relationshipStatus === "follows_me" ? "friend" : "following" }
+          : e,
+      ),
+    );
+    try {
+      await fetch("/api/follows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ followeeId: targetUserId }),
+      });
+    } catch {
+      void fetchDirectory();
+    }
+  }, [fetchDirectory]);
+
+  const handleUnfollow = useCallback(async (targetUserId: string) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.userId === targetUserId
+          ? { ...e, relationshipStatus: e.relationshipStatus === "friend" ? "follows_me" : "none" }
+          : e,
+      ),
+    );
+    try {
+      await fetch(`/api/follows/${targetUserId}`, { method: "DELETE" });
+    } catch {
+      void fetchDirectory();
+    }
+  }, [fetchDirectory]);
+
+  const handleBlock = useCallback(async (targetUserId: string) => {
+    if (!confirm(msg.blockConfirm)) return;
+    // Optimistic: remove from list
+    setEntries((prev) => prev.filter((e) => e.userId !== targetUserId));
+    try {
+      await fetch("/api/blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blockedId: targetUserId }),
+      });
+    } catch {
+      void fetchDirectory();
+    }
+  }, [fetchDirectory]);
+
+  const handleUnblock = useCallback(async (targetUserId: string) => {
+    setEntries((prev) => prev.filter((e) => e.userId !== targetUserId));
+    try {
+      await fetch(`/api/blocks/${targetUserId}`, { method: "DELETE" });
+    } catch {
+      void fetchDirectory();
+    }
+  }, [fetchDirectory]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <a
+        href="#directory-results"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:rounded focus:shadow-lg focus:text-indigo-600 focus:font-medium"
+      >
+        Skip to directory results
+      </a>
+      <div className="sr-only" role="status" aria-live="polite">
+        {!loading && !error && `${entries.length} members shown`}
+      </div>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Community Directory</h1>
-          {!loading && !error && (
-            <p className="text-sm text-gray-500 mt-0.5">
-              {total} {total === 1 ? "member" : "members"} found
-            </p>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">{msg.pageTitle}</h1>
         </div>
       </div>
 
@@ -297,16 +396,53 @@ export default function DirectoryPage() {
           ))}
         </select>
 
+        <input
+          type="text"
+          placeholder={msg.filterCity}
+          value={city}
+          onChange={(e) => { setCity(e.target.value); setCountry(""); setContinent(""); }}
+          aria-label={msg.filterCity}
+          className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+        />
+
+        <input
+          type="text"
+          placeholder={msg.filterCountry}
+          value={country}
+          onChange={(e) => { setCountry(e.target.value); setCity(""); setContinent(""); }}
+          aria-label={msg.filterCountry}
+          className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+        />
+
+        <input
+          type="text"
+          placeholder={msg.filterContinent}
+          value={continent}
+          onChange={(e) => { setContinent(e.target.value); setCity(""); setCountry(""); }}
+          aria-label={msg.filterContinent}
+          className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+        />
+
         <label className="flex items-center gap-2 text-sm text-gray-700 px-1 cursor-pointer">
           <input
             type="checkbox"
             checked={verifiedOnly}
             onChange={(e) => setVerifiedOnly(e.target.checked)}
-            aria-label="Show verified teachers only"
+            aria-label={msg.teachersOnly}
             className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
-          Verified teachers only
+          {msg.teachersOnly}
         </label>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline px-2 py-2"
+            aria-label={msg.clearAll}
+          >
+            {msg.clearAll}
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -354,17 +490,20 @@ export default function DirectoryPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div id="directory-results" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" role="region" aria-label="Directory results">
             {entries.map((entry) => (
               <MemberCard
                 key={entry.userId}
                 entry={entry}
-                isOwn={entry.userId === myUserId || entry.relationship === "self"}
+                onFollow={(id) => void handleFollow(id)}
+                onUnfollow={(id) => void handleUnfollow(id)}
+                onBlock={(id) => void handleBlock(id)}
+                onUnblock={(id) => void handleUnblock(id)}
               />
             ))}
           </div>
 
-          {nextCursor && (
+          {hasNextPage && nextCursor && (
             <div className="mt-8 flex justify-center">
               <button
                 onClick={() => void loadMore()}

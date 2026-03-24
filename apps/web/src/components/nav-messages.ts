@@ -7,6 +7,7 @@ export const NAV_MESSAGES = {
   brandName: "AcroYoga Community",
   navHome: "Home",
   navEvents: "Events",
+  navDirectory: "Directory",
   navTeachers: "Teachers",
   navProfile: "Profile",
   navSettings: "Settings",

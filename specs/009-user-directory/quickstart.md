@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - Node.js 22+ with npm 10+
-- WSL (all commands run in WSL — Constitution XIII)
+- GitHub Codespaces or Linux environment (Constitution XIII)
 - Specs 002, 004, and 005 migrations already applied (tables: `user_profiles`, `social_links`, `follows`, `blocks`, `mutes`, `geography`, `teacher_profiles`)
 
 ## Setup

@@ -122,6 +122,7 @@ export function findUserById(id: string): SampleUser | undefined {
 
 export function isMockAuthEnabled(): boolean {
   return (
-    process.env.NODE_ENV === "development" && !process.env.ENTRA_CLIENT_ID
+    (process.env.NODE_ENV === "development" && !process.env.ENTRA_CLIENT_ID) ||
+    process.env.MOCK_AUTH_ENABLED === "true"
   );
 }

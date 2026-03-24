@@ -3,6 +3,7 @@ export * from "./community";
 export * from "./credits";
 export * from "./directory";
 export * from "./events";
+export * from "./health";
 export * from "./payments";
 export * from "./permissions";
 export * from "./recurring";

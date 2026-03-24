@@ -1,60 +1,86 @@
 // User Directory feature types — Spec 009
 
-import type { DefaultRole, Relationship, SocialLink } from "./community";
+import type { DefaultRole, SocialPlatform } from "./community";
 
-export type DirectoryRelationshipFilter = "following" | "followers" | "friends";
-export type DirectorySortOrder = "name" | "proximity";
+export type DirectorySortMode = 'alphabetical' | 'recent' | 'proximity';
+export type RelationshipFilter = 'friends' | 'following' | 'followers' | 'blocked';
+export type RelationshipStatus = 'friend' | 'following' | 'follows_me' | 'none' | 'blocked';
+
+export interface VisibleSocialLink {
+  platform: SocialPlatform;
+  url: string;
+}
 
 /** A single entry in the community directory. */
 export interface DirectoryEntry {
+  id: string;
   userId: string;
   displayName: string | null;
-  bio: string | null;
-  homeCityName: string | null;
-  defaultRole: DefaultRole | null;
   avatarUrl: string | null;
-  /** Social links filtered to the viewer's relationship level. */
-  socialLinks: SocialLink[];
-  /** Viewer's relationship to this member. */
-  relationship: Relationship;
-  /** True when this user has an active verified teacher badge. */
+  defaultRole: DefaultRole | null;
+  /** Human-readable city name or null if not set */
+  homeCity: string | null;
+  /** Human-readable country name or null */
+  homeCountry: string | null;
+  /** true if user has badge_status = 'verified' in teacher_profiles */
   isVerifiedTeacher: boolean;
-  /** Profile completeness score 0–100. */
-  profileCompleteness: number;
-  /** ISO timestamp when the user joined (users.created_at). */
-  joinedAt: string;
+  /** Social links filtered by the viewer's relationship to this user */
+  visibleSocialLinks: VisibleSocialLink[];
+  /** Viewer's relationship to this directory entry */
+  relationshipStatus: RelationshipStatus;
+  /** ISO 8601 — account creation date */
+  createdAt: string;
 }
 
 /** Query parameters for GET /api/directory */
-export interface DirectorySearchParams {
-  /** Free-text search on display_name and bio (ILIKE). */
-  q?: string;
-  /** Filter by home city UUID. */
-  cityId?: string;
-  /** Filter by AcroYoga role. */
-  role?: DefaultRole;
-  /** When true, only show verified teachers. */
-  verifiedTeacher?: boolean;
-  /** Filter by viewer's relationship to members. */
-  relationship?: DirectoryRelationshipFilter;
-  /** Sort order. Defaults to 'name'. */
-  sort?: DirectorySortOrder;
-  /** Opaque cursor for the next page (base64-encoded). */
+export interface DirectoryQueryParams {
+  /** Opaque cursor for pagination (base64-encoded). Omit for first page. */
   cursor?: string;
-  /** Page size. Default 20, max 50. */
-  limit?: number;
+  /** Number of results per page. Default 20, max 100. */
+  pageSize?: number;
+  /** Sort mode. Default 'alphabetical'. */
+  sort?: DirectorySortMode;
+  /** Filter by acro role */
+  role?: DefaultRole;
+  /** Filter by city key (from geography table) */
+  city?: string;
+  /** Filter by country key */
+  country?: string;
+  /** Filter by continent key */
+  continent?: string;
+  /** Filter to verified teachers only */
+  teachersOnly?: boolean;
+  /** Filter by relationship to the viewer */
+  relationship?: RelationshipFilter;
+  /** Text search on display name (case-insensitive prefix match) */
+  search?: string;
 }
 
 /** Response for GET /api/directory */
-export interface DirectorySearchResponse {
+export interface DirectoryResponse {
   entries: DirectoryEntry[];
-  /** Cursor to pass as `cursor` for the next page, or null if no more pages. */
+  /** Opaque cursor for the next page. Null if no more results. */
   nextCursor: string | null;
-  /** Total matching members (without pagination). */
-  total: number;
+  /** Whether more results exist beyond this page */
+  hasNextPage: boolean;
+  /** Total count of results matching the current filters (optional) */
+  totalCount?: number;
 }
 
 /** Request body for PATCH /api/directory/visibility */
 export interface SetDirectoryVisibilityRequest {
   visible: boolean;
+}
+
+/** Profile completeness — computed at render time, not stored (FR-026, FR-027) */
+export interface ProfileCompleteness {
+  /** 0–100 in increments of 20 */
+  percentage: number;
+  fields: {
+    avatar: boolean;
+    displayName: boolean;
+    bio: boolean;
+    homeCity: boolean;
+    socialLink: boolean;
+  };
 }

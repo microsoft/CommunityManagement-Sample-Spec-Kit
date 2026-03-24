@@ -7,7 +7,7 @@ MUST follow these rules. Violations will be caught by CI and rejected.
 
 1. **Find the relevant spec** — Check `specs/` for the feature spec matching
    your issue. Read spec.md, plan.md, tasks.md, and data-model.md before coding.
-2. **Read the constitution** — `specs/constitution.md` (v1.4.0) defines 13
+2. **Read the constitution** — `specs/constitution.md` (v1.5.0) defines 14
    mandatory architectural principles. Key constraints:
    - **I. API-First**: All mutations go through API routes, never direct DB from components.
      Response shapes live in `packages/shared/src/types/`. Error responses use `@/lib/errors`.

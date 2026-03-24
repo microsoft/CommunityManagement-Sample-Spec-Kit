@@ -31,6 +31,8 @@
 - [x] **VIII. Internationalisation**: All login page strings in `auth-messages.ts` (i18n keys). No raw string literals. Error messages use i18n keys.
 - [x] **IX. Scoped Permissions**: No changes to permission system. New users get `member` role by default (no grants). `withPermission()` unchanged.
 - [x] **XI. Resource Ownership**: Account linking verifies caller owns the account. DELETE `/api/auth/link/:id` verifies the linked_account belongs to the authenticated user.
+- [x] **XIII. Development Environment**: No platform-specific tooling. Codespaces-compatible. Mock auth (Spec 007) unchanged.
+- [x] **XIV. Managed Identity**: Entra External ID in production uses `DefaultAzureCredential`-compatible token flow. No shared keys or connection strings introduced for Azure services. `AZURE_CLIENT_ID` env var documented.
 - [x] **QG-10**: `POST /api/auth/link` has integration test proving 401 for unauthenticated and 403 for non-owner.
 - [x] **QG-11**: All routes use `getServerSession()` / `requireAuth()`. No client-injectable headers. Verified in auth config.
 - [x] **QG-12**: `linked_accounts` references `users.id`. GDPR deletion integration test covers new tables. New PII fields covered in export test.

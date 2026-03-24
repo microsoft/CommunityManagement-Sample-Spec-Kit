@@ -9,6 +9,7 @@ import { NAV_MESSAGES as msg } from "./nav-messages";
 const navLinks = [
   { href: "/", label: msg.navHome },
   { href: "/events", label: msg.navEvents },
+  { href: "/directory", label: msg.navDirectory },
   { href: "/teachers", label: msg.navTeachers },
   { href: "/profile", label: msg.navProfile },
   { href: "/settings", label: msg.navSettings },

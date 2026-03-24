@@ -6,18 +6,19 @@ export const updateProfileSchema = z.object({
   homeCityId: z.string().uuid().optional(),
   defaultRole: z.enum(["base", "flyer", "hybrid"]).optional(),
   avatarUrl: z.string().url().max(2048).optional(),
+  directoryVisible: z.boolean().optional(),
 });
 
 export const setSocialLinksSchema = z.object({
   links: z
     .array(
       z.object({
-        platform: z.enum(["facebook", "instagram", "youtube", "website"]),
+        platform: z.enum(["facebook", "instagram", "youtube", "website", "tiktok", "twitter_x", "linkedin", "threads"]),
         url: z.string().url().max(2048),
         visibility: z.enum(["everyone", "followers", "friends", "hidden"]),
       }),
     )
-    .max(4)
+    .max(8)
     .refine(
       (links) => {
         const platforms = links.map((l) => l.platform);

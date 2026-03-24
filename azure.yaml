@@ -1,0 +1,10 @@
+name: acroyoga-community
+metadata:
+  template: acroyoga-community
+services:
+  web:
+    project: ./apps/web
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      context: .

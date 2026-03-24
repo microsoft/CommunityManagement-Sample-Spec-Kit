@@ -11,8 +11,41 @@ export interface DbClient {
 
 let devDb: DbClient | null = null;
 
+/**
+ * Returns a token-fetching password function for Azure Entra auth.
+ * Used when AZURE_CLIENT_ID and PGHOST are set (deployed environment).
+ */
+async function getEntraPassword(): Promise<string> {
+  const { DefaultAzureCredential } = await import("@azure/identity");
+  const credential = new DefaultAzureCredential({
+    managedIdentityClientId: process.env.AZURE_CLIENT_ID,
+  });
+  const token = await credential.getToken(
+    "https://ossrdbms-aad.database.windows.net/.default",
+  );
+  return token.token;
+}
+
 export function getDb(): DbClient {
   const dbUrl = process.env.DATABASE_URL;
+  const pgHost = process.env.PGHOST;
+  const azureClientId = process.env.AZURE_CLIENT_ID;
+
+  // Managed Identity token auth (deployed environment)
+  if (pgHost && azureClientId) {
+    if (!pool) {
+      pool = new pg.Pool({
+        host: pgHost,
+        port: 5432,
+        database: process.env.PGDATABASE || "acroyoga",
+        user: process.env.PGUSER || azureClientId,
+        password: getEntraPassword,
+        ssl: { rejectUnauthorized: true },
+        max: 10,
+      });
+    }
+    return pool;
+  }
 
   // No DATABASE_URL or explicitly set to "pglite" → use PGlite file-backed dev DB
   if (!dbUrl || dbUrl === "pglite") {

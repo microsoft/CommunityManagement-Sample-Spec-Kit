@@ -6,6 +6,7 @@ import {
   setDirectoryVisibility,
   getDirectoryVisibility,
 } from "@/lib/directory/service";
+import { getProfile, upsertProfile } from "@/lib/profiles/service";
 import fs from "fs";
 import path from "path";
 
@@ -14,8 +15,8 @@ let userAId: string; // viewer
 let userBId: string; // directory member
 let userCId: string; // another directory member
 let userDId: string; // not in directory
-let countryId: string;
-let cityId: string;
+let geoId: string; // geography row (London)
+let geoId2: string; // geography row (Paris)
 
 async function applyMigrations(pglite: PGlite) {
   const migrationsDir = path.resolve(__dirname, "../../../src/db/migrations");
@@ -48,16 +49,17 @@ describe("Directory Service", () => {
     userCId = await createUser(db, "carol@test.com", "Carol");
     userDId = await createUser(db, "dave@test.com", "Dave");
 
-    const countryResult = await db.query<{ id: string }>(
-      "INSERT INTO countries (name, code, continent_code) VALUES ('UK', 'GB', 'EU') RETURNING id",
+    const geoResult = await db.query<{ id: string }>(
+      `INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent)
+       VALUES ('london', 'united_kingdom', 'europe', 'London', 'United Kingdom', 'Europe') RETURNING id`,
     );
-    countryId = countryResult.rows[0].id;
+    geoId = geoResult.rows[0].id;
 
-    const cityResult = await db.query<{ id: string }>(
-      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('London', 'london', $1, 51.5074, -0.1278, 'Europe/London') RETURNING id",
-      [countryId],
+    const geoResult2 = await db.query<{ id: string }>(
+      `INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent)
+       VALUES ('paris', 'france', 'europe', 'Paris', 'France', 'Europe') RETURNING id`,
     );
-    cityId = cityResult.rows[0].id;
+    geoId2 = geoResult2.rows[0].id;
   });
 
   afterEach(async () => {
@@ -87,7 +89,6 @@ describe("Directory Service", () => {
 
   describe("searchDirectory", () => {
     beforeEach(async () => {
-      // Make Bob and Carol opt-in to the directory
       await setDirectoryVisibility(userBId, true);
       await setDirectoryVisibility(userCId, true);
       // Dave has not opted in
@@ -109,7 +110,6 @@ describe("Directory Service", () => {
     });
 
     it("should not include blocked users", async () => {
-      // userA blocks userB
       await db.query(
         "INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2)",
         [userAId, userBId],
@@ -121,7 +121,6 @@ describe("Directory Service", () => {
     });
 
     it("should not include users who blocked the viewer", async () => {
-      // userB blocks userA
       await db.query(
         "INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2)",
         [userBId, userAId],
@@ -131,59 +130,83 @@ describe("Directory Service", () => {
       expect(userIds).not.toContain(userBId);
     });
 
-    it("should return correct total count", async () => {
+    it("should include hasNextPage in response", async () => {
       const result = await searchDirectory(userAId, {});
-      expect(result.total).toBe(2);
+      expect(result.hasNextPage).toBe(false);
     });
 
-    describe("text search (q)", () => {
+    describe("text search (search)", () => {
       beforeEach(async () => {
         await db.query(
-          "UPDATE user_profiles SET display_name = 'Bob Smith', bio = 'I love acro' WHERE user_id = $1",
+          "UPDATE user_profiles SET display_name = 'Bob Smith' WHERE user_id = $1",
           [userBId],
         );
         await db.query(
-          "UPDATE user_profiles SET display_name = 'Carol Jones', bio = 'Yoga teacher' WHERE user_id = $1",
+          "UPDATE user_profiles SET display_name = 'Carol Jones' WHERE user_id = $1",
           [userCId],
         );
       });
 
-      it("should filter by display name", async () => {
-        const result = await searchDirectory(userAId, { q: "Bob" });
+      it("should filter by display name prefix", async () => {
+        const result = await searchDirectory(userAId, { search: "Bob" });
         expect(result.entries).toHaveLength(1);
         expect(result.entries[0].userId).toBe(userBId);
       });
 
-      it("should filter by bio", async () => {
-        const result = await searchDirectory(userAId, { q: "yoga" });
-        expect(result.entries).toHaveLength(1);
-        expect(result.entries[0].userId).toBe(userCId);
+      it("should return no results for non-matching query", async () => {
+        const result = await searchDirectory(userAId, { search: "xyzzy" });
+        expect(result.entries).toHaveLength(0);
       });
 
-      it("should return no results for non-matching query", async () => {
-        const result = await searchDirectory(userAId, { q: "xyzzy" });
-        expect(result.entries).toHaveLength(0);
+      it("should be case-insensitive", async () => {
+        const result = await searchDirectory(userAId, { search: "bob" });
+        expect(result.entries).toHaveLength(1);
+        expect(result.entries[0].userId).toBe(userBId);
       });
     });
 
     describe("city filter", () => {
-      it("should filter by city", async () => {
+      it("should filter by city UUID", async () => {
         await db.query(
           "UPDATE user_profiles SET home_city_id = $1 WHERE user_id = $2",
-          [cityId, userBId],
+          [geoId, userBId],
         );
-        const result = await searchDirectory(userAId, { cityId });
+        const result = await searchDirectory(userAId, { city: geoId });
         expect(result.entries).toHaveLength(1);
         expect(result.entries[0].userId).toBe(userBId);
       });
 
       it("should return empty for city with no members", async () => {
-        const otherCity = await db.query<{ id: string }>(
-          "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('Manchester', 'manchester', $1, 53.483, -2.244, 'Europe/London') RETURNING id",
-          [countryId],
-        );
-        const result = await searchDirectory(userAId, { cityId: otherCity.rows[0].id });
+        const result = await searchDirectory(userAId, { city: geoId2 });
         expect(result.entries).toHaveLength(0);
+      });
+    });
+
+    describe("country filter", () => {
+      it("should filter by country key", async () => {
+        await db.query(
+          "UPDATE user_profiles SET home_city_id = $1 WHERE user_id = $2",
+          [geoId, userBId],
+        );
+        const result = await searchDirectory(userAId, { country: "united_kingdom" });
+        expect(result.entries).toHaveLength(1);
+        expect(result.entries[0].userId).toBe(userBId);
+      });
+    });
+
+    describe("continent filter", () => {
+      it("should filter by continent key", async () => {
+        await db.query(
+          "UPDATE user_profiles SET home_city_id = $1 WHERE user_id = $2",
+          [geoId, userBId],
+        );
+        await db.query(
+          "UPDATE user_profiles SET home_city_id = $1 WHERE user_id = $2",
+          [geoId2, userCId],
+        );
+        // Both are in Europe
+        const result = await searchDirectory(userAId, { continent: "europe" });
+        expect(result.entries).toHaveLength(2);
       });
     });
 
@@ -207,7 +230,7 @@ describe("Directory Service", () => {
       it("should show 'none' relationship for strangers", async () => {
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.relationship).toBe("none");
+        expect(bobEntry?.relationshipStatus).toBe("none");
       });
 
       it("should show 'following' when viewer follows member", async () => {
@@ -217,17 +240,17 @@ describe("Directory Service", () => {
         );
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.relationship).toBe("following");
+        expect(bobEntry?.relationshipStatus).toBe("following");
       });
 
-      it("should show 'follower' when member follows viewer", async () => {
+      it("should show 'follows_me' when member follows viewer", async () => {
         await db.query(
           "INSERT INTO follows (follower_id, followee_id) VALUES ($1, $2)",
           [userBId, userAId],
         );
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.relationship).toBe("follower");
+        expect(bobEntry?.relationshipStatus).toBe("follows_me");
       });
 
       it("should show 'friend' for mutual follows", async () => {
@@ -241,7 +264,7 @@ describe("Directory Service", () => {
         );
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.relationship).toBe("friend");
+        expect(bobEntry?.relationshipStatus).toBe("friend");
       });
     });
 
@@ -271,32 +294,79 @@ describe("Directory Service", () => {
         expect(ids).toContain(userBId);
         expect(ids).not.toContain(userCId);
       });
+
+      it("should filter to followers", async () => {
+        const result = await searchDirectory(userAId, { relationship: "followers" });
+        const ids = result.entries.map((e) => e.userId);
+        expect(ids).toContain(userBId);
+      });
+    });
+
+    describe("blocked relationship filter", () => {
+      it("should show blocked users when filtered", async () => {
+        await db.query(
+          "INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2)",
+          [userAId, userBId],
+        );
+        const result = await searchDirectory(userAId, { relationship: "blocked" });
+        const ids = result.entries.map((e) => e.userId);
+        expect(ids).toContain(userBId);
+        expect(ids).not.toContain(userCId);
+      });
+    });
+
+    describe("sort modes", () => {
+      beforeEach(async () => {
+        await db.query(
+          "UPDATE user_profiles SET display_name = 'Zara' WHERE user_id = $1",
+          [userBId],
+        );
+        await db.query(
+          "UPDATE user_profiles SET display_name = 'Alice Jr' WHERE user_id = $1",
+          [userCId],
+        );
+      });
+
+      it("should sort alphabetically by default", async () => {
+        const result = await searchDirectory(userAId, {});
+        expect(result.entries[0].displayName).toBe("Alice Jr");
+        expect(result.entries[1].displayName).toBe("Zara");
+      });
+
+      it("should sort by recent (newest first)", async () => {
+        const result = await searchDirectory(userAId, { sort: "recent" });
+        // Carol was created after Bob, so should appear first
+        expect(result.entries[0].userId).toBe(userCId);
+        expect(result.entries[1].userId).toBe(userBId);
+      });
     });
 
     describe("cursor pagination", () => {
       it("should paginate with cursor", async () => {
-        const page1 = await searchDirectory(userAId, { limit: 1 });
+        const page1 = await searchDirectory(userAId, { pageSize: 1 });
         expect(page1.entries).toHaveLength(1);
         expect(page1.nextCursor).not.toBeNull();
+        expect(page1.hasNextPage).toBe(true);
 
         const page2 = await searchDirectory(userAId, {
-          limit: 1,
+          pageSize: 1,
           cursor: page1.nextCursor!,
         });
         expect(page2.entries).toHaveLength(1);
         expect(page2.entries[0].userId).not.toBe(page1.entries[0].userId);
         expect(page2.nextCursor).toBeNull();
+        expect(page2.hasNextPage).toBe(false);
       });
 
       it("should return null nextCursor when no more pages", async () => {
-        const result = await searchDirectory(userAId, { limit: 50 });
+        const result = await searchDirectory(userAId, { pageSize: 100 });
         expect(result.nextCursor).toBeNull();
+        expect(result.hasNextPage).toBe(false);
       });
     });
 
     describe("social link visibility", () => {
       it("should filter social links by relationship level", async () => {
-        // Bob has a 'friends' visibility link and an 'everyone' link
         await db.query(
           "INSERT INTO social_links (user_id, platform, url, visibility) VALUES ($1, 'instagram', 'https://ig.com/bob', 'everyone')",
           [userBId],
@@ -309,39 +379,65 @@ describe("Directory Service", () => {
         // As a stranger, should only see 'everyone' links
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.socialLinks).toHaveLength(1);
-        expect(bobEntry?.socialLinks[0].platform).toBe("instagram");
-      });
-    });
-
-    describe("profile completeness", () => {
-      it("should compute 0 completeness for empty profile", async () => {
-        const result = await searchDirectory(userAId, {});
-        const bobEntry = result.entries.find((e) => e.userId === userBId);
-        expect(bobEntry?.profileCompleteness).toBe(0);
+        expect(bobEntry?.visibleSocialLinks).toHaveLength(1);
+        expect(bobEntry?.visibleSocialLinks[0].platform).toBe("instagram");
       });
 
-      it("should compute completeness based on fields set", async () => {
+      it("should return only platform and url in visible links", async () => {
         await db.query(
-          "UPDATE user_profiles SET display_name = 'Bob', bio = 'Hello', avatar_url = 'https://example.com/bob.jpg', home_city_id = $1, default_role = 'base' WHERE user_id = $2",
-          [cityId, userBId],
+          "INSERT INTO social_links (user_id, platform, url, visibility) VALUES ($1, 'instagram', 'https://ig.com/bob', 'everyone')",
+          [userBId],
         );
         const result = await searchDirectory(userAId, {});
         const bobEntry = result.entries.find((e) => e.userId === userBId);
-        // display_name(20) + bio(20) + avatar(20) + city(20) + role(10) = 90
-        expect(bobEntry?.profileCompleteness).toBe(90);
+        const link = bobEntry?.visibleSocialLinks[0];
+        expect(link).toHaveProperty("platform");
+        expect(link).toHaveProperty("url");
+        expect(link).not.toHaveProperty("id");
+        expect(link).not.toHaveProperty("visibility");
+      });
+    });
+
+    describe("entry fields", () => {
+      it("should include homeCity and homeCountry from geography", async () => {
+        await db.query(
+          "UPDATE user_profiles SET home_city_id = $1 WHERE user_id = $2",
+          [geoId, userBId],
+        );
+        const result = await searchDirectory(userAId, {});
+        const bobEntry = result.entries.find((e) => e.userId === userBId);
+        expect(bobEntry?.homeCity).toBe("London");
+        expect(bobEntry?.homeCountry).toBe("United Kingdom");
+      });
+
+      it("should include profile id", async () => {
+        const result = await searchDirectory(userAId, {});
+        const entry = result.entries[0];
+        expect(entry.id).toBeDefined();
+        expect(typeof entry.id).toBe("string");
+      });
+
+      it("should include createdAt", async () => {
+        const result = await searchDirectory(userAId, {});
+        const entry = result.entries[0];
+        expect(entry.createdAt).toBeDefined();
+      });
+
+      it("should not include profileCompleteness in entry", async () => {
+        const result = await searchDirectory(userAId, {});
+        const entry = result.entries[0] as unknown as Record<string, unknown>;
+        expect(entry).not.toHaveProperty("profileCompleteness");
       });
     });
 
     describe("verified teacher filter", () => {
       it("should filter to verified teachers only", async () => {
-        // Insert teacher profile for userB
         await db.query(
           `INSERT INTO teacher_profiles (user_id, specialties, badge_status)
            VALUES ($1, '{}', 'verified')`,
           [userBId],
         );
-        const result = await searchDirectory(userAId, { verifiedTeacher: true });
+        const result = await searchDirectory(userAId, { teachersOnly: true });
         const ids = result.entries.map((e) => e.userId);
         expect(ids).toContain(userBId);
         expect(ids).not.toContain(userCId);
@@ -358,6 +454,74 @@ describe("Directory Service", () => {
         const carolEntry = result.entries.find((e) => e.userId === userCId);
         expect(bobEntry?.isVerifiedTeacher).toBe(true);
         expect(carolEntry?.isVerifiedTeacher).toBe(false);
+      });
+    });
+
+    describe("mute does not affect directory", () => {
+      it("muted users should still appear in directory results", async () => {
+        await db.query(
+          "INSERT INTO mutes (muter_id, muted_id) VALUES ($1, $2)",
+          [userAId, userBId],
+        );
+        const result = await searchDirectory(userAId, {});
+        const ids = result.entries.map((e) => e.userId);
+        expect(ids).toContain(userBId);
+      });
+    });
+
+    describe("T027: full visibility cycle", () => {
+      it("user defaults hidden, appears after opt-in, disappears after opt-out", async () => {
+        // Dave has not opted in — not in directory
+        const before = await searchDirectory(userAId, {});
+        expect(before.entries.map((e) => e.userId)).not.toContain(userDId);
+
+        // Dave opts in
+        await setDirectoryVisibility(userDId, true);
+        const visible = await searchDirectory(userAId, {});
+        expect(visible.entries.map((e) => e.userId)).toContain(userDId);
+
+        // Dave opts out
+        await setDirectoryVisibility(userDId, false);
+        const hidden = await searchDirectory(userAId, {});
+        expect(hidden.entries.map((e) => e.userId)).not.toContain(userDId);
+      });
+    });
+
+    describe("T028a: direct profile access when directory_visible=false", () => {
+      it("getProfile returns data even for directory-hidden users", async () => {
+        // Dave never opted in (directory_visible=false)
+        const profile = await getProfile(userDId, userAId);
+        expect(profile).not.toBeNull();
+        expect(profile!.userId).toBe(userDId);
+      });
+
+      it("getProfile returns data after user explicitly opts out", async () => {
+        await setDirectoryVisibility(userBId, false);
+        const profile = await getProfile(userBId, userAId);
+        expect(profile).not.toBeNull();
+        expect(profile!.userId).toBe(userBId);
+      });
+    });
+
+    describe("T028b: directoryVisible via upsertProfile", () => {
+      it("upsertProfile sets directory_visible to true", async () => {
+        await upsertProfile(userDId, { directoryVisible: true });
+        const visible = await getDirectoryVisibility(userDId);
+        expect(visible).toBe(true);
+      });
+
+      it("upsertProfile sets directory_visible to false", async () => {
+        await setDirectoryVisibility(userDId, true);
+        await upsertProfile(userDId, { directoryVisible: false });
+        const visible = await getDirectoryVisibility(userDId);
+        expect(visible).toBe(false);
+      });
+
+      it("upsertProfile updates other fields without affecting directory_visible", async () => {
+        await setDirectoryVisibility(userDId, true);
+        await upsertProfile(userDId, { displayName: "Dave Updated" });
+        const visible = await getDirectoryVisibility(userDId);
+        expect(visible).toBe(true);
       });
     });
   });

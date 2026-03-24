@@ -1,12 +1,12 @@
 <!--
   Sync Impact Report
-  Version change: 1.3.0 → 1.4.0 (MINOR — added Principle XIII: Development Environment)
-  Modified principles: (none)
+  Version change: 1.4.0 → 1.5.0 (MINOR — rewrote XIII, added XIV)
+  Modified principles: XIII (Development Environment — WSL → Codespaces)
   Unchanged principles: I–XII
   Added sections:
-    - XIII. Development Environment — WSL-only for installs, builds, and tests
+    - XIV. Managed Identity — DefaultAzureCredential for all Azure connections
   Removed sections: (none)
-  Alignment matrix: filled gaps for II, III, IV, VI, IX, X, XI, XII across all specs
+  Alignment matrix: added row for XIV; updated XIII description
   Templates requiring updates:
     - .specify/templates/plan-template.md ✅ no updates needed (Constitution Check is generic)
     - .specify/templates/spec-template.md ✅ no updates needed (constitution check line is generic)
@@ -19,7 +19,7 @@
 -->
 # AcroYoga Community — Project Constitution
 
-> Version 1.4.0 — Governing architectural principles for the
+> Version 1.5.0 — Governing architectural principles for the
 > AcroYoga Community Events platform.
 
 ## Core Principles
@@ -206,24 +206,44 @@ the client.
 
 ### XIII. Development Environment
 
-All package installations, dependency management, and build tooling
-MUST be executed inside WSL (Windows Subsystem for Linux), not
-natively on Windows. Windows terminals may be used for read-only
-operations (file browsing, git status) but any command that installs
-packages, runs build scripts, or modifies `node_modules` MUST be
-run in WSL.
+All development, package management, and build tooling MUST be
+executed in GitHub Codespaces or a consistent Linux container
+environment. Codespaces is the primary development environment,
+providing pre-configured containers with all dependencies and
+tooling ready to use.
 
-**Rationale:** Native Windows environments introduce path-length
-limits, symlink issues, and platform-specific native module
-compilation failures that waste development time. WSL provides a
-consistent Linux environment matching CI/CD and production.
+**Rationale:** Codespaces eliminates environment inconsistencies
+across contributors, provides instant onboarding with zero local
+setup, and ensures parity between development, CI/CD, and
+production environments.
 
 **Constraints:**
-- `npm install`, `npm ci`, and any package manager invocations MUST run in WSL
-- Build scripts (`npm run build`, `tokens:build`, etc.) MUST run in WSL
-- Test suites MUST run in WSL as the primary execution environment
-- CI workflows run on `ubuntu-latest`, so WSL ensures local–CI parity
-- Windows-native Node.js may be used for quick one-off checks but MUST NOT be the authoritative environment for installs or builds
+- `npm install`, `npm ci`, and any package manager invocations MUST run in the Codespaces container or CI runner
+- Build scripts (`npm run build`, `tokens:build`, etc.) MUST run in a Linux environment (Codespaces or CI)
+- Test suites MUST run in a Linux environment as the primary execution environment
+- CI workflows run on `ubuntu-latest`; Codespaces ensures local–CI parity
+- A `.devcontainer/devcontainer.json` MUST be maintained at the repo root with all required tooling pre-installed
+
+### XIV. Managed Identity
+
+All Azure service-to-service connections MUST use Azure Managed
+Identity with `DefaultAzureCredential` from `@azure/identity`.
+Shared keys, connection strings, and static credentials MUST NOT
+be used for cloud service authentication in deployed environments.
+
+**Rationale:** Managed Identity eliminates credential rotation
+overhead, prevents secret leakage, and follows Azure security
+best practices. `DefaultAzureCredential` provides a seamless
+fallback chain that works in Codespaces, CI, and production.
+
+**Constraints:**
+- Azure Blob Storage MUST be accessed via `DefaultAzureCredential`, never shared keys or connection strings
+- Azure PostgreSQL MUST use Microsoft Entra token authentication via Managed Identity in deployed environments; password auth is permitted only for local development with PGlite
+- Azure Key Vault MUST use RBAC with Managed Identity (already enforced)
+- Azure Container Registry MUST use Managed Identity for image pulls (already enforced)
+- SAS tokens (where required for client-side uploads) MUST use User Delegation SAS, never account-key-based SAS
+- The `AZURE_CLIENT_ID` environment variable MUST be set in all deployed containers to identify the User-Assigned Managed Identity
+- New Azure service integrations MUST use `DefaultAzureCredential` — PR reviewers MUST reject any code that introduces shared keys or connection strings for Azure services
 
 ---
 
@@ -244,6 +264,7 @@ consistent Linux environment matching CI/CD and production.
 | XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ | ✅ |
 | XII. Financial Integrity | | | ✅ | ✅ | ✅ | |
 | XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XIV. Managed Identity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Usage:** Each spec's header SHOULD list the principles that apply.
 > Specs 003, 004, and 005 should be updated to include XI and XII
@@ -310,4 +331,4 @@ Exceptions may be granted for prototyping/spike branches clearly
 labelled as such (branch prefix `spike/` or `prototype/`).
 Exceptions MUST NOT merge to `main`.
 
-**Version**: 1.4.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-18
+**Version**: 1.5.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-22

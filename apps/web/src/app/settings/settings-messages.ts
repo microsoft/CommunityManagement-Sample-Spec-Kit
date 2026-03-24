@@ -51,6 +51,10 @@ export const SETTINGS_MESSAGES = {
   unmute: "Unmute",
   manageSocialLinks: "Manage social link visibility \u2192",
 
+  // Profile completeness
+  profileCompleteness: "Profile Completeness",
+  profileCompletenessDesc: "Complete your profile to help others find and recognize you in the community.",
+
   // Teacher application
   applyAsTeacher: "Apply as Teacher",
   bio: "Bio",

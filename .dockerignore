@@ -1,0 +1,17 @@
+.git
+.github
+.azure
+.next
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/build
+**/*.tsbuildinfo
+storybook-static
+docs
+specs
+scripts
+*.md
+!README.md
+.env*

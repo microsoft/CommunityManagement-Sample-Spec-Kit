@@ -1,0 +1,14 @@
+{
+  "containerApp": "ca",
+  "containerAppsEnvironment": "cae",
+  "containerRegistry": "acr",
+  "frontDoor": "afd",
+  "keyVault": "kv",
+  "logAnalyticsWorkspace": "log",
+  "applicationInsights": "appi",
+  "managedIdentity": "id",
+  "postgreSQLFlexibleServer": "psql",
+  "resourceGroup": "rg",
+  "storageAccount": "st",
+  "webApplicationFirewallPolicy": "waf"
+}

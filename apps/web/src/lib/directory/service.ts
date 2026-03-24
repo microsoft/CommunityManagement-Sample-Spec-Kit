@@ -1,20 +1,21 @@
 import { db } from "@/lib/db/client";
-import { escapeIlike } from "@/lib/db/utils";
 import { filterSocialLinks } from "@/lib/profiles/visibility";
 import type {
   DirectoryEntry,
-  DirectorySearchParams,
-  DirectorySearchResponse,
+  DirectoryQueryParams,
+  DirectoryResponse,
+  RelationshipStatus,
+  VisibleSocialLink,
 } from "@acroyoga/shared/types/directory";
 import type { SocialLink, Relationship, DefaultRole } from "@acroyoga/shared/types/community";
 
 interface DirectoryRow {
+  profile_id: string;
   user_id: string;
   display_name: string | null;
-  bio: string | null;
   home_city_name: string | null;
+  home_country_name: string | null;
   home_city_id: string | null;
-  home_country_id: string | null;
   default_role: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -32,12 +33,16 @@ interface SocialLinkRaw {
 }
 
 interface CursorPayload {
-  n: string | null;
+  /** Sort value (display_name for alphabetical, created_at for recent, tier+name for proximity) */
+  s: string | null;
   id: string;
+  /** Proximity tier (only for proximity sort) */
+  t?: number;
 }
 
-function encodeCursor(displayName: string | null, userId: string): string {
-  const payload: CursorPayload = { n: displayName, id: userId };
+function encodeCursor(sortValue: string | null, userId: string, tier?: number): string {
+  const payload: CursorPayload = { s: sortValue, id: userId };
+  if (tier !== undefined) payload.t = tier;
   return Buffer.from(JSON.stringify(payload)).toString("base64");
 }
 
@@ -52,15 +57,15 @@ function decodeCursor(cursor: string): CursorPayload | null {
   }
 }
 
-function computeCompleteness(row: DirectoryRow): number {
-  let score = 0;
-  if (row.display_name) score += 20;
-  if (row.bio) score += 20;
-  if (row.avatar_url) score += 20;
-  if (row.home_city_name) score += 20;
-  if (row.default_role) score += 10;
-  if (row.social_links && row.social_links.length > 0) score += 10;
-  return score;
+/** Map internal Relationship to contract RelationshipStatus */
+function toRelationshipStatus(rel: string): RelationshipStatus {
+  switch (rel) {
+    case "friend": return "friend";
+    case "following": return "following";
+    case "follower": return "follows_me";
+    case "blocked": return "blocked";
+    default: return "none";
+  }
 }
 
 function rowToEntry(row: DirectoryRow): DirectoryEntry {
@@ -74,18 +79,23 @@ function rowToEntry(row: DirectoryRow): DirectoryEntry {
   }));
   const visibleLinks = filterSocialLinks(rawLinks, relationship);
 
+  const visibleSocialLinks: VisibleSocialLink[] = visibleLinks.map((l) => ({
+    platform: l.platform,
+    url: l.url,
+  }));
+
   return {
+    id: row.profile_id,
     userId: row.user_id,
     displayName: row.display_name,
-    bio: row.bio,
-    homeCityName: row.home_city_name,
-    defaultRole: row.default_role as DefaultRole | null,
     avatarUrl: row.avatar_url,
-    socialLinks: visibleLinks,
-    relationship,
+    defaultRole: row.default_role as DefaultRole | null,
+    homeCity: row.home_city_name,
+    homeCountry: row.home_country_name,
     isVerifiedTeacher: row.is_verified_teacher,
-    profileCompleteness: computeCompleteness(row),
-    joinedAt: row.created_at,
+    visibleSocialLinks,
+    relationshipStatus: toRelationshipStatus(row.relationship),
+    createdAt: row.created_at,
   };
 }
 
@@ -96,41 +106,64 @@ function rowToEntry(row: DirectoryRow): DirectoryEntry {
  */
 export async function searchDirectory(
   viewerId: string,
-  params: DirectorySearchParams,
-): Promise<DirectorySearchResponse> {
+  params: DirectoryQueryParams,
+): Promise<DirectoryResponse> {
   const {
-    q,
-    cityId,
+    search,
+    city,
+    country,
+    continent,
     role,
-    verifiedTeacher,
+    teachersOnly,
     relationship: relationshipFilter,
-    sort = "name",
+    sort = "alphabetical",
     cursor,
-    limit = 20,
+    pageSize = 20,
   } = params;
 
   const conditions: string[] = [
-    "up.directory_visible = true",
     "up.user_id != $1",
-    `NOT EXISTS (
-      SELECT 1 FROM blocks b
-      WHERE (b.blocker_id = $1 AND b.blocked_id = up.user_id)
-         OR (b.blocker_id = up.user_id AND b.blocked_id = $1)
-    )`,
   ];
   const queryParams: unknown[] = [viewerId];
   let idx = 2;
 
-  if (q) {
-    const like = `%${escapeIlike(q)}%`;
-    conditions.push(`(up.display_name ILIKE $${idx} OR up.bio ILIKE $${idx})`);
-    queryParams.push(like);
+  // For the "blocked" filter, we show blocked users instead of excluding them
+  const isBlockedFilter = relationshipFilter === "blocked";
+
+  if (!isBlockedFilter) {
+    // Standard: hide blocked users symmetrically
+    conditions.push(
+      `NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = $1 AND b.blocked_id = up.user_id)
+           OR (b.blocker_id = up.user_id AND b.blocked_id = $1)
+      )`,
+    );
+    conditions.push("up.directory_visible = true");
+  } else {
+    // Blocked filter: show users the viewer has blocked
+    conditions.push(
+      `EXISTS (SELECT 1 FROM blocks b WHERE b.blocker_id = $1 AND b.blocked_id = up.user_id)`,
+    );
+  }
+
+  // Text search: case-insensitive prefix match on display_name (FR-009)
+  if (search) {
+    conditions.push(`lower(up.display_name) LIKE lower($${idx}) || '%'`);
+    queryParams.push(search);
     idx++;
   }
 
-  if (cityId) {
+  // Location filters via geography table
+  if (city) {
     conditions.push(`up.home_city_id = $${idx++}`);
-    queryParams.push(cityId);
+    queryParams.push(city);
+  } else if (country) {
+    conditions.push(`g.country = $${idx++}`);
+    queryParams.push(country);
+  } else if (continent) {
+    conditions.push(`g.continent = $${idx++}`);
+    queryParams.push(continent);
   }
 
   if (role) {
@@ -138,10 +171,11 @@ export async function searchDirectory(
     queryParams.push(role);
   }
 
-  if (verifiedTeacher) {
+  if (teachersOnly) {
     conditions.push(`tp.badge_status = 'verified'`);
   }
 
+  // Relationship filters
   if (relationshipFilter === "following") {
     conditions.push(`f_out.followee_id IS NOT NULL`);
   } else if (relationshipFilter === "followers") {
@@ -152,57 +186,146 @@ export async function searchDirectory(
 
   const whereBase = conditions.join(" AND ");
 
-  // Track the index at which base params end (before cursor params)
-  const baseParamCount = idx - 1; // params $1 through $(idx-1) are base params
-
-  // Cursor pagination
+  // Build ORDER BY and cursor condition based on sort mode
+  let orderBy: string;
   let cursorCondition = "";
-  if (cursor) {
-    const decoded = decodeCursor(cursor);
-    if (decoded) {
-      if (decoded.n === null) {
-        cursorCondition = `AND (up.display_name IS NULL AND up.user_id > $${idx++})`;
-        queryParams.push(decoded.id);
-      } else {
-        cursorCondition = `AND (
-          up.display_name > $${idx}
-          OR (up.display_name = $${idx} AND up.user_id > $${idx + 1})
-          OR up.display_name IS NULL
-        )`;
-        queryParams.push(decoded.n, decoded.id);
+
+  if (sort === "recent") {
+    orderBy = `ORDER BY u.created_at DESC, up.user_id DESC`;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (decoded) {
+        cursorCondition = `AND (u.created_at < $${idx} OR (u.created_at = $${idx} AND up.user_id < $${idx + 1}))`;
+        queryParams.push(decoded.s, decoded.id);
         idx += 2;
+      }
+    }
+  } else if (sort === "proximity") {
+    // 4-tier proximity: same city (1) → same country (2) → same continent (3) → global (4)
+    orderBy = `ORDER BY
+      CASE
+        WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+        WHEN g.country = (
+          SELECT g2.country FROM user_profiles up2
+          LEFT JOIN geography g2 ON g2.id = up2.home_city_id
+          WHERE up2.user_id = $1
+        ) THEN 2
+        WHEN g.continent = (
+          SELECT g3.continent FROM user_profiles up3
+          LEFT JOIN geography g3 ON g3.id = up3.home_city_id
+          WHERE up3.user_id = $1
+        ) THEN 3
+        ELSE 4
+      END ASC,
+      up.display_name ASC NULLS LAST,
+      up.user_id ASC`;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (decoded && decoded.t !== undefined) {
+        // For proximity cursor we use tier + name + id
+        if (decoded.s === null) {
+          cursorCondition = `AND (
+            CASE
+              WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+              WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+              WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+              ELSE 4
+            END > $${idx}
+            OR (
+              CASE
+                WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+                WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+                WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+                ELSE 4
+              END = $${idx}
+              AND (up.display_name IS NULL AND up.user_id > $${idx + 2})
+            )
+            OR (
+              CASE
+                WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+                WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+                WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+                ELSE 4
+              END = $${idx}
+              AND up.display_name > $${idx + 1}
+            )
+            OR (
+              CASE
+                WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+                WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+                WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+                ELSE 4
+              END = $${idx}
+              AND up.display_name = $${idx + 1}
+              AND up.user_id > $${idx + 2}
+            )
+          )`;
+        queryParams.push(decoded.t, decoded.s, decoded.id);
+        idx += 3;
+        } else {
+          cursorCondition = `AND (
+            CASE
+              WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+              WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+              WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+              ELSE 4
+            END > $${idx}
+            OR (
+              CASE
+                WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+                WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+                WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+                ELSE 4
+              END = $${idx}
+              AND up.display_name > $${idx + 1}
+            )
+            OR (
+              CASE
+                WHEN g.id = (SELECT home_city_id FROM user_profiles WHERE user_id = $1) THEN 1
+                WHEN g.country = (SELECT g2.country FROM user_profiles up2 LEFT JOIN geography g2 ON g2.id = up2.home_city_id WHERE up2.user_id = $1) THEN 2
+                WHEN g.continent = (SELECT g3.continent FROM user_profiles up3 LEFT JOIN geography g3 ON g3.id = up3.home_city_id WHERE up3.user_id = $1) THEN 3
+                ELSE 4
+              END = $${idx}
+              AND up.display_name = $${idx + 1}
+              AND up.user_id > $${idx + 2}
+            )
+          )`;
+        queryParams.push(decoded.t, decoded.s, decoded.id);
+        idx += 3;
+        }
+      }
+    }
+  } else {
+    // alphabetical (default)
+    orderBy = `ORDER BY up.display_name ASC NULLS LAST, up.user_id ASC`;
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (decoded) {
+        if (decoded.s === null) {
+          cursorCondition = `AND (up.display_name IS NULL AND up.user_id > $${idx++})`;
+          queryParams.push(decoded.id);
+        } else {
+          cursorCondition = `AND (
+            up.display_name > $${idx}
+            OR (up.display_name = $${idx} AND up.user_id > $${idx + 1})
+            OR up.display_name IS NULL
+          )`;
+          queryParams.push(decoded.s, decoded.id);
+          idx += 2;
+        }
       }
     }
   }
 
   const whereWithCursor = `WHERE ${whereBase} ${cursorCondition}`;
-  const whereWithoutCursor = `WHERE ${whereBase}`;
 
-  const orderBy =
-    sort === "proximity"
-      ? `ORDER BY
-          CASE
-            WHEN up.home_city_id = (
-              SELECT home_city_id FROM user_profiles WHERE user_id = $1
-            ) THEN 0
-            WHEN c.country_id = (
-              SELECT c2.country_id FROM user_profiles up2
-              LEFT JOIN cities c2 ON c2.id = up2.home_city_id
-              WHERE up2.user_id = $1
-            ) THEN 1
-            ELSE 2
-          END ASC,
-          up.display_name ASC NULLS LAST,
-          up.user_id ASC`
-      : `ORDER BY up.display_name ASC NULLS LAST, up.user_id ASC`;
-
-  const pageSize = Math.min(limit, 50);
+  const boundedPageSize = Math.min(pageSize, 100);
 
   const joins = `
     FROM user_profiles up
     JOIN users u ON u.id = up.user_id
-    LEFT JOIN cities c
-           ON c.id = up.home_city_id
+    LEFT JOIN geography g
+           ON g.id = up.home_city_id
     LEFT JOIN teacher_profiles tp
            ON tp.user_id = up.user_id
           AND tp.is_deleted = false
@@ -217,24 +340,18 @@ export async function searchDirectory(
           AND f_in.followee_id = $1
   `;
 
-  const countSql = `
-    SELECT COUNT(DISTINCT up.user_id) AS cnt
-    ${joins}
-    ${whereWithoutCursor}
-  `;
-
   const limitParam = idx;
-  queryParams.push(pageSize + 1); // fetch one extra to detect next page
+  queryParams.push(boundedPageSize + 1);
   idx++;
 
   const dataSql = `
     SELECT
+      up.id            AS profile_id,
       up.user_id,
       up.display_name,
-      up.bio,
-      c.name           AS home_city_name,
+      g.display_name_city    AS home_city_name,
+      g.display_name_country AS home_country_name,
       up.home_city_id,
-      c.country_id     AS home_country_id,
       up.default_role,
       up.avatar_url,
       u.created_at,
@@ -260,8 +377,9 @@ export async function searchDirectory(
     ${joins}
     ${whereWithCursor}
     GROUP BY
-      up.user_id, up.display_name, up.bio,
-      c.name, up.home_city_id, c.country_id,
+      up.id, up.user_id, up.display_name,
+      g.display_name_city, g.display_name_country, g.id, g.country, g.continent,
+      up.home_city_id,
       up.default_role, up.avatar_url, u.created_at,
       tp.badge_status,
       f_out.followee_id, f_in.follower_id
@@ -269,27 +387,26 @@ export async function searchDirectory(
     LIMIT $${limitParam}
   `;
 
-  const countParams = queryParams.slice(0, baseParamCount);
-  const [countResult, dataResult] = await Promise.all([
-    db().query<{ cnt: string }>(countSql, countParams),
-    db().query<DirectoryRow>(dataSql, queryParams),
-  ]);
+  const dataResult = await db().query<DirectoryRow>(dataSql, queryParams);
 
-  const total = parseInt(countResult.rows[0].cnt, 10);
   const rows = dataResult.rows;
-  const hasMore = rows.length > pageSize;
-  const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
+  const hasMore = rows.length > boundedPageSize;
+  const pageRows = hasMore ? rows.slice(0, boundedPageSize) : rows;
 
-  const lastRow = pageRows[pageRows.length - 1];
-  const nextCursor =
-    hasMore && lastRow
-      ? encodeCursor(lastRow.display_name, lastRow.user_id)
-      : null;
+  let nextCursor: string | null = null;
+  if (hasMore && pageRows.length > 0) {
+    const lastRow = pageRows[pageRows.length - 1];
+    if (sort === "recent") {
+      nextCursor = encodeCursor(lastRow.created_at, lastRow.user_id);
+    } else {
+      nextCursor = encodeCursor(lastRow.display_name, lastRow.user_id);
+    }
+  }
 
   return {
     entries: pageRows.map(rowToEntry),
     nextCursor,
-    total,
+    hasNextPage: hasMore,
   };
 }
 

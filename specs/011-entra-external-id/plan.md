@@ -38,7 +38,8 @@ Replace the current standard Entra ID workforce authentication with Microsoft En
 | X. Notification Architecture | N/A | No notifications in this feature. |
 | XI. Resource Ownership | N/A | No new mutable resources with owners. |
 | XII. Financial Integrity | N/A | No financial operations. |
-| XIII. Development Environment | ✅ PASS | No platform-specific tooling. WSL-compatible. Mock auth (Spec 007) unchanged and still functional for local development. |
+| XIII. Development Environment | ✅ PASS | No platform-specific tooling. Codespaces-compatible. Mock auth (Spec 007) unchanged and still functional for local development. |
+| XIV. Managed Identity | ✅ PASS | Entra External ID tenant authentication uses `DefaultAzureCredential`-compatible token flow in production. No shared keys or connection strings introduced. `AZURE_CLIENT_ID` env var documented in quickstart. |
 | QG-3: Lint | ✅ PASS | All new code follows existing ESLint config. i18n lint passes — no raw strings in UI. |
 | QG-10: Permission smoke test | N/A | Auth changes do not introduce new mutation endpoints (account linking is the only new endpoint — 403 test included). |
 | QG-11: Auth consistency | ✅ PASS | All routes use `getServerSession()` / `requireAuth()`. Account-linking endpoint uses `requireAuth()`. No client-injectable headers. |

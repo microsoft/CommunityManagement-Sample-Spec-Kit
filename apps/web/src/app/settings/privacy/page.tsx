@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SETTINGS_MESSAGES as msg } from "../settings-messages";
+import { ProfileCompleteness } from "@acroyoga/shared-ui/ProfileCompleteness";
+import { computeProfileCompleteness } from "@/lib/directory/completeness";
 
 interface BlockEntry {
   userId: string;
@@ -22,16 +24,27 @@ export default function PrivacySettingsPage() {
   const [loading, setLoading] = useState(true);
   const [directoryVisible, setDirectoryVisible] = useState(false);
   const [directoryUpdating, setDirectoryUpdating] = useState(false);
+  const [completeness, setCompleteness] = useState<ReturnType<typeof computeProfileCompleteness> | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/blocks").then((r) => r.json()),
       fetch("/api/mutes").then((r) => r.json()),
       fetch("/api/directory/visibility").then((r) => (r.ok ? r.json() : { visible: false })),
-    ]).then(([blocksData, mutesData, visibilityData]) => {
+      fetch("/api/profiles/me").then((r) => (r.ok ? r.json() : null)),
+    ]).then(([blocksData, mutesData, visibilityData, profileData]) => {
       setBlocks(blocksData.blocks ?? []);
       setMutes(mutesData.mutes ?? []);
       setDirectoryVisible(visibilityData.visible ?? false);
+      if (profileData) {
+        setCompleteness(computeProfileCompleteness({
+          avatarUrl: profileData.avatarUrl ?? null,
+          displayName: profileData.displayName ?? null,
+          bio: profileData.bio ?? null,
+          homeCityId: profileData.homeCityId ?? null,
+          socialLinksCount: profileData.socialLinks?.length ?? 0,
+        }));
+      }
       setLoading(false);
     });
   }, []);
@@ -70,6 +83,16 @@ export default function PrivacySettingsPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">{msg.privacyTitle}</h1>
+
+      {completeness && (
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">{msg.profileCompleteness}</h2>
+          <div className="border border-gray-200 rounded-lg p-4">
+            <p className="text-sm text-gray-500 mb-3">{msg.profileCompletenessDesc}</p>
+            <ProfileCompleteness completeness={completeness} />
+          </div>
+        </section>
+      )}
 
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-3">{msg.communityDirectory}</h2>

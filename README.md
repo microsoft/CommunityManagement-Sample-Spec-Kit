@@ -12,7 +12,8 @@ AcroYoga Community connects practitioners with local events, teachers, and each 
 - **Permissions & Creator Accounts** — Hierarchical role-based access scoped to geographic regions (city → country → global)
 - **Teacher Profiles & Reviews** — Verified instructor profiles, certification tracking, ratings and reviews
 - **Payments & Bookings** — Stripe Connect for creator payouts, concession pricing, credits, and refund policies
-- **Cross-Platform UI** — Shared design token pipeline (CSS, TS, Swift, Kotlin) with 15 reusable components and Storybook 10 component explorer
+- **User Directory** — Browse, search, and filter community members with relationship status, proximity sort, social link icons, and profile completeness
+- **Cross-Platform UI** — Shared design token pipeline (CSS, TS, Swift, Kotlin) with 17 reusable components and Storybook 10 component explorer
 
 ## Tech Stack
 
@@ -55,7 +56,7 @@ This is an **npm workspaces monorepo** with shared packages:
 │
 ├── specs/                      # Spec-Kit feature specifications
 │   ├── constitution.md         # Architectural principles (v1.4.0)
-│   └── 001–008/                # Feature specs with plans, tasks, contracts
+│   └── 001–009/                # Feature specs with plans, tasks, contracts
 │
 └── .agent.md                   # UI Expert agent configuration
 ```
@@ -84,8 +85,9 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 007 | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
 | 007 | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
 | 008 | [Cross-Platform UI](specs/008-cross-platform-ui/) | P0 | Implemented (web) |
+| 009 | [User Directory](specs/009-user-directory/) | P1 | In Progress (core merged) |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Spec 009 has core service, types, schemas, shared-ui components, and integration tests merged; UI polish and action buttons are deferred.
 
 ## Architectural Principles
 
@@ -103,7 +105,7 @@ The project is governed by a [constitution](specs/constitution.md) (v1.4.0) defi
 10. **Notification Architecture** — Multi-channel, user-configurable, async delivery
 11. **Resource Ownership** — Every mutation verifies caller is owner or scoped admin
 12. **Financial Integrity** — Server-side pricing; Stripe Connect; signed OAuth state
-13. **WSL Mandate** — All npm/node commands must run via WSL on Windows
+13. **Codespaces Mandate** — All development runs in GitHub Codespaces
 
 ## Getting Started
 
@@ -111,7 +113,7 @@ The project is governed by a [constitution](specs/constitution.md) (v1.4.0) defi
 
 - Node.js 24+ (managed via fnm)
 - PostgreSQL 15+ (or use PGlite for development/testing)
-- WSL (Ubuntu) on Windows — all Node.js commands must run in WSL
+- GitHub Codespaces (recommended) or a Linux environment — ensures local–CI parity
 
 ### Setup
 

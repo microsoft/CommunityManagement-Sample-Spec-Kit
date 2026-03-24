@@ -1,6 +1,7 @@
 /**
  * Dev seed: populates the database with sample data for local development.
- * Creates 10 users, geography, venues, 10 events and 10 teacher profiles.
+ * Creates 10 users, geography, venues, 10 events, 10 teacher profiles,
+ * community profiles (directory-visible), and social links.
  *
  * Run via:  npm run db:seed:dev -w @acroyoga/web
  * Or auto-seeded on first dev request via /api/dev/mock-user/seed?full=true
@@ -112,6 +113,67 @@ const TEACHERS: TeacherDef[] = [
   { userIdx: 1, bio: "UK country admin who also teaches intermediate standing acro and L-basing on weekends.",                                          specialties: ["standing", "l_basing"],                              badgeStatus: "verified", rating: 4.3,  reviewCount: 14 },
   { userIdx: 2, bio: "Bristol city admin and assistant coach. Focuses on spotting fundamentals and beginner progressions.",                              specialties: ["coaching", "l_basing", "therapeutic"],               badgeStatus: "pending",  rating: null, reviewCount: 0 },
   { userIdx: 4, bio: "Community member exploring teaching. New to instruction but experienced practitioner with 5 years of jamming.",                    specialties: ["flow", "partner_acrobatics"],                        badgeStatus: "pending",  rating: null, reviewCount: 0 },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Community profiles — directory-visible user profiles                */
+/* ------------------------------------------------------------------ */
+type AcroRole = "base" | "flyer" | "hybrid";
+
+interface ProfileDef {
+  userIdx: number;
+  displayName: string;
+  bio: string;
+  role: AcroRole;
+  citySlug: string;
+  directoryVisible: boolean;
+}
+
+const PROFILES: ProfileDef[] = [
+  { userIdx: 0, displayName: "Alice Global",    bio: "Global admin and veteran acroyogi. 12 years of practice and teaching.",                role: "base",   citySlug: "bristol",       directoryVisible: true },
+  { userIdx: 1, displayName: "Bob UK",          bio: "Country admin for the UK. Loves weekend acro jams and handstands.",                    role: "base",   citySlug: "london",        directoryVisible: true },
+  { userIdx: 2, displayName: "Charlie Bristol",  bio: "Bristol city admin and spotting specialist. Welcome all newcomers!",                   role: "hybrid", citySlug: "bristol",       directoryVisible: true },
+  { userIdx: 3, displayName: "Diana Creator",    bio: "Event creator and flow enthusiast based in Bristol. Washing machines are life.",       role: "flyer",  citySlug: "bristol",       directoryVisible: true },
+  { userIdx: 4, displayName: "Eve Member",       bio: "Regular community member who loves Sunday jams and partner acrobatics.",               role: "flyer",  citySlug: "london",        directoryVisible: true },
+  { userIdx: 5, displayName: "Frank Teacher",    bio: "French acrobat and L-basing maestro. Co-founder of Paris Acro Festival.",             role: "base",   citySlug: "paris",         directoryVisible: true },
+  { userIdx: 6, displayName: "Grace Yogi",       bio: "San Francisco therapeutic flyer and community organiser. Inclusivity first!",         role: "flyer",  citySlug: "san-francisco", directoryVisible: true },
+  { userIdx: 7, displayName: "Hiro Tanaka",      bio: "Thai massage meets acro. Running retreats across Southeast Asia.",                    role: "base",   citySlug: "bangkok",       directoryVisible: true },
+  { userIdx: 8, displayName: "Isla Santos",      bio: "Dance-acro fusion artist from Lisbon. Blending contemporary dance with movement.",    role: "hybrid", citySlug: "paris",         directoryVisible: true },
+  { userIdx: 9, displayName: "Javier Cruz",      bio: "New teacher and experienced practitioner. 5 years of jamming, ready to share.",       role: "hybrid", citySlug: "san-francisco", directoryVisible: false },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Social links — sample links for directory profiles                  */
+/* ------------------------------------------------------------------ */
+type SocialPlatform = "instagram" | "youtube" | "facebook" | "website" | "tiktok" | "twitter_x" | "linkedin" | "threads";
+
+interface SocialDef {
+  userIdx: number;
+  platform: SocialPlatform;
+  url: string;
+}
+
+const SOCIAL_LINKS: SocialDef[] = [
+  { userIdx: 0, platform: "instagram",  url: "https://instagram.com/alice_acro" },
+  { userIdx: 0, platform: "youtube",    url: "https://youtube.com/@aliceacro" },
+  { userIdx: 0, platform: "website",    url: "https://aliceacro.com" },
+  { userIdx: 1, platform: "instagram",  url: "https://instagram.com/bob_uk_acro" },
+  { userIdx: 2, platform: "instagram",  url: "https://instagram.com/charlie_bristol" },
+  { userIdx: 2, platform: "facebook",   url: "https://facebook.com/charlie.bristol.acro" },
+  { userIdx: 3, platform: "instagram",  url: "https://instagram.com/diana_flows" },
+  { userIdx: 3, platform: "tiktok",     url: "https://tiktok.com/@diana_flows" },
+  { userIdx: 3, platform: "youtube",    url: "https://youtube.com/@dianaflows" },
+  { userIdx: 4, platform: "instagram",  url: "https://instagram.com/eve_acro" },
+  { userIdx: 5, platform: "instagram",  url: "https://instagram.com/frank_acro_paris" },
+  { userIdx: 5, platform: "website",    url: "https://parisacrofestival.com" },
+  { userIdx: 5, platform: "youtube",    url: "https://youtube.com/@frankteacher" },
+  { userIdx: 5, platform: "linkedin",   url: "https://linkedin.com/in/frank-teacher" },
+  { userIdx: 6, platform: "instagram",  url: "https://instagram.com/grace_yogi_sf" },
+  { userIdx: 6, platform: "twitter_x",  url: "https://x.com/graceyogisf" },
+  { userIdx: 7, platform: "instagram",  url: "https://instagram.com/hiro_acro_bkk" },
+  { userIdx: 7, platform: "website",    url: "https://hiroacroretreat.com" },
+  { userIdx: 8, platform: "instagram",  url: "https://instagram.com/isla_danceacro" },
+  { userIdx: 8, platform: "threads",    url: "https://threads.net/@isla_danceacro" },
 ];
 
 /* ================================================================== */
@@ -230,6 +292,40 @@ export async function seedDevData(client?: DbClient): Promise<string[]> {
     }
   }
   log.push(`Seeded ${teachersCreated} teacher profiles`);
+
+  // 7. Community profiles (user_profiles with directory_visible)
+  let profilesCreated = 0;
+  for (const p of PROFILES) {
+    const userId = ALL_USER_IDS[p.userIdx];
+    const cityId = cityIds[p.citySlug] ?? null;
+    await d.query(
+      `INSERT INTO user_profiles (user_id, display_name, bio, default_role, home_city_id, directory_visible)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id) DO UPDATE SET
+         display_name = EXCLUDED.display_name,
+         bio = EXCLUDED.bio,
+         default_role = EXCLUDED.default_role,
+         home_city_id = EXCLUDED.home_city_id,
+         directory_visible = EXCLUDED.directory_visible`,
+      [userId, p.displayName, p.bio, p.role, cityId, p.directoryVisible],
+    );
+    profilesCreated++;
+  }
+  log.push(`Seeded ${profilesCreated} community profiles (${PROFILES.filter((p) => p.directoryVisible).length} directory-visible)`);
+
+  // 8. Social links
+  let linksCreated = 0;
+  for (const sl of SOCIAL_LINKS) {
+    const userId = ALL_USER_IDS[sl.userIdx];
+    await d.query(
+      `INSERT INTO social_links (user_id, platform, url, visibility)
+       VALUES ($1, $2, $3, 'everyone')
+       ON CONFLICT (user_id, platform) DO UPDATE SET url = EXCLUDED.url`,
+      [userId, sl.platform, sl.url],
+    );
+    linksCreated++;
+  }
+  log.push(`Seeded ${linksCreated} social links`);
 
   return log;
 }

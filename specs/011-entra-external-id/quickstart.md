@@ -16,7 +16,7 @@
 Spec 007 mock auth remains the default local development experience. You do **not** need an Entra External ID tenant to run the app locally.
 
 ```bash
-# 1. Clone and install (from repo root, in WSL)
+# 1. Clone and install (from repo root, in Codespaces or a Linux container)
 npm install
 
 # 2. Copy environment template

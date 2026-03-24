@@ -43,6 +43,15 @@ export type { EventCardProps, EventCardData } from "./EventCard/EventCard";
 export { TeacherCard } from "./TeacherCard/index.web";
 export type { TeacherCardProps, TeacherCardData } from "./TeacherCard/TeacherCard";
 
+export { DirectoryCard } from "./DirectoryCard/index.web";
+export type { DirectoryCardProps, DirectoryCardData } from "./DirectoryCard/DirectoryCard";
+
+export { SocialIcons } from "./SocialIcons/index.web";
+export type { SocialIconsProps } from "./SocialIcons/SocialIcons";
+
+export { ProfileCompleteness } from "./ProfileCompleteness/index.web";
+export type { ProfileCompletenessProps } from "./ProfileCompleteness/ProfileCompleteness";
+
 // Feedback / states
 export { OfflineBanner } from "./OfflineBanner/index.web";
 export type { OfflineBannerProps } from "./OfflineBanner/OfflineBanner";

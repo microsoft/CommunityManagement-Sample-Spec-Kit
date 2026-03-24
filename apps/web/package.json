@@ -22,6 +22,8 @@
     "@acroyoga/shared": "*",
     "@acroyoga/shared-ui": "*",
     "@acroyoga/tokens": "*",
+    "@azure/identity": "^4.6.0",
+    "@azure/monitor-opentelemetry": "^1.16.0",
     "@azure/storage-blob": "^12.31.0",
     "@tailwindcss/postcss": "^4.2.1",
     "date-fns": "^4.1.0",
@@ -61,10 +63,10 @@
     "eslint-config-next": "^16.1.6",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "http-server": "^14.1.1",
-    "jsdom": "^29.0.0",
+    "jsdom": "^29.0.1",
     "storybook": "^10.3.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0",
+    "vitest": "^4.1.1",
     "wait-on": "^9.0.4"
   }
 }
