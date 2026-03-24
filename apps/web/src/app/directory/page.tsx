@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -165,6 +165,14 @@ function MemberCard({
 }
 
 export default function DirectoryPage() {
+  return (
+    <Suspense>
+      <DirectoryContent />
+    </Suspense>
+  );
+}
+
+function DirectoryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
