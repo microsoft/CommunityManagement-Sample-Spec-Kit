@@ -17,9 +17,9 @@
 
 **Purpose**: Create new files and directories needed for mock auth
 
-- [ ] T001 Create mock user definitions module with all 5 sample users, deterministic UUIDs, slugs, grants, and the `SampleUser`/`SampleGrant` types in src/lib/auth/mock-users.ts
-- [ ] T002 [P] Create the dev API route directory structure at src/app/api/dev/mock-user/
-- [ ] T003 [P] Create the dev components directory at src/components/dev/
+- [X] T001 Create mock user definitions module with all 5 sample users, deterministic UUIDs, slugs, grants, and the `SampleUser`/`SampleGrant` types in src/lib/auth/mock-users.ts
+- [X] T002 [P] Create the dev API route directory structure at src/app/api/dev/mock-user/
+- [X] T003 [P] Create the dev components directory at src/components/dev/
 
 ---
 
@@ -29,8 +29,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Implement `isMockAuthEnabled()` utility function in src/lib/auth/mock-users.ts that returns true when `NODE_ENV === 'development'` AND Entra ID credentials (`ENTRA_CLIENT_ID`) are not configured
-- [ ] T005 Implement idempotent seed function in src/lib/auth/mock-seed.ts that upserts all sample users into `users` table, inserts geography/city/country reference data, and upserts permission grants into `permission_grants` table using `ON CONFLICT` clauses
+- [X] T004 Implement `isMockAuthEnabled()` utility function in src/lib/auth/mock-users.ts that returns true when `NODE_ENV === 'development'` AND Entra ID credentials (`ENTRA_CLIENT_ID`) are not configured
+- [X] T005 Implement idempotent seed function in src/lib/auth/mock-seed.ts that upserts all sample users into `users` table, inserts geography/city/country reference data, and upserts permission grants into `permission_grants` table using `ON CONFLICT` clauses
 
 **Checkpoint**: Mock user data definitions and seed infrastructure ready — user story implementation can begin
 
@@ -44,9 +44,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Modify `getServerSession()` in src/lib/auth/session.ts to add a mock auth guard: when `isMockAuthEnabled()` is true, read the active mock user from cookie (`mock-user-id` via `cookies()` from `next/headers`) or fall back to module-level `_mockUserId` state; return `{ userId }` for the active user or `null` for anonymous; default to global-admin UUID when no mock user is set
-- [ ] T007 [US1] Add `setMockUser(userId: string | null)` and `getMockUserId()` exports to src/lib/auth/session.ts for module-level mock user state (used by tests and dev seed)
-- [ ] T008 [US1] Implement the `GET /api/dev/mock-user/seed` route in src/app/api/dev/mock-user/seed/route.ts that calls the seed function from mock-seed.ts, returns `SeedMockUsersResponse`, and returns 404 in production mode
+- [X] T006 [US1] Modify `getServerSession()` in src/lib/auth/session.ts to add a mock auth guard: when `isMockAuthEnabled()` is true, read the active mock user from cookie (`mock-user-id` via `cookies()` from `next/headers`) or fall back to module-level `_mockUserId` state; return `{ userId }` for the active user or `null` for anonymous; default to global-admin UUID when no mock user is set
+- [X] T007 [US1] Add `setMockUser(userId: string | null)` and `getMockUserId()` exports to src/lib/auth/session.ts for module-level mock user state (used by tests and dev seed)
+- [X] T008 [US1] Implement the `GET /api/dev/mock-user/seed` route in src/app/api/dev/mock-user/seed/route.ts that calls the seed function from mock-seed.ts, returns `SeedMockUsersResponse`, and returns 404 in production mode
 
 **Checkpoint**: App runs locally with automatic mock auth. `getServerSession()` returns a valid session for the default user. All existing `requireAuth()` and `withPermission()` middleware works unchanged.
 
@@ -60,10 +60,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Implement `POST /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts that accepts `SetMockUserRequest` (Zod-validated slug), sets the `mock-user-id` cookie to the matching sample user's UUID (or clears it for anonymous), and returns `SetMockUserResponse`; returns 404 in production mode
-- [ ] T010 [US2] Implement `GET /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts that returns `GetMockUserResponse` with active user (read from cookie) and all available sample users; returns 404 in production mode
-- [ ] T011 [US2] Create `MockUserSwitcher` Client Component in src/components/dev/MockUserSwitcher.tsx — fixed-position floating panel (bottom-right), displays current user name and role badge, dropdown of all sample users, calls `POST /api/dev/mock-user` on selection, keyboard-navigable
-- [ ] T012 [US2] Modify root layout in src/app/layout.tsx to conditionally render `<MockUserSwitcher />` only when `process.env.NODE_ENV === 'development'`
+- [X] T009 [US2] Implement `POST /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts that accepts `SetMockUserRequest` (Zod-validated slug), sets the `mock-user-id` cookie to the matching sample user's UUID (or clears it for anonymous), and returns `SetMockUserResponse`; returns 404 in production mode
+- [X] T010 [US2] Implement `GET /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts that returns `GetMockUserResponse` with active user (read from cookie) and all available sample users; returns 404 in production mode
+- [X] T011 [US2] Create `MockUserSwitcher` Client Component in src/components/dev/MockUserSwitcher.tsx — fixed-position floating panel (bottom-right), displays current user name and role badge, dropdown of all sample users, calls `POST /api/dev/mock-user` on selection, keyboard-navigable
+- [X] T012 [US2] Modify root layout in src/app/layout.tsx to conditionally render `<MockUserSwitcher />` only when `process.env.NODE_ENV === 'development'`
 
 **Checkpoint**: Developer can switch between all sample users via the floating UI. Permission behavior changes immediately reflect the selected user.
 
@@ -77,8 +77,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Add dev-mode auto-seed logic that calls the seed function from src/lib/auth/mock-seed.ts on app startup in development mode — trigger from src/app/layout.tsx or a server-side initialization path so that the database is seeded before first request
-- [ ] T014 [US3] Verify idempotency: ensure the seed function in src/lib/auth/mock-seed.ts handles re-runs gracefully — no duplicate records, no constraint violations, upserts update existing data
+- [X] T013 [US3] Add dev-mode auto-seed logic that calls the seed function from src/lib/auth/mock-seed.ts on app startup in development mode — trigger from src/app/layout.tsx or a server-side initialization path so that the database is seeded before first request
+- [X] T014 [US3] Verify idempotency: ensure the seed function in src/lib/auth/mock-seed.ts handles re-runs gracefully — no duplicate records, no constraint violations, upserts update existing data
 
 **Checkpoint**: Fresh `npm run dev` on empty database has all sample users and grants seeded. `checkPermission()` returns correct results for all permission levels.
 
@@ -92,8 +92,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T015 [US4] Create shared test helper in tests/helpers/users.ts that re-exports `SAMPLE_USERS` from src/lib/auth/mock-users.ts, and exports `seedSampleUsers(db: PGlite)` and `seedSampleUser(db: PGlite, slug: string)` functions that insert users, geography, and permission grants into the test database
-- [ ] T016 [US4] Add `setTestDb(db: PGlite)` export to src/lib/auth/mock-seed.ts (or src/lib/auth/session.ts) so that seed and session functions can use the injected PGlite instance in test contexts
+- [X] T015 [US4] Create shared test helper in tests/helpers/users.ts that re-exports `SAMPLE_USERS` from src/lib/auth/mock-users.ts, and exports `seedSampleUsers(db: PGlite)` and `seedSampleUser(db: PGlite, slug: string)` functions that insert users, geography, and permission grants into the test database
+- [X] T016 [US4] Add `setTestDb(db: PGlite)` export to src/lib/auth/mock-seed.ts (or src/lib/auth/session.ts) so that seed and session functions can use the injected PGlite instance in test contexts
 
 **Checkpoint**: All test files can import from `tests/helpers/users.ts` for consistent sample user seeding. No more ad-hoc `createUser()` duplication needed.
 
@@ -107,8 +107,8 @@
 
 ### Implementation for User Story 5
 
-- [ ] T017 [US5] Ensure the `POST /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts handles the `anonymous` slug by clearing the `mock-user-id` cookie (or setting it to a sentinel value), causing `getServerSession()` to return `null`
-- [ ] T018 [US5] Ensure `MockUserSwitcher` in src/components/dev/MockUserSwitcher.tsx includes the "Anonymous / Visitor" option in the dropdown with a distinct visual indicator (no role badge, greyed out)
+- [X] T017 [US5] Ensure the `POST /api/dev/mock-user` route in src/app/api/dev/mock-user/route.ts handles the `anonymous` slug by clearing the `mock-user-id` cookie (or setting it to a sentinel value), causing `getServerSession()` to return `null`
+- [X] T018 [US5] Ensure `MockUserSwitcher` in src/components/dev/MockUserSwitcher.tsx includes the "Anonymous / Visitor" option in the dropdown with a distinct visual indicator (no role badge, greyed out)
 
 **Checkpoint**: Switching to Anonymous causes `getServerSession()` to return `null`. Protected routes return 401. Public routes work normally.
 
@@ -122,9 +122,9 @@
 
 ### Implementation for User Story 6
 
-- [ ] T019 [US6] Create mock middleware in src/lib/auth/mock-middleware.ts that checks for `?mockUser=<slug>` query parameter on incoming requests in development mode, sets the `mock-user-id` cookie to the matching user's UUID, and strips the query param via redirect
-- [ ] T020 [US6] Create Next.js middleware file at src/middleware.ts (or modify if it exists) to invoke the mock query param handler from src/lib/auth/mock-middleware.ts when in development mode; ensure it is a no-op in production
-- [ ] T021 [US6] Handle invalid/unknown slugs in src/lib/auth/mock-middleware.ts by falling back to the default sample user (global-admin) rather than erroring
+- [X] T019 [US6] Create mock middleware in src/lib/auth/mock-middleware.ts that checks for `?mockUser=<slug>` query parameter on incoming requests in development mode, sets the `mock-user-id` cookie to the matching user's UUID, and strips the query param via redirect
+- [X] T020 [US6] Create Next.js middleware file at src/middleware.ts (or modify if it exists) to invoke the mock query param handler from src/lib/auth/mock-middleware.ts when in development mode; ensure it is a no-op in production
+- [X] T021 [US6] Handle invalid/unknown slugs in src/lib/auth/mock-middleware.ts by falling back to the default sample user (global-admin) rather than erroring
 
 **Checkpoint**: `?mockUser=<slug>` on any URL switches the active mock user. Works with curl, Postman, and browser. Completely ignored in production.
 
@@ -134,10 +134,10 @@
 
 **Purpose**: Production safety, cleanup, and validation
 
-- [ ] T022 [P] Verify production safety: ensure `getServerSession()` guard in src/lib/auth/session.ts is completely inert when `NODE_ENV !== 'development'` — no mock sessions, no cookie reads, no performance impact
-- [ ] T023 [P] Verify `MockUserSwitcher` component in src/components/dev/MockUserSwitcher.tsx is tree-shaken from production builds via the conditional import in layout.tsx
-- [ ] T024 [P] Verify all dev API routes (src/app/api/dev/mock-user/route.ts and src/app/api/dev/mock-user/seed/route.ts) return 404 in production mode
-- [ ] T025 Run quickstart.md validation — follow the developer quick start steps end-to-end and verify the documented workflow matches actual behavior
+- [X] T022 [P] Verify production safety: ensure `getServerSession()` guard in src/lib/auth/session.ts is completely inert when `NODE_ENV !== 'development'` — no mock sessions, no cookie reads, no performance impact
+- [X] T023 [P] Verify `MockUserSwitcher` component in src/components/dev/MockUserSwitcher.tsx is tree-shaken from production builds via the conditional import in layout.tsx
+- [X] T024 [P] Verify all dev API routes (src/app/api/dev/mock-user/route.ts and src/app/api/dev/mock-user/seed/route.ts) return 404 in production mode
+- [X] T025 Run quickstart.md validation — follow the developer quick start steps end-to-end and verify the documented workflow matches actual behavior
 
 ---
 
