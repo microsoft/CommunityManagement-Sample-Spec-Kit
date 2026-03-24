@@ -142,8 +142,8 @@ export async function searchTeachers(options: {
   if (city) {
     conditions.push(`EXISTS (
       SELECT 1 FROM user_profiles up2
-      JOIN cities c ON c.id = up2.home_city_id
-      WHERE up2.user_id = tp.user_id AND c.slug = $${idx}
+      JOIN geography g ON g.id = up2.home_city_id
+      WHERE up2.user_id = tp.user_id AND g.city = $${idx}
     )`);
     params.push(city);
     idx++;
