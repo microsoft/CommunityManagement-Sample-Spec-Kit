@@ -26,19 +26,23 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.image-tag)
     outputs:
       image-tag: sha-${{ github.sha }}
+    # OIDC token is required for the azure/login action (Constitution XIV — Managed Identity)
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure login
+      - name: Azure login (OIDC — staging managed identity)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: ACR login
-        uses: azure/docker-login@v2
-        with:
-          login-server: ${{ env.REGISTRY }}
+        run: az acr login --name ${{ env.REGISTRY }}
 
       - name: Build and push container image
         run: |
@@ -51,6 +55,9 @@ jobs:
     needs: [build-and-push]
     if: always() && (needs.build-and-push.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging'))
     environment: staging
+    permissions:
+      id-token: write
+      contents: read
 
     env:
       IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag || inputs.image-tag }}
@@ -60,10 +67,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure login
+      - name: Azure login (OIDC — staging managed identity)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to staging
         uses: azure/container-apps-deploy-action@v2
@@ -95,6 +104,9 @@ jobs:
     needs: [build-and-push, deploy-staging]
     if: always() && needs.deploy-staging.result == 'success' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production'))
     environment: production
+    permissions:
+      id-token: write
+      contents: read
 
     env:
       IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag || inputs.image-tag }}
@@ -104,10 +116,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure login
+      - name: Azure login (OIDC — production managed identity)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_PRODUCTION }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to production
         uses: azure/container-apps-deploy-action@v2
