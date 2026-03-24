@@ -72,4 +72,4 @@ jobs:
         run: |
           npx concurrently -k -s first -n storybook,test \
             "npx http-server apps/web/storybook-static --port 6006 --silent" \
-            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006"
+            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006 --config-dir apps/web/.storybook"
