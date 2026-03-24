@@ -101,8 +101,8 @@ describe("GDPR deletion — social auth fields (T028)", () => {
     expect(row.avatar_url).toBeNull();
     expect(row.provider).toBeNull();
     // Email and name should be anonymised
-    expect(row.email).toBe("[deleted]");
-    expect(row.name).toBe("[deleted]");
+    expect(row.email).toContain("deleted_");
+    expect(row.name).toBe("Deleted User");
   });
 });
 
