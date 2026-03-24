@@ -19,8 +19,8 @@
 
 **Purpose**: Update test helpers to support session-based auth so that all existing 339 tests continue to pass after the auth migration.
 
-- [ ] T001 Update test auth helper to use session-based authentication instead of x-user-id header in tests/helpers/auth.ts
-- [ ] T002 Verify all 339 existing tests still pass with updated test helpers by running `npm run test`
+- [X] T001 Update test auth helper to use session-based authentication instead of x-user-id header in tests/helpers/auth.ts
+- [X] T002 Verify all 339 existing tests still pass with updated test helpers by running `npm run test`
 
 **Checkpoint**: Test infrastructure is session-aware. All 339 tests green. Auth migration can now proceed.
 
@@ -34,51 +34,51 @@
 
 ### Spec 001 Routes — Events, Venues, RSVPs, Credits
 
-- [ ] T003 [P] Migrate POST /api/events to requireAuth() in src/app/api/events/route.ts
-- [ ] T004 [P] Migrate PATCH /api/events/[id] to requireAuth() in src/app/api/events/[id]/route.ts
-- [ ] T005 [P] Migrate DELETE /api/events/[id] to requireAuth() in src/app/api/events/[id]/route.ts
-- [ ] T006 [P] Migrate POST /api/events/[id]/rsvp to requireAuth() in src/app/api/events/[id]/rsvp/route.ts
-- [ ] T007 [P] Migrate DELETE /api/events/[id]/rsvp to requireAuth() in src/app/api/events/[id]/rsvp/route.ts
-- [ ] T008 [P] Migrate GET /api/events/[id]/rsvp/status to requireAuth() in src/app/api/events/[id]/rsvp/status/route.ts
-- [ ] T009 [P] Migrate POST /api/venues to requireAuth() in src/app/api/venues/route.ts
-- [ ] T010 [P] Migrate PATCH /api/venues/[id] to requireAuth() in src/app/api/venues/[id]/route.ts
-- [ ] T011 [P] Migrate DELETE /api/venues/[id] to requireAuth() in src/app/api/venues/[id]/route.ts
-- [ ] T012 [P] Migrate GET /api/venues/mine to requireAuth() in src/app/api/venues/mine/route.ts
-- [ ] T013 [P] Migrate POST /api/credits/redeem to requireAuth() in src/app/api/credits/redeem/route.ts
-- [ ] T014 [P] Migrate GET /api/credits/balance to requireAuth() in src/app/api/credits/balance/route.ts
-- [ ] T015 Run test suite for Spec 001 routes: `npm run test -- tests/integration/events/ tests/integration/venues/`
+- [X] T003 [P] Migrate POST /api/events to requireAuth() in src/app/api/events/route.ts
+- [X] T004 [P] Migrate PATCH /api/events/[id] to requireAuth() in src/app/api/events/[id]/route.ts
+- [X] T005 [P] Migrate DELETE /api/events/[id] to requireAuth() in src/app/api/events/[id]/route.ts
+- [X] T006 [P] Migrate POST /api/events/[id]/rsvp to requireAuth() in src/app/api/events/[id]/rsvp/route.ts
+- [X] T007 [P] Migrate DELETE /api/events/[id]/rsvp to requireAuth() in src/app/api/events/[id]/rsvp/route.ts
+- [X] T008 [P] Migrate GET /api/events/[id]/rsvp/status to requireAuth() in src/app/api/events/[id]/rsvp/status/route.ts
+- [X] T009 [P] Migrate POST /api/venues to requireAuth() in src/app/api/venues/route.ts
+- [X] T010 [P] Migrate PATCH /api/venues/[id] to requireAuth() in src/app/api/venues/[id]/route.ts
+- [X] T011 [P] Migrate DELETE /api/venues/[id] to requireAuth() in src/app/api/venues/[id]/route.ts
+- [X] T012 [P] Migrate GET /api/venues/mine to requireAuth() in src/app/api/venues/mine/route.ts
+- [X] T013 [P] Migrate POST /api/credits/redeem to requireAuth() in src/app/api/credits/redeem/route.ts
+- [X] T014 [P] Migrate GET /api/credits/balance to requireAuth() in src/app/api/credits/balance/route.ts
+- [X] T015 Run test suite for Spec 001 routes: `npm run test -- tests/integration/events/ tests/integration/venues/`
 
 ### Spec 002 Routes — Profiles, Follows, Threads, Safety
 
-- [ ] T016 [P] Migrate GET /api/profiles/me to requireAuth() in src/app/api/profiles/me/route.ts
-- [ ] T017 [P] Migrate PATCH /api/profiles/me to requireAuth() in src/app/api/profiles/me/route.ts
-- [ ] T018 [P] Migrate POST /api/follows to requireAuth() in src/app/api/follows/route.ts
-- [ ] T019 [P] Migrate DELETE /api/follows/[id] to requireAuth() in src/app/api/follows/[id]/route.ts
-- [ ] T020 [P] Migrate GET /api/follows/followers to requireAuth() in src/app/api/follows/followers/route.ts
-- [ ] T021 [P] Migrate GET /api/follows/following to requireAuth() in src/app/api/follows/following/route.ts
-- [ ] T022 [P] Migrate POST /api/threads to requireAuth() in src/app/api/threads/route.ts
-- [ ] T023 [P] Migrate GET /api/threads to requireAuth() in src/app/api/threads/route.ts
-- [ ] T024 [P] Migrate GET /api/threads/[id]/messages to requireAuth() in src/app/api/threads/[id]/messages/route.ts
-- [ ] T025 [P] Migrate POST /api/threads/[id]/messages to requireAuth() in src/app/api/threads/[id]/messages/route.ts
-- [ ] T026 [P] Migrate POST /api/threads/[id]/messages/[msgId]/reactions to requireAuth() in src/app/api/threads/[id]/messages/[msgId]/reactions/route.ts
-- [ ] T027 [P] Migrate POST /api/safety/block to requireAuth() in src/app/api/safety/block/route.ts
-- [ ] T028 [P] Migrate DELETE /api/safety/block/[id] to requireAuth() in src/app/api/safety/block/[id]/route.ts
-- [ ] T029 [P] Migrate POST /api/safety/report to requireAuth() in src/app/api/safety/report/route.ts
-- [ ] T030 Run test suite for Spec 002 routes: `npm run test -- tests/integration/profiles/ tests/integration/follows/ tests/integration/threads/`
+- [X] T016 [P] Migrate GET /api/profiles/me to requireAuth() in src/app/api/profiles/me/route.ts
+- [X] T017 [P] Migrate PATCH /api/profiles/me to requireAuth() in src/app/api/profiles/me/route.ts
+- [X] T018 [P] Migrate POST /api/follows to requireAuth() in src/app/api/follows/route.ts
+- [X] T019 [P] Migrate DELETE /api/follows/[id] to requireAuth() in src/app/api/follows/[id]/route.ts
+- [X] T020 [P] Migrate GET /api/follows/followers to requireAuth() in src/app/api/follows/followers/route.ts
+- [X] T021 [P] Migrate GET /api/follows/following to requireAuth() in src/app/api/follows/following/route.ts
+- [X] T022 [P] Migrate POST /api/threads to requireAuth() in src/app/api/threads/route.ts
+- [X] T023 [P] Migrate GET /api/threads to requireAuth() in src/app/api/threads/route.ts
+- [X] T024 [P] Migrate GET /api/threads/[id]/messages to requireAuth() in src/app/api/threads/[id]/messages/route.ts
+- [X] T025 [P] Migrate POST /api/threads/[id]/messages to requireAuth() in src/app/api/threads/[id]/messages/route.ts
+- [X] T026 [P] Migrate POST /api/threads/[id]/messages/[msgId]/reactions to requireAuth() in src/app/api/threads/[id]/messages/[msgId]/reactions/route.ts
+- [X] T027 [P] Migrate POST /api/safety/block to requireAuth() in src/app/api/safety/block/route.ts
+- [X] T028 [P] Migrate DELETE /api/safety/block/[id] to requireAuth() in src/app/api/safety/block/[id]/route.ts
+- [X] T029 [P] Migrate POST /api/safety/report to requireAuth() in src/app/api/safety/report/route.ts
+- [X] T030 Run test suite for Spec 002 routes: `npm run test -- tests/integration/profiles/ tests/integration/follows/ tests/integration/threads/`
 
 ### Spec 003 Routes — Bookings, Recurrence
 
-- [ ] T031 [P] Migrate POST /api/bookings to requireAuth() in src/app/api/bookings/route.ts
-- [ ] T032 [P] Migrate DELETE /api/bookings/[id] to requireAuth() in src/app/api/bookings/[id]/route.ts
-- [ ] T033 [P] Migrate GET /api/bookings/mine to requireAuth() in src/app/api/bookings/mine/route.ts
-- [ ] T034 [P] Migrate POST /api/events/[id]/recurrence to requireAuth() in src/app/api/events/[id]/recurrence/route.ts
-- [ ] T035 [P] Migrate PATCH /api/events/[id]/recurrence to requireAuth() in src/app/api/events/[id]/recurrence/route.ts
-- [ ] T036 Run test suite for Spec 003 routes: `npm run test -- tests/integration/bookings/`
+- [X] T031 [P] Migrate POST /api/bookings to requireAuth() in src/app/api/bookings/route.ts
+- [X] T032 [P] Migrate DELETE /api/bookings/[id] to requireAuth() in src/app/api/bookings/[id]/route.ts
+- [X] T033 [P] Migrate GET /api/bookings/mine to requireAuth() in src/app/api/bookings/mine/route.ts
+- [X] T034 [P] Migrate POST /api/events/[id]/recurrence to requireAuth() in src/app/api/events/[id]/recurrence/route.ts
+- [X] T035 [P] Migrate PATCH /api/events/[id]/recurrence to requireAuth() in src/app/api/events/[id]/recurrence/route.ts
+- [X] T036 Run test suite for Spec 003 routes: `npm run test -- tests/integration/bookings/`
 
 ### Final Auth Verification
 
-- [ ] T037 Grep src/ for any remaining x-user-id header references and remove them
-- [ ] T038 Run full test suite to confirm all 339 tests pass: `npm run test`
+- [X] T037 Grep src/ for any remaining x-user-id header references and remove them
+- [X] T038 Run full test suite to confirm all 339 tests pass: `npm run test`
 
 **Checkpoint**: All 32+ routes use server-verified sessions. Zero x-user-id references remain. 339 tests green. FR-001, FR-002, FR-003 satisfied.
 
@@ -92,16 +92,16 @@
 
 ### Tests for User Story 2
 
-- [ ] T039 [P] [US2] Write ownership test: non-owner PATCH returns 403 in tests/integration/teachers/ownership.test.ts
-- [ ] T040 [P] [US2] Write ownership test: non-owner DELETE returns 403 in tests/integration/teachers/ownership.test.ts
-- [ ] T041 [P] [US2] Write ownership test: owner PATCH succeeds in tests/integration/teachers/ownership.test.ts
-- [ ] T042 [P] [US2] Write ownership test: admin override PATCH succeeds for non-owner in tests/integration/teachers/ownership.test.ts
+- [X] T039 [P] [US2] Write ownership test: non-owner PATCH returns 403 in tests/integration/teachers/ownership.test.ts
+- [X] T040 [P] [US2] Write ownership test: non-owner DELETE returns 403 in tests/integration/teachers/ownership.test.ts
+- [X] T041 [P] [US2] Write ownership test: owner PATCH succeeds in tests/integration/teachers/ownership.test.ts
+- [X] T042 [P] [US2] Write ownership test: admin override PATCH succeeds for non-owner in tests/integration/teachers/ownership.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Add ownership verification to PATCH handler — load profile, compare user_id to session user, allow admin override in src/app/api/teachers/[id]/route.ts
-- [ ] T044 [US2] Add ownership verification to DELETE handler — same pattern as PATCH in src/app/api/teachers/[id]/route.ts
-- [ ] T045 [US2] Run ownership tests: `npm run test -- tests/integration/teachers/ownership`
+- [X] T043 [US2] Add ownership verification to PATCH handler — load profile, compare user_id to session user, allow admin override in src/app/api/teachers/[id]/route.ts
+- [X] T044 [US2] Add ownership verification to DELETE handler — same pattern as PATCH in src/app/api/teachers/[id]/route.ts
+- [X] T045 [US2] Run ownership tests: `npm run test -- tests/integration/teachers/ownership`
 
 **Checkpoint**: Non-owners get 403 on teacher profile mutations. Owners and admins succeed. FR-004, FR-005 satisfied.
 
@@ -115,19 +115,19 @@
 
 ### Tests for User Story 3
 
-- [ ] T046 [P] [US3] Write admin test: non-admin PATCH certification verify returns 403 in tests/integration/teachers/admin.test.ts
-- [ ] T047 [P] [US3] Write admin test: non-admin PATCH review moderate returns 403 in tests/integration/teachers/admin.test.ts
-- [ ] T048 [P] [US3] Write admin test: non-admin GET pending teacher requests returns 403 in tests/integration/teachers/admin.test.ts
-- [ ] T049 [P] [US3] Write admin test: non-admin GET expiring certifications returns 403 in tests/integration/teachers/admin.test.ts
-- [ ] T050 [P] [US3] Write admin test: admin user succeeds on all 4 endpoints in tests/integration/teachers/admin.test.ts
+- [X] T046 [P] [US3] Write admin test: non-admin PATCH certification verify returns 403 in tests/integration/teachers/admin.test.ts
+- [X] T047 [P] [US3] Write admin test: non-admin PATCH review moderate returns 403 in tests/integration/teachers/admin.test.ts
+- [X] T048 [P] [US3] Write admin test: non-admin GET pending teacher requests returns 403 in tests/integration/teachers/admin.test.ts
+- [X] T049 [P] [US3] Write admin test: non-admin GET expiring certifications returns 403 in tests/integration/teachers/admin.test.ts
+- [X] T050 [P] [US3] Write admin test: admin user succeeds on all 4 endpoints in tests/integration/teachers/admin.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T051 [P] [US3] Wrap PATCH /api/teachers/[id]/certifications/[certId]/verify with withPermission('admin') in src/app/api/teachers/[id]/certifications/[certId]/verify/route.ts
-- [ ] T052 [P] [US3] Wrap PATCH /api/reviews/[id]/moderate with withPermission('admin') in src/app/api/reviews/[id]/moderate/route.ts
-- [ ] T053 [P] [US3] Wrap GET /api/teachers/requests/pending with withPermission('admin') in src/app/api/teachers/requests/pending/route.ts
-- [ ] T054 [P] [US3] Wrap GET /api/teachers/certifications/expiring with withPermission('admin') in src/app/api/teachers/certifications/expiring/route.ts
-- [ ] T055 [US3] Run admin tests: `npm run test -- tests/integration/teachers/admin`
+- [X] T051 [P] [US3] Wrap PATCH /api/teachers/[id]/certifications/[certId]/verify with withPermission('admin') in src/app/api/teachers/[id]/certifications/[certId]/verify/route.ts
+- [X] T052 [P] [US3] Wrap PATCH /api/reviews/[id]/moderate with withPermission('admin') in src/app/api/reviews/[id]/moderate/route.ts
+- [X] T053 [P] [US3] Wrap GET /api/teachers/requests/pending with withPermission('admin') in src/app/api/teachers/requests/pending/route.ts
+- [X] T054 [P] [US3] Wrap GET /api/teachers/certifications/expiring with withPermission('admin') in src/app/api/teachers/certifications/expiring/route.ts
+- [X] T055 [US3] Run admin tests: `npm run test -- tests/integration/teachers/admin`
 
 **Checkpoint**: All 4 privileged endpoints reject non-admin users with 403. FR-006, FR-007 satisfied.
 
@@ -141,14 +141,14 @@
 
 ### Tests for User Story 4
 
-- [ ] T056 [P] [US4] Write GDPR test: user with full Spec 005 data → zero rows after deletion in tests/integration/gdpr/deletion-spec005.test.ts
-- [ ] T057 [P] [US4] Write GDPR test: user with no teacher data → deletion completes without error in tests/integration/gdpr/deletion-spec005.test.ts
-- [ ] T058 [P] [US4] Write GDPR test: user with partial teacher data → clean deletion in tests/integration/gdpr/deletion-spec005.test.ts
+- [X] T056 [P] [US4] Write GDPR test: user with full Spec 005 data → zero rows after deletion in tests/integration/gdpr/deletion-spec005.test.ts
+- [X] T057 [P] [US4] Write GDPR test: user with no teacher data → deletion completes without error in tests/integration/gdpr/deletion-spec005.test.ts
+- [X] T058 [P] [US4] Write GDPR test: user with partial teacher data → clean deletion in tests/integration/gdpr/deletion-spec005.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T059 [US4] Add 8 deletion steps (orders 21–28) for Spec 005 tables to GDPR deletion function in src/lib/gdpr/deletion.ts — delete review_reminders, reviews (authored), reviews (about user's teacher profile), event_teachers, teacher_photos, certifications, teacher_requests, teacher_profiles in FK order
-- [ ] T060 [US4] Run GDPR tests: `npm run test -- tests/integration/gdpr/`
+- [X] T059 [US4] Add 8 deletion steps (orders 21–28) for Spec 005 tables to GDPR deletion function in src/lib/gdpr/deletion.ts — delete review_reminders, reviews (authored), reviews (about user's teacher profile), event_teachers, teacher_photos, certifications, teacher_requests, teacher_profiles in FK order
+- [X] T060 [US4] Run GDPR tests: `npm run test -- tests/integration/gdpr/`
 
 **Checkpoint**: GDPR deletion covers all 28 tables across 5 specs. Existing deletion steps unchanged. FR-008, FR-009, FR-010 satisfied.
 
@@ -162,10 +162,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T061 [US5] Replace per-message isBlocked() with batch query loading all blocked user IDs into a Set in src/services/messages.ts
-- [ ] T062 [US5] Replace per-message getReactions() with batch GROUP BY query loading all reaction summaries into a Map in src/services/messages.ts
-- [ ] T063 [US5] Decorate messages in-memory using the preloaded Set and Map in src/services/messages.ts
-- [ ] T064 [US5] Run thread message tests to verify no regressions: `npm run test -- tests/integration/threads/messages`
+- [X] T061 [US5] Replace per-message isBlocked() with batch query loading all blocked user IDs into a Set in src/services/messages.ts
+- [X] T062 [US5] Replace per-message getReactions() with batch GROUP BY query loading all reaction summaries into a Map in src/services/messages.ts
+- [X] T063 [US5] Decorate messages in-memory using the preloaded Set and Map in src/services/messages.ts
+- [X] T064 [US5] Run thread message tests to verify no regressions: `npm run test -- tests/integration/threads/messages`
 
 **Checkpoint**: Thread loading uses O(1) queries regardless of message count. FR-011, FR-012 satisfied.
 
@@ -179,9 +179,9 @@
 
 ### Implementation for User Story 6
 
-- [ ] T065 [US6] Replace per-entry getRelationshipStatus() with batch WHERE IN query loading follow-back set in src/services/follows.ts
-- [ ] T066 [US6] Decorate follower/following entries in-memory using the preloaded Set in src/services/follows.ts
-- [ ] T067 [US6] Run follower tests to verify no regressions: `npm run test -- tests/integration/follows/`
+- [X] T065 [US6] Replace per-entry getRelationshipStatus() with batch WHERE IN query loading follow-back set in src/services/follows.ts
+- [X] T066 [US6] Decorate follower/following entries in-memory using the preloaded Set in src/services/follows.ts
+- [X] T067 [US6] Run follower tests to verify no regressions: `npm run test -- tests/integration/follows/`
 
 **Checkpoint**: Follower/following lists use O(1) queries regardless of page size. FR-013 satisfied.
 
@@ -195,8 +195,8 @@
 
 ### Implementation for User Story 7
 
-- [ ] T068 [US7] Fix city filter table reference from wrong table to correct table (user_profiles or teacher_profiles) in src/services/teachers.ts
-- [ ] T069 [US7] Run teacher search tests to verify the fix: `npm run test -- tests/integration/teachers/`
+- [X] T068 [US7] Fix city filter table reference from wrong table to correct table (user_profiles or teacher_profiles) in src/services/teachers.ts
+- [X] T069 [US7] Run teacher search tests to verify the fix: `npm run test -- tests/integration/teachers/`
 
 **Checkpoint**: Teacher search by city works without runtime errors. FR-014 satisfied.
 
@@ -210,15 +210,15 @@
 
 ### Implementation for User Story 8
 
-- [ ] T070 [P] [US8] Create escapeIlike() utility function in src/lib/db/utils.ts — escape %, _, and \ in user-supplied search input
-- [ ] T071 [P] [US8] Define STRIPE_API_VERSION constant in src/lib/payments/constants.ts
-- [ ] T072 [US8] Replace typeof checks with Zod schema (url, alt_text, display_order) in teacher photos POST handler in src/app/api/teachers/[id]/photos/route.ts
-- [ ] T073 [US8] Apply escapeIlike() to event search endpoint in src/app/api/events/route.ts
-- [ ] T074 [P] [US8] Apply escapeIlike() to venue search endpoint in src/app/api/venues/route.ts
-- [ ] T075 [P] [US8] Apply escapeIlike() to teacher search endpoint in src/services/teachers.ts
-- [ ] T076 [US8] Update all Stripe API version references to use STRIPE_API_VERSION constant from src/lib/payments/constants.ts
-- [ ] T077 [US8] Audit all route files for ad-hoc error responses (NextResponse.json with non-standard shapes) and replace with shared error helpers from src/lib/errors.ts
-- [ ] T078 [US8] Run full test suite to confirm quality fixes introduce no regressions: `npm run test`
+- [X] T070 [P] [US8] Create escapeIlike() utility function in src/lib/db/utils.ts — escape %, _, and \ in user-supplied search input
+- [X] T071 [P] [US8] Define STRIPE_API_VERSION constant in src/lib/payments/constants.ts
+- [X] T072 [US8] Replace typeof checks with Zod schema (url, alt_text, display_order) in teacher photos POST handler in src/app/api/teachers/[id]/photos/route.ts
+- [X] T073 [US8] Apply escapeIlike() to event search endpoint in src/app/api/events/route.ts
+- [X] T074 [P] [US8] Apply escapeIlike() to venue search endpoint in src/app/api/venues/route.ts
+- [X] T075 [P] [US8] Apply escapeIlike() to teacher search endpoint in src/services/teachers.ts
+- [X] T076 [US8] Update all Stripe API version references to use STRIPE_API_VERSION constant from src/lib/payments/constants.ts
+- [X] T077 [US8] Audit all route files for ad-hoc error responses (NextResponse.json with non-standard shapes) and replace with shared error helpers from src/lib/errors.ts
+- [X] T078 [US8] Run full test suite to confirm quality fixes introduce no regressions: `npm run test`
 
 **Checkpoint**: All validation uses Zod. ILIKE input is escaped. Error shapes are consistent. Stripe version from shared constant. FR-015, FR-016, FR-017, FR-018 satisfied.
 
@@ -228,11 +228,11 @@
 
 **Purpose**: Final validation confirming all success criteria are met.
 
-- [ ] T079 Run full test suite — all 339+ existing tests and all new tests must pass: `npm run test`
-- [ ] T080 Run TypeScript compiler check with zero errors: `tsc --noEmit`
-- [ ] T081 Final grep for x-user-id in src/ — confirm zero matches
-- [ ] T082 Verify all success criteria SC-001 through SC-010 are met
-- [ ] T083 Run quickstart.md validation steps to confirm developer workflow
+- [X] T079 Run full test suite — all 339+ existing tests and all new tests must pass: `npm run test`
+- [X] T080 Run TypeScript compiler check with zero errors: `tsc --noEmit`
+- [X] T081 Final grep for x-user-id in src/ — confirm zero matches
+- [X] T082 Verify all success criteria SC-001 through SC-010 are met
+- [X] T083 Run quickstart.md validation steps to confirm developer workflow
 
 **Checkpoint**: All success criteria verified. Total test count ≥ 354 (339 baseline + ≥15 new). Zero regressions. Branch ready for PR.
 
