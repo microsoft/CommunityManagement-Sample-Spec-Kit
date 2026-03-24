@@ -66,15 +66,21 @@ describe("Profile and Settings effects", () => {
     await db.query(
       "INSERT INTO countries (id, name, code, continent_code) VALUES ('00000000-0000-0000-0000-000000000002', 'France', 'FR', 'EU')",
     );
-    const c1 = await db.query<{ id: string }>(
-      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('London', 'london', '00000000-0000-0000-0000-000000000001', 51.5074, -0.1278, 'Europe/London') RETURNING id",
+    await db.query(
+      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('London', 'london', '00000000-0000-0000-0000-000000000001', 51.5074, -0.1278, 'Europe/London')",
     );
-    cityId = c1.rows[0].id;
+    await db.query(
+      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('Paris', 'paris', '00000000-0000-0000-0000-000000000002', 48.8566, 2.3522, 'Europe/Paris')",
+    );
+    const g1 = await db.query<{ id: string }>(
+      "INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent) VALUES ('london', 'united_kingdom', 'europe', 'London', 'United Kingdom', 'Europe') RETURNING id",
+    );
+    cityId = g1.rows[0].id;
 
-    const c2 = await db.query<{ id: string }>(
-      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('Paris', 'paris', '00000000-0000-0000-0000-000000000002', 48.8566, 2.3522, 'Europe/Paris') RETURNING id",
+    const g2 = await db.query<{ id: string }>(
+      "INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent) VALUES ('paris', 'france', 'europe', 'Paris', 'France', 'Europe') RETURNING id",
     );
-    city2Id = c2.rows[0].id;
+    city2Id = g2.rows[0].id;
   });
 
   afterEach(async () => {

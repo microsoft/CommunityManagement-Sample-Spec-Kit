@@ -51,6 +51,22 @@ const CITIES: CityDef[] = [
 ];
 
 /* ------------------------------------------------------------------ */
+/*  Geography entries for user home-location (home_city_id)           */
+/* ------------------------------------------------------------------ */
+interface GeoDef {
+  city: string; country: string; continent: string;
+  displayCity: string; displayCountry: string; displayContinent: string;
+}
+
+const GEOGRAPHY_ENTRIES: GeoDef[] = [
+  { city: "bristol",       country: "united_kingdom", continent: "europe",   displayCity: "Bristol",       displayCountry: "United Kingdom", displayContinent: "Europe" },
+  { city: "london",        country: "united_kingdom", continent: "europe",   displayCity: "London",        displayCountry: "United Kingdom", displayContinent: "Europe" },
+  { city: "paris",         country: "france",         continent: "europe",   displayCity: "Paris",         displayCountry: "France",         displayContinent: "Europe" },
+  { city: "san-francisco", country: "united_states",  continent: "americas", displayCity: "San Francisco", displayCountry: "United States",  displayContinent: "Americas" },
+  { city: "bangkok",       country: "thailand",       continent: "asia",     displayCity: "Bangkok",       displayCountry: "Thailand",       displayContinent: "Asia" },
+];
+
+/* ------------------------------------------------------------------ */
 /*  Venues (one per city)                                              */
 /* ------------------------------------------------------------------ */
 const VENUES = [
@@ -219,6 +235,19 @@ export async function seedDevData(client?: DbClient): Promise<string[]> {
   }
   log.push(`Seeded ${CITIES.length} cities`);
 
+  // 3b. Geography entries (home_city_id references geography.id)
+  const geoIds: Record<string, string> = {};
+  for (const geo of GEOGRAPHY_ENTRIES) {
+    const res = await d.query<{ id: string }>(
+      `INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (city) DO UPDATE SET display_name_city = EXCLUDED.display_name_city RETURNING id`,
+      [geo.city, geo.country, geo.continent, geo.displayCity, geo.displayCountry, geo.displayContinent],
+    );
+    geoIds[geo.city] = res.rows[0].id;
+  }
+  log.push(`Seeded ${GEOGRAPHY_ENTRIES.length} geography entries`);
+
   // 4. Venues
   const venueIds: string[] = [];
   for (const v of VENUES) {
@@ -297,7 +326,7 @@ export async function seedDevData(client?: DbClient): Promise<string[]> {
   let profilesCreated = 0;
   for (const p of PROFILES) {
     const userId = ALL_USER_IDS[p.userIdx];
-    const cityId = cityIds[p.citySlug] ?? null;
+    const cityId = geoIds[p.citySlug] ?? null;
     await d.query(
       `INSERT INTO user_profiles (user_id, display_name, bio, default_role, home_city_id, directory_visible)
        VALUES ($1, $2, $3, $4, $5, $6)

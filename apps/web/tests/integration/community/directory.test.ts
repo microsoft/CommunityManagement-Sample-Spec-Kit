@@ -49,6 +49,13 @@ describe("Directory Service", () => {
     userCId = await createUser(db, "carol@test.com", "Carol");
     userDId = await createUser(db, "dave@test.com", "Dave");
 
+    // Ensure Bob has a strictly older created_at than Carol for deterministic sort-by-recent tests.
+    // PGlite may assign the same now() timestamp to rapid sequential inserts.
+    await db.query(
+      "UPDATE users SET created_at = created_at - interval '10 seconds' WHERE id = $1",
+      [userBId],
+    );
+
     const geoResult = await db.query<{ id: string }>(
       `INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent)
        VALUES ('london', 'united_kingdom', 'europe', 'London', 'United Kingdom', 'Europe') RETURNING id`,
