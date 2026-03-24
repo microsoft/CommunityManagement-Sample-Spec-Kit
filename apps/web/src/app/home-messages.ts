@@ -19,4 +19,12 @@ export const HOME_MESSAGES = {
   tryAgain: "Try Again",
   noUpcomingEvents: "No upcoming events yet.",
   checkBackSoon: "Check back soon or explore our teacher directory!",
+
+  // Database wake (non-production only)
+  dbSleepingTitle: "Database is sleeping",
+  dbSleepingHint: "The staging database may be stopped to save costs. You can wake it up — this takes about 60 seconds.",
+  wakeDatabase: "Wake Database",
+  wakingDatabase: "Starting database…",
+  wakeSuccess: "Database is starting. Retrying in a moment…",
+  wakeError: "Could not start the database. Check the Azure portal.",
 } as const;

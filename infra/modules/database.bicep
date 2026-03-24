@@ -108,6 +108,45 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-0
   }
 }
 
+// ── Custom Role: DB Wake (start + read) ──────────────────────────────────────
+// Minimal-privilege role for the Managed Identity's database wake capability.
+// Only grants start and read on this specific PostgreSQL server.
+// (Constitution XIV — least-privilege Managed Identity access)
+
+resource dbWakeCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  scope: subscription()
+  name: guid('db-wake-role', subscription().subscriptionId, resourceGroup().id)
+  properties: {
+    roleName: 'AcroYoga DB Wake - ${environmentName}'
+    description: 'Allows starting and reading the AcroYoga PostgreSQL Flexible Server. Assigned to the Container App Managed Identity for database wake functionality.'
+    type: 'CustomRole'
+    permissions: [
+      {
+        actions: [
+          'Microsoft.DBforPostgreSQL/flexibleServers/read'
+          'Microsoft.DBforPostgreSQL/flexibleServers/start/action'
+        ]
+        notActions: []
+        dataActions: []
+        notDataActions: []
+      }
+    ]
+    assignableScopes: [
+      postgresServer.id
+    ]
+  }
+}
+
+resource dbWakeRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(postgresServer.id, managedIdentityPrincipalId, 'db-wake')
+  scope: postgresServer
+  properties: {
+    roleDefinitionId: dbWakeCustomRole.id
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 output serverFqdn string = postgresServer.properties.fullyQualifiedDomainName
 #disable-next-line outputs-should-not-contain-secrets
 output connectionString string = 'postgresql://${adminLogin}:${adminPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/${databaseName}?sslmode=require'
