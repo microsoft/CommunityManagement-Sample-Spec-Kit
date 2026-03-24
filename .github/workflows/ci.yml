@@ -35,30 +35,23 @@ jobs:
 
       - name: Check bundle size
         run: |
-          # Check gzipped size of initial (first-load) JS chunks only.
-          # Uses build-manifest.json rootMainFiles — these are the chunks loaded
-          # on every page navigation, matching the Constitution VI 200KB compressed budget.
-          node -e "
-            const fs = require('fs');
-            const zlib = require('zlib');
-            const path = require('path');
-            const manifest = JSON.parse(fs.readFileSync('apps/web/.next/build-manifest.json', 'utf8'));
-            const initial = manifest.rootMainFiles || [];
-            let totalGz = 0;
-            for (const rel of initial) {
-              const p = path.join('apps/web/.next', rel);
-              if (fs.existsSync(p)) {
-                const buf = fs.readFileSync(p);
-                totalGz += zlib.gzipSync(buf, { level: 9 }).length;
-              }
-            }
-            const kb = Math.ceil(totalGz / 1024);
-            console.log('Initial JS bundle (gzipped): ' + kb + 'KB');
-            if (kb > 200) {
-              console.error('::error::Initial JS bundle (' + kb + 'KB gzipped) exceeds 200KB budget (Constitution VI)');
-              process.exit(1);
-            }
-          "
+          # Check gzipped size of initial JS chunks for the home page (Constitution VI, FR-013)
+          # Only chunks referenced in the prerendered index.html count as "initial bundle"
+          INDEX_HTML="apps/web/.next/server/app/index.html"
+          TOTAL_GZ=0
+          while IFS= read -r chunk; do
+            CHUNK_FILE="apps/web/.next/static/chunks/${chunk}"
+            if [ -f "$CHUNK_FILE" ]; then
+              GZ_SIZE=$(gzip -c "$CHUNK_FILE" | wc -c)
+              TOTAL_GZ=$((TOTAL_GZ + GZ_SIZE))
+            fi
+          done < <(grep -oP 'src="/_next/static/chunks/\K[^"]+(?=")' "$INDEX_HTML" 2>/dev/null)
+          TOTAL_KB=$((TOTAL_GZ / 1024))
+          echo "Initial JS bundle size (gzipped): ${TOTAL_KB}KB"
+          if [ "$TOTAL_KB" -gt 200 ]; then
+            echo "::error::Initial JS bundle size (${TOTAL_KB}KB gzipped) exceeds 200KB budget (Constitution VI, FR-013)"
+            exit 1
+          fi
 
       - name: Run token tests
         run: npm run test -w @acroyoga/tokens
@@ -75,8 +68,11 @@ jobs:
       - name: Build Storybook
         run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Storybook a11y audit (FR-019, QG-6)
         run: |
           npx concurrently -k -s first -n storybook,test \
             "npx http-server apps/web/storybook-static --port 6006 --silent" \
-            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006"
+            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006 --config-dir apps/web/.storybook"

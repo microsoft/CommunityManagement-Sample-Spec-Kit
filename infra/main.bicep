@@ -61,6 +61,12 @@ param memorySize string = '1Gi'
 @description('Email address for alert notifications')
 param alertEmailAddress string = ''
 
+@description('GitHub organisation name (e.g. "microsoft"). When set together with githubRepo, OIDC federated identity credentials are provisioned on the managed identity so GitHub Actions can authenticate without stored secrets.')
+param githubOrg string = ''
+
+@description('GitHub repository name (e.g. "CommunityManagement-Sample-Spec-Kit"). Required when githubOrg is set.')
+param githubRepo string = ''
+
 // ──────────────────────────────────────────────
 // 1. Managed Identity
 // ──────────────────────────────────────────────
@@ -69,6 +75,10 @@ module identity 'modules/managed-identity.bicep' = {
   params: {
     environmentName: environmentName
     location: location
+    githubOrg: githubOrg
+    githubRepo: githubRepo
+    // Only the staging identity gets the main-branch FIC (for the build-and-push CI job)
+    addMainBranchFic: environmentName == 'staging'
   }
 }
 

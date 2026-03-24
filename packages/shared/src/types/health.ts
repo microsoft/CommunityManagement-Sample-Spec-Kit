@@ -14,3 +14,13 @@ export interface ReadinessResponse {
   };
   timestamp: string;
 }
+
+/** Database wake availability check response */
+export interface DbWakeAvailableResponse {
+  available: boolean;
+}
+
+/** Database wake trigger response */
+export interface DbWakeResponse {
+  status: "starting" | "already_running";
+}

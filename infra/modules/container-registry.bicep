@@ -35,4 +35,18 @@ resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+// AcrPush role — allows the managed identity to push images from CI
+// (GitHub Actions OIDC uses this identity to run `docker build && docker push`)
+var acrPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
+
+resource acrPushRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, managedIdentityPrincipalId, acrPushRoleId)
+  scope: registry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPushRoleId)
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 output loginServer string = registry.properties.loginServer
