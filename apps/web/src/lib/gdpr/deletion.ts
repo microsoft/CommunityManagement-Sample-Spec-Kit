@@ -122,14 +122,14 @@ export async function deleteAccount(userId: string, confirmation: string): Promi
   // Spec 011: clear social PII fields (provider_oid, avatar_url, provider) in addition to email/name
   await db().query(
     `UPDATE users SET
-       email        = '[deleted]',
-       name         = '[deleted]',
+       email        = $2,
+       name         = 'Deleted User',
        provider_oid = NULL,
        avatar_url   = NULL,
        provider     = NULL,
        updated_at   = now()
      WHERE id = $1`,
-    [userId],
+    [userId, `deleted_${userId}@system.local`],
   );
 
   return true;

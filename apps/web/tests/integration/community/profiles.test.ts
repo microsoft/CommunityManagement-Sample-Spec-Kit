@@ -38,10 +38,13 @@ describe("Profile Service", () => {
     await db.query(
       "INSERT INTO countries (id, name, code, continent_code) VALUES ('00000000-0000-0000-0000-000000000001', 'UK', 'GB', 'EU')",
     );
-    const cityResult = await db.query<{ id: string }>(
-      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('London', 'london', '00000000-0000-0000-0000-000000000001', 51.5074, -0.1278, 'Europe/London') RETURNING id",
+    await db.query(
+      "INSERT INTO cities (name, slug, country_id, latitude, longitude, timezone) VALUES ('London', 'london', '00000000-0000-0000-0000-000000000001', 51.5074, -0.1278, 'Europe/London')",
     );
-    cityId = cityResult.rows[0].id;
+    const geoResult = await db.query<{ id: string }>(
+      "INSERT INTO geography (city, country, continent, display_name_city, display_name_country, display_name_continent) VALUES ('london', 'united_kingdom', 'europe', 'London', 'United Kingdom', 'Europe') RETURNING id",
+    );
+    cityId = geoResult.rows[0].id;
   });
 
   afterEach(async () => {

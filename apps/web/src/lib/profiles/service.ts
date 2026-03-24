@@ -82,7 +82,7 @@ export async function getMyProfile(userId: string): Promise<UserProfileSelf> {
 
   const cityResult = profile.homeCityId
     ? await db().query<{ name: string }>(
-        `SELECT name FROM cities WHERE id = $1`,
+        `SELECT display_name_city AS name FROM geography WHERE id = $1`,
         [profile.homeCityId],
       )
     : null;
@@ -105,9 +105,9 @@ export async function getProfile(
   }
 
   const result = await db().query<ProfileRow & { city_name: string | null }>(
-    `SELECT up.*, c.name as city_name
+    `SELECT up.*, g.display_name_city as city_name
      FROM user_profiles up
-     LEFT JOIN cities c ON c.id = up.home_city_id
+     LEFT JOIN geography g ON g.id = up.home_city_id
      WHERE up.user_id = $1`,
     [userId],
   );
@@ -250,8 +250,10 @@ export async function detectHomeCity(
   lon: number,
 ): Promise<{ cityId: string | null; cityName: string | null; distance: number | null }> {
   // Haversine distance calculation — same as Spec 001's findNearestCity
-  const result = await db().query<{ id: string; name: string; distance: number }>(
-    `SELECT id, name,
+  // Uses cities table for coordinate data, then resolves to a geography row
+  // (home_city_id references geography.id for continent/country filter support).
+  const result = await db().query<{ slug: string; name: string; distance: number }>(
+    `SELECT slug, name,
        (6371 * acos(
          cos(radians($1)) * cos(radians(latitude)) *
          cos(radians(longitude) - radians($2)) +
@@ -272,9 +274,20 @@ export async function detectHomeCity(
     return { cityId: null, cityName: null, distance: nearest.distance };
   }
 
+  // Resolve to the matching geography row (city slug → geography.city key).
+  // geography.city has a UNIQUE constraint, so LIMIT 1 is deterministic.
+  const geoResult = await db().query<{ id: string; display_name_city: string }>(
+    `SELECT id, display_name_city FROM geography WHERE city = $1 LIMIT 1`,
+    [nearest.slug],
+  );
+
+  if (geoResult.rows.length === 0) {
+    return { cityId: null, cityName: null, distance: nearest.distance };
+  }
+
   return {
-    cityId: nearest.id,
-    cityName: nearest.name,
+    cityId: geoResult.rows[0].id,
+    cityName: geoResult.rows[0].display_name_city,
     distance: nearest.distance,
   };
 }
