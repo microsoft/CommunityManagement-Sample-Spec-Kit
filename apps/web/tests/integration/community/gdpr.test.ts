@@ -158,8 +158,8 @@ describe("GDPR", () => {
         "SELECT email, name FROM users WHERE id = $1",
         [userAId],
       );
-      expect(user.rows[0].name).toBe("Deleted User");
-      expect(user.rows[0].email).toContain("deleted_");
+      expect(user.rows[0].name).toBe("[deleted]");
+      expect(user.rows[0].email).toBe("[deleted]");
 
       // Verify social links removed
       const links = await db.query("SELECT 1 FROM social_links WHERE user_id = $1", [userAId]);
