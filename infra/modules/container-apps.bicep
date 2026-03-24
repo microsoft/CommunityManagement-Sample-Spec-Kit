@@ -163,6 +163,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'PORT', value: '3000' }
             { name: 'AZURE_CLIENT_ID', value: managedIdentityClientId }
             { name: 'AZURE_STORAGE_ACCOUNT_URL', value: storageBlobEndpoint }
+            { name: 'AZURE_SUBSCRIPTION_ID', value: subscription().subscriptionId }
+            { name: 'AZURE_RESOURCE_GROUP', value: resourceGroup().name }
+            { name: 'ENVIRONMENT_NAME', value: environmentName }
             { name: 'PGHOST', value: pgHost }
             { name: 'PGDATABASE', value: pgDatabase }
             { name: 'PGUSER', value: managedIdentityName }

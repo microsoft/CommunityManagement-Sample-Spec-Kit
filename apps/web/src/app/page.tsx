@@ -1,26 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import EventCard from "@/components/events/EventCard";
 import type { EventSummary } from "@acroyoga/shared/types/events";
+import type { DbWakeAvailableResponse } from "@acroyoga/shared";
 import { HOME_MESSAGES as msg } from "./home-messages";
 
 export default function Home() {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wakeAvailable, setWakeAvailable] = useState(false);
+  const [waking, setWaking] = useState(false);
+  const [wakeMessage, setWakeMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadEvents = useCallback(() => {
+    setLoading(true);
+    setError(null);
     fetch("/api/events?limit=6&sort=startDatetime")
       .then((r) => {
         if (!r.ok) throw new Error("Failed to load events");
         return r.json();
       })
       .then((data) => setEvents(data.events ?? []))
-      .catch((err) => setError(err.message))
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Failed to load events");
+        // Check whether wake is available whenever events fail to load
+        fetch("/api/db/wake")
+          .then((r) => r.json() as Promise<DbWakeAvailableResponse>)
+          .then((data) => setWakeAvailable(data.available))
+          .catch(() => setWakeAvailable(false));
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const handleWake = useCallback(() => {
+    setWaking(true);
+    setWakeMessage(null);
+    fetch("/api/db/wake", { method: "POST" })
+      .then((r) => {
+        if (r.ok || r.status === 202) {
+          setWakeMessage(msg.wakeSuccess);
+          // Poll every 15 s — retry loading events once the DB is up
+          const interval = setInterval(() => {
+            fetch("/api/db/wake")
+              .then((res) => res.json() as Promise<DbWakeAvailableResponse>)
+              .then(() => {
+                loadEvents();
+              })
+              .catch(() => undefined);
+          }, 15_000);
+          // Stop polling after 3 minutes
+          setTimeout(() => clearInterval(interval), 180_000);
+        } else {
+          setWakeMessage(msg.wakeError);
+        }
+      })
+      .catch(() => setWakeMessage(msg.wakeError))
+      .finally(() => setWaking(false));
+  }, [loadEvents]);
 
   return (
     <div>
@@ -77,12 +120,29 @@ export default function Home() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
             <p className="font-medium">{msg.failedToLoadEvents}</p>
             <p className="text-sm mt-1">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-3 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded"
-            >
-              {msg.tryAgain}
-            </button>
+            {wakeAvailable ? (
+              <div className="mt-4 border-t border-red-200 pt-4">
+                <p className="text-sm font-medium text-amber-800">{msg.dbSleepingTitle}</p>
+                <p className="text-sm text-amber-700 mt-1">{msg.dbSleepingHint}</p>
+                {wakeMessage && (
+                  <p className="text-sm mt-2 font-medium text-green-700">{wakeMessage}</p>
+                )}
+                <button
+                  onClick={handleWake}
+                  disabled={waking}
+                  className="mt-3 text-sm bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {waking ? msg.wakingDatabase : msg.wakeDatabase}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-3 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded"
+              >
+                {msg.tryAgain}
+              </button>
+            )}
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-12">

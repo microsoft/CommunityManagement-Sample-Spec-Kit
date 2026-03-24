@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { DirectoryEntry, DirectoryResponse } from "@acroyoga/shared/types/directory";
@@ -164,6 +165,18 @@ function MemberCard({
 }
 
 export default function DirectoryPage() {
+  return (
+    <Suspense>
+      <DirectoryContent />
+    </Suspense>
+  );
+}
+
+function DirectoryContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -171,16 +184,16 @@ export default function DirectoryPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [role, setRole] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [continent, setContinent] = useState("");
-  const [relationship, setRelationship] = useState("");
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [sort, setSort] = useState("alphabetical");
+  // Filters — initialized from URL search params so the page is bookmarkable/shareable
+  const [query, setQuery] = useState(() => searchParams.get("search") ?? "");
+  const [debouncedQuery, setDebouncedQuery] = useState(() => searchParams.get("search") ?? "");
+  const [role, setRole] = useState(() => searchParams.get("role") ?? "");
+  const [city, setCity] = useState(() => searchParams.get("city") ?? "");
+  const [country, setCountry] = useState(() => searchParams.get("country") ?? "");
+  const [continent, setContinent] = useState(() => searchParams.get("continent") ?? "");
+  const [relationship, setRelationship] = useState(() => searchParams.get("relationship") ?? "");
+  const [verifiedOnly, setVerifiedOnly] = useState(() => searchParams.get("teachersOnly") === "true");
+  const [sort, setSort] = useState(() => searchParams.get("sort") ?? "alphabetical");
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -194,6 +207,21 @@ export default function DirectoryPage() {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
   }, [query]);
+
+  // Sync filter state to URL so the page is bookmarkable and shareable
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedQuery) params.set("search", debouncedQuery);
+    if (role) params.set("role", role);
+    if (city) params.set("city", city);
+    if (country) params.set("country", country);
+    if (continent) params.set("continent", continent);
+    if (relationship) params.set("relationship", relationship);
+    if (verifiedOnly) params.set("teachersOnly", "true");
+    if (sort !== "alphabetical") params.set("sort", sort);
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [debouncedQuery, role, city, country, continent, relationship, verifiedOnly, sort, router, pathname]);
 
   const hasActiveFilters = !!(debouncedQuery || role || city || country || continent || relationship || verifiedOnly);
 

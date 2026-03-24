@@ -178,8 +178,8 @@
 ### Implementation for User Story 6
 
 - [X] T044 [US6] Add relationship filter clauses to directory query builder in `apps/web/src/lib/directory/service.ts` — friends: mutual follow EXISTS; following: viewer follows EXISTS; followers: followee=viewer EXISTS; blocked: blocker_id=viewer EXISTS (inverts normal block exclusion), per research R-7 (FR-007)
-- [ ] T045 ~Deferred~ — Add relationship filter dropdown to DirectoryFilters component in `apps/web/src/components/directory/DirectoryFilters.tsx` — Friends/Following/Followers/Blocked options, combine with other active filters via AND logic (FR-007, FR-011)
-- [ ] T046 ~Deferred~ — Handle "Blocked" filter special case in DirectoryList — show unblock action on each card, skip standard block exclusion for this filter, apply directory_visible=true only for non-blocked filters (FR-007, US6-AS4)
+- [X] T045 ~Deferred~ — Add relationship filter dropdown to DirectoryFilters component in `apps/web/src/components/directory/DirectoryFilters.tsx` — Friends/Following/Followers/Blocked options, combine with other active filters via AND logic (FR-007, FR-011)
+- [X] T046 ~Deferred~ — Handle "Blocked" filter special case in DirectoryList — show unblock action on each card, skip standard block exclusion for this filter, apply directory_visible=true only for non-blocked filters (FR-007, US6-AS4)
 
 **Checkpoint**: User Story 6 complete — all relationship filters work individually and combined with other filters
 
