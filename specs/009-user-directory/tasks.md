@@ -24,7 +24,7 @@
 
 **Purpose**: Database migration, shared types, validation schemas, and test harness for 009
 
-- [ ] T001 ~Skipped~ — directories already existed from prior implementation: `apps/web/src/lib/directory/`, `apps/web/src/components/directory/`, `apps/web/src/app/api/directory/`, `apps/web/src/app/directory/`, `apps/web/tests/integration/directory/`, `packages/shared-ui/src/DirectoryCard/`, `packages/shared-ui/src/SocialIcons/`
+- [X] T001 ~Skipped~ — directories already existed from prior implementation: `apps/web/src/lib/directory/`, `apps/web/src/components/directory/`, `apps/web/src/app/api/directory/`, `apps/web/src/app/directory/`, `apps/web/tests/integration/directory/`, `packages/shared-ui/src/DirectoryCard/`, `packages/shared-ui/src/SocialIcons/`
 - [X] T002 Create database migration file `apps/web/src/db/migrations/007_user_directory.sql` (merged into existing migration) — ALTER TABLE user_profiles ADD COLUMN directory_visible BOOLEAN NOT NULL DEFAULT false; expand social_links platform CHECK constraint from 4→8 values; create 5 partial indexes per data-model.md (idx_profiles_directory_visible, idx_profiles_role_visible, idx_profiles_name_visible, idx_profiles_created_visible, idx_profiles_city_visible)
 - [X] T003 [P] Create shared directory types in `packages/shared/src/types/directory.ts` — export DirectoryEntry, DirectoryQueryParams, DirectoryResponse, DirectorySortMode, RelationshipFilter, RelationshipStatus, VisibleSocialLink, ProfileCompleteness interfaces per contracts/directory-api.ts
 - [X] T004 [P] Expand SocialPlatform type in `packages/shared/src/types/community.ts` — add 'tiktok', 'twitter_x', 'linkedin', 'threads' to the existing 4-value union type (FR-023, research R-1)
@@ -41,7 +41,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 ~Deferred~ — Cursor encode/decode inlined into service.ts — encodeCursor(sortValue, id) → base64 opaque string, decodeCursor(cursor) → validated {sortValue, id} with Zod, per research R-2
+- [X] T007 ~Deferred~ — Cursor encode/decode inlined into service.ts — encodeCursor(sortValue, id) → base64 opaque string, decodeCursor(cursor) → validated {sortValue, id} with Zod, per research R-2
 - [X] T008 Implement base directory SQL query builder in `apps/web/src/lib/directory/service.ts` — core SELECT joining user_profiles + geography + teacher_profiles + social_links, block exclusion via NOT EXISTS (symmetric, research R-6), social link visibility FILTER clause (everyone/followers/friends per research R-4), GROUP BY, LIMIT pageSize+1, self-exclusion
 - [X] T009 [P] ~Deferred~ — Zod SocialPlatform schema update in `apps/web/src/lib/validation/community-schemas.ts` (or equivalent) to match expanded 8-value enum — ensure Spec 002 validation layer accepts new platforms
 

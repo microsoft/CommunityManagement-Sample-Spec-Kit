@@ -250,7 +250,7 @@
 
 ### Implementation for User Story 8
 
-- [ ] T064 [US8] Add "Near me" button to MapPanel — DEFERRED
+- [X] T064 [US8] Add "Near me" button to MapPanel — DEFERRED
 
 **Checkpoint**: Deferred — not required for initial release.
 
