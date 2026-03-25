@@ -43,14 +43,14 @@
 ### Auth & Session
 
 - [ ] T007 Configure next-auth v5 with Microsoft Entra External ID provider in `src/app/api/auth/[...nextauth]/route.ts` — session carries `userId` only, no permission claims (R-4)
-- [ ] T008 Create `src/lib/auth/session.ts` — `getServerSession()` wrapper that returns typed `{ userId: string }` or null for unauthenticated visitors
+- [X] T008 Create `src/lib/auth/session.ts` — `getServerSession()` wrapper that returns typed `{ userId: string }` or null for unauthenticated visitors
 
 ### Database & Migrations
 
 - [ ] T009 Create database connection module in `src/lib/db/client.ts` — PostgreSQL client with connection pooling for production, PGlite adapter for tests
 - [ ] T010 Create migration runner in `src/lib/db/migrate.ts` and npm script `db:migrate` — reads SQL files from `src/db/migrations/` and applies them in order
 - [ ] T011 Create migration `src/db/migrations/001_users.sql` — minimal `users` table (`id uuid PK, email, name, created_at`) required by permission_grants FK references
-- [ ] T012 Create migration `src/db/migrations/004_permissions.sql` — all 5 tables (geography, permission_grants, permission_requests, creator_payment_accounts, permission_audit_log) with indexes and constraints per data-model.md
+- [X] T012 Create migration `src/db/migrations/004_permissions.sql` — all 5 tables (geography, permission_grants, permission_requests, creator_payment_accounts, permission_audit_log) with indexes and constraints per data-model.md
 
 ### Geography & Seed Data
 
@@ -59,15 +59,15 @@
 
 ### Shared Types & Core Permission Infrastructure
 
-- [ ] T015 Create shared permission types in `src/types/permissions.ts` — `Role`, `ScopeType`, `EffectiveRole`, `Scope`, `PermissionGrant`, `PermissionAction`, `CheckPermissionRequest`, `CheckPermissionResponse` per contracts/permissions-api.ts
-- [ ] T016 Create shared request types in `src/types/requests.ts` — `RequestStatus`, `PermissionRequest`, `SubmitRequestBody`, `ReviewRequestBody` per contracts/requests-api.ts
-- [ ] T017 Create shared payment types in `src/types/payments.ts` — `CreatorPaymentAccount`, `ConnectInitiateResponse`, `PaymentStatusResponse` per contracts/payments-api.ts
-- [ ] T018 Implement scope hierarchy resolver in `src/lib/permissions/hierarchy.ts` — `doesScopeEncompass(grantScope, targetScope)` using geography table lookup (R-2: city → country → continent → global walk)
-- [ ] T019 Implement role-capability matrix in `src/lib/permissions/types.ts` — `roleHasCapability(role, action): boolean` mapping per R-3 matrix (Global Admin: all, Country Admin: within country, etc.)
-- [ ] T020 Implement permission cache in `src/lib/permissions/cache.ts` — session-level in-memory Map keyed by userId, lazy-loaded on first check, invalidated on grant/revoke (R-1)
-- [ ] T021 Implement core permission service in `src/lib/permissions/service.ts` — `checkPermission(userId, action, targetScope)`, `grantPermission()`, `revokePermission()` with most-permissive-wins resolution (R-3)
-- [ ] T022 Implement audit log writer in `src/lib/permissions/audit.ts` — `logAuditEvent(action, userId, role, scope, performedBy, metadata)` appending to permission_audit_log table (R-6)
-- [ ] T023 Implement `withPermission(action, scopeResolver)` middleware HOF in `src/lib/permissions/middleware.ts` — wraps Next.js route handlers, extracts userId from session, runs permission check, returns 403 + audit log on deny (R-8)
+- [X] T015 Create shared permission types in `src/types/permissions.ts` — `Role`, `ScopeType`, `EffectiveRole`, `Scope`, `PermissionGrant`, `PermissionAction`, `CheckPermissionRequest`, `CheckPermissionResponse` per contracts/permissions-api.ts
+- [X] T016 Create shared request types in `src/types/requests.ts` — `RequestStatus`, `PermissionRequest`, `SubmitRequestBody`, `ReviewRequestBody` per contracts/requests-api.ts
+- [X] T017 Create shared payment types in `src/types/payments.ts` — `CreatorPaymentAccount`, `ConnectInitiateResponse`, `PaymentStatusResponse` per contracts/payments-api.ts
+- [X] T018 Implement scope hierarchy resolver in `src/lib/permissions/hierarchy.ts` — `doesScopeEncompass(grantScope, targetScope)` using geography table lookup (R-2: city → country → continent → global walk)
+- [X] T019 Implement role-capability matrix in `src/lib/permissions/types.ts` — `roleHasCapability(role, action): boolean` mapping per R-3 matrix (Global Admin: all, Country Admin: within country, etc.)
+- [X] T020 Implement permission cache in `src/lib/permissions/cache.ts` — session-level in-memory Map keyed by userId, lazy-loaded on first check, invalidated on grant/revoke (R-1)
+- [X] T021 Implement core permission service in `src/lib/permissions/service.ts` — `checkPermission(userId, action, targetScope)`, `grantPermission()`, `revokePermission()` with most-permissive-wins resolution (R-3)
+- [X] T022 Implement audit log writer in `src/lib/permissions/audit.ts` — `logAuditEvent(action, userId, role, scope, performedBy, metadata)` appending to permission_audit_log table (R-6)
+- [X] T023 Implement `withPermission(action, scopeResolver)` middleware HOF in `src/lib/permissions/middleware.ts` — wraps Next.js route handlers, extracts userId from session, runs permission check, returns 403 + audit log on deny (R-8)
 - [ ] T024 Implement `requireAuth()` middleware in `src/lib/auth/middleware.ts` — wraps route handlers, returns 401 if no session, provides `ctx.userId`
 
 **Checkpoint**: Foundation ready — auth, database, migrations, permission check infrastructure, and middleware are all operational. User story implementation can now begin.
@@ -82,17 +82,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T025 [US1] Implement grant/revoke service functions in `src/lib/permissions/service.ts` — `grantPermission()` creates row in permission_grants + audit log entry; `revokePermission()` sets revoked_at + audit log; includes global admin protection (R-7: count check with SELECT FOR UPDATE)
-- [ ] T026 [US1] Implement POST `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — Zod-validated `CreateGrantRequest`, wrapped with `withPermission('manageGrants', ...)`, calls grantPermission service, returns 201 with grant
-- [ ] T027 [US1] Implement GET `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — query params filter by userId/scopeType/scopeValue/includeRevoked, scoped to caller's admin scope
-- [ ] T028 [US1] Implement DELETE `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — Zod-validated `RevokeGrantRequest`, wrapped with `withPermission('manageGrants', ...)`, returns 409 if last global admin
-- [ ] T029 [US1] Implement POST `/api/permissions/check` route in `src/app/api/permissions/check/route.ts` — Zod-validated `CheckPermissionRequest`, requires auth, returns `{ allowed, matchedGrant, effectiveRole }` (always 200)
-- [ ] T030 [US1] Write integration test for grant + revoke lifecycle in `tests/integration/permissions/grant-revoke.test.ts` — grant creator for bristol, verify active, revoke, verify revoked_at set, verify audit log entries
-- [ ] T031 [US1] Write integration test for scope hierarchy in `tests/integration/permissions/scope-hierarchy.test.ts` — city grant covers city only; country grant covers all cities in country; global covers all; cross-country denied
-- [ ] T032 [US1] Write integration test for multi-grant resolution in `tests/integration/permissions/multi-grant.test.ts` — user with City Admin Bristol + Event Creator Bath: create event Bristol ✅, create event Bath ✅, create event London ❌
-- [ ] T033 [US1] Write integration test for permission check in `tests/integration/permissions/permission-check.test.ts` — event creator can create events in scope, cannot edit others' events, member gets denied, visitor gets denied
-- [ ] T034 [US1] Write integration test for audit logging in `tests/integration/permissions/audit-log.test.ts` — grant produces audit entry, revoke produces audit entry, denied check produces audit entry with correct metadata
-- [ ] T035 [US1] Write 403 smoke tests for all grant/revoke endpoints in `tests/integration/permissions/unauthorized.test.ts` — unauthenticated caller gets 401, member without admin scope gets 403 on grant/revoke (QG-10)
+- [X] T025 [US1] Implement grant/revoke service functions in `src/lib/permissions/service.ts` — `grantPermission()` creates row in permission_grants + audit log entry; `revokePermission()` sets revoked_at + audit log; includes global admin protection (R-7: count check with SELECT FOR UPDATE)
+- [X] T026 [US1] Implement POST `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — Zod-validated `CreateGrantRequest`, wrapped with `withPermission('manageGrants', ...)`, calls grantPermission service, returns 201 with grant
+- [X] T027 [US1] Implement GET `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — query params filter by userId/scopeType/scopeValue/includeRevoked, scoped to caller's admin scope
+- [X] T028 [US1] Implement DELETE `/api/permissions/grants` route in `src/app/api/permissions/grants/route.ts` — Zod-validated `RevokeGrantRequest`, wrapped with `withPermission('manageGrants', ...)`, returns 409 if last global admin
+- [X] T029 [US1] Implement POST `/api/permissions/check` route in `src/app/api/permissions/check/route.ts` — Zod-validated `CheckPermissionRequest`, requires auth, returns `{ allowed, matchedGrant, effectiveRole }` (always 200)
+- [X] T030 [US1] Write integration test for grant + revoke lifecycle in `tests/integration/permissions/grant-revoke.test.ts` — grant creator for bristol, verify active, revoke, verify revoked_at set, verify audit log entries
+- [X] T031 [US1] Write integration test for scope hierarchy in `tests/integration/permissions/scope-hierarchy.test.ts` — city grant covers city only; country grant covers all cities in country; global covers all; cross-country denied
+- [X] T032 [US1] Write integration test for multi-grant resolution in `tests/integration/permissions/multi-grant.test.ts` — user with City Admin Bristol + Event Creator Bath: create event Bristol ✅, create event Bath ✅, create event London ❌
+- [X] T033 [US1] Write integration test for permission check in `tests/integration/permissions/permission-check.test.ts` — event creator can create events in scope, cannot edit others' events, member gets denied, visitor gets denied
+- [X] T034 [US1] Write integration test for audit logging in `tests/integration/permissions/audit-log.test.ts` — grant produces audit entry, revoke produces audit entry, denied check produces audit entry with correct metadata
+- [X] T035 [US1] Write 403 smoke tests for all grant/revoke endpoints in `tests/integration/permissions/unauthorized.test.ts` — unauthenticated caller gets 401, member without admin scope gets 403 on grant/revoke (QG-10)
 
 **Checkpoint**: Scoped permission grants work end-to-end. Creators can be assigned city scope. Permission checks enforce scope hierarchy with most-permissive-wins. Audit trail is complete.
 
@@ -106,12 +106,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T036 [US2] Implement scope-filtered grant listing in `src/lib/permissions/service.ts` — `listGrantsForScope(callerGrants, filters)` returns only grants the caller's scope covers (Country Admin UK sees all UK grants, not France)
-- [ ] T037 [US2] Implement admin panel permissions page in `src/app/admin/permissions/page.tsx` — server component that lists grants within caller's scope, with grant/revoke actions; shows role, scope, user, grantedAt; uses `withPermission('viewAdminPanel', ...)`
-- [ ] T038 [US2] Create admin layout in `src/app/admin/layout.tsx` — shared admin navigation, permission gate (redirects non-admins), scope indicator showing current admin's scope level
-- [ ] T039 [US2] Write integration test for hierarchical scope filtering in `tests/integration/permissions/scope-hierarchy.test.ts` — Country Admin UK sees Bristol + London grants; does NOT see Paris grants; Global Admin sees all
-- [ ] T040 [US2] Write integration test for cross-scope admin rejection in `tests/integration/permissions/scope-hierarchy.test.ts` — Country Admin UK attempts to revoke a France city_admin grant → 403
-- [ ] T041 [US2] Write 403 smoke test for admin panel API in `tests/integration/permissions/unauthorized.test.ts` — member accessing admin grant list gets 403; event creator accessing admin panel gets 403
+- [X] T036 [US2] Implement scope-filtered grant listing in `src/lib/permissions/service.ts` — `listGrantsForScope(callerGrants, filters)` returns only grants the caller's scope covers (Country Admin UK sees all UK grants, not France)
+- [X] T037 [US2] Implement admin panel permissions page in `src/app/admin/permissions/page.tsx` — server component that lists grants within caller's scope, with grant/revoke actions; shows role, scope, user, grantedAt; uses `withPermission('viewAdminPanel', ...)`
+- [X] T038 [US2] Create admin layout in `src/app/admin/layout.tsx` — shared admin navigation, permission gate (redirects non-admins), scope indicator showing current admin's scope level
+- [X] T039 [US2] Write integration test for hierarchical scope filtering in `tests/integration/permissions/scope-hierarchy.test.ts` — Country Admin UK sees Bristol + London grants; does NOT see Paris grants; Global Admin sees all
+- [X] T040 [US2] Write integration test for cross-scope admin rejection in `tests/integration/permissions/scope-hierarchy.test.ts` — Country Admin UK attempts to revoke a France city_admin grant → 403
+- [X] T041 [US2] Write 403 smoke test for admin panel API in `tests/integration/permissions/unauthorized.test.ts` — member accessing admin grant list gets 403; event creator accessing admin panel gets 403
 
 **Checkpoint**: Admin hierarchy works. Higher-scope admins see and manage everything within their scope. Cross-scope access is denied. Admin panel reflects scope boundaries.
 
@@ -125,13 +125,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T042 [US4] Implement request service in `src/lib/requests/service.ts` — `submitRequest(userId, scopeValue, message)`: validates city exists in geography, checks no duplicate pending request (409), inserts permission_requests row, audit log entry
-- [ ] T043 [US4] Implement request review service in `src/lib/requests/service.ts` — `reviewRequest(requestId, decision, reason, reviewerId)`: validates request is pending (409 if already reviewed), updates status/reviewedBy/reviewedAt; if approved, calls `grantPermission()` to create event_creator grant; audit log entry for both outcomes
-- [ ] T044 [US4] Implement POST `/api/permissions/requests` route in `src/app/api/permissions/requests/route.ts` — Zod-validated `SubmitRequestBody`, requires auth (member+), creates request
-- [ ] T045 [US4] Implement GET `/api/permissions/requests` route in `src/app/api/permissions/requests/route.ts` — for admins: list pending requests within their scope; for members: list own requests; query params filter by status/scopeValue/userId
-- [ ] T046 [US4] Implement PATCH `/api/permissions/requests/:id` route in `src/app/api/permissions/requests/[id]/route.ts` — Zod-validated `ReviewRequestBody`, wrapped with `withPermission('approveRequests', scopeFromRequest)`, updates request status
-- [ ] T047 [US4] Implement request types in `src/lib/requests/types.ts` — Zod schemas for `SubmitRequestBody`, `ReviewRequestBody`, `ListRequestsQuery`
-- [ ] T048 [US4] Implement admin requests review page in `src/app/admin/requests/page.tsx` — server component listing pending requests within caller's scope, approve/reject actions with reason field
+- [X] T042 [US4] Implement request service in `src/lib/requests/service.ts` — `submitRequest(userId, scopeValue, message)`: validates city exists in geography, checks no duplicate pending request (409), inserts permission_requests row, audit log entry
+- [X] T043 [US4] Implement request review service in `src/lib/requests/service.ts` — `reviewRequest(requestId, decision, reason, reviewerId)`: validates request is pending (409 if already reviewed), updates status/reviewedBy/reviewedAt; if approved, calls `grantPermission()` to create event_creator grant; audit log entry for both outcomes
+- [X] T044 [US4] Implement POST `/api/permissions/requests` route in `src/app/api/permissions/requests/route.ts` — Zod-validated `SubmitRequestBody`, requires auth (member+), creates request
+- [X] T045 [US4] Implement GET `/api/permissions/requests` route in `src/app/api/permissions/requests/route.ts` — for admins: list pending requests within their scope; for members: list own requests; query params filter by status/scopeValue/userId
+- [X] T046 [US4] Implement PATCH `/api/permissions/requests/:id` route in `src/app/api/permissions/requests/[id]/route.ts` — Zod-validated `ReviewRequestBody`, wrapped with `withPermission('approveRequests', scopeFromRequest)`, updates request status
+- [X] T047 [US4] Implement request types in `src/lib/requests/types.ts` — Zod schemas for `SubmitRequestBody`, `ReviewRequestBody`, `ListRequestsQuery`
+- [X] T048 [US4] Implement admin requests review page in `src/app/admin/requests/page.tsx` — server component listing pending requests within caller's scope, approve/reject actions with reason field
 - [ ] T049 [US4] Write integration test for request lifecycle in `tests/integration/requests/request-lifecycle.test.ts` — submit request → verify pending → approve → verify grant created → verify audit trail
 - [ ] T050 [US4] Write integration test for request rejection + resubmission in `tests/integration/requests/request-lifecycle.test.ts` — submit → reject with reason → verify reason visible → submit new request for same scope → succeeds
 - [ ] T051 [US4] Write integration test for duplicate request in `tests/integration/requests/duplicate-request.test.ts` — submit request → submit again for same scope while pending → 409
@@ -149,15 +149,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T053 [US3] Implement Stripe Connect service in `src/lib/payments/stripe-connect.ts` — `initiateConnect(userId)`: generates Stripe OAuth URL with correct scopes and state parameter; `handleCallback(code, userId)`: exchanges code for stripe_user_id, stores in creator_payment_accounts (R-5)
-- [ ] T054 [US3] Implement onboarding status check in `src/lib/payments/stripe-connect.ts` — `getPaymentStatus(userId)`: returns connected/onboarding status from creator_payment_accounts
-- [ ] T055 [US3] Implement POST `/api/payments/connect` route in `src/app/api/payments/connect/route.ts` — requires event_creator grant (403 if not), checks not already connected (409), returns `{ redirectUrl }` to Stripe OAuth
-- [ ] T056 [US3] Implement GET `/api/payments/callback` route in `src/app/api/payments/callback/route.ts` — handles Stripe OAuth redirect: exchanges code for stripe_user_id, stores account, redirects to `/settings/creator?status=success` or `?error=...`
-- [ ] T057 [US3] Implement GET `/api/payments/status` route in `src/app/api/payments/status/route.ts` — requires auth, returns `{ connected, onboardingComplete, account }`
-- [ ] T058 [US3] Implement Stripe webhook handler for `account.updated` in `src/app/api/payments/webhook/route.ts` — verifies webhook signature, updates `onboarding_complete` flag on creator_payment_accounts when Stripe confirms full onboarding
+- [X] T053 [US3] Implement Stripe Connect service in `src/lib/payments/stripe-connect.ts` — `initiateConnect(userId)`: generates Stripe OAuth URL with correct scopes and state parameter; `handleCallback(code, userId)`: exchanges code for stripe_user_id, stores in creator_payment_accounts (R-5)
+- [X] T054 [US3] Implement onboarding status check in `src/lib/payments/stripe-connect.ts` — `getPaymentStatus(userId)`: returns connected/onboarding status from creator_payment_accounts
+- [X] T055 [US3] Implement POST `/api/payments/connect` route in `src/app/api/payments/connect/route.ts` — requires event_creator grant (403 if not), checks not already connected (409), returns `{ redirectUrl }` to Stripe OAuth
+- [X] T056 [US3] Implement GET `/api/payments/callback` route in `src/app/api/payments/callback/route.ts` — handles Stripe OAuth redirect: exchanges code for stripe_user_id, stores account, redirects to `/settings/creator?status=success` or `?error=...`
+- [X] T057 [US3] Implement GET `/api/payments/status` route in `src/app/api/payments/status/route.ts` — requires auth, returns `{ connected, onboardingComplete, account }`
+- [X] T058 [US3] Implement Stripe webhook handler for `account.updated` in `src/app/api/payments/webhook/route.ts` — verifies webhook signature, updates `onboarding_complete` flag on creator_payment_accounts when Stripe confirms full onboarding
 - [ ] T059 [US3] Implement creator settings page in `src/app/settings/creator/page.tsx` — shows Stripe Connect status, "Connect Stripe Account" button (or connected indicator), onboarding progress; only visible to users with event_creator grant
-- [ ] T060 [US3] Write integration test for Stripe Connect flow in `tests/integration/payments/stripe-connect.test.ts` — mock Stripe API: initiate → callback → verify account stored → status check returns connected; test 403 for non-creator; test 409 for already connected
-- [ ] T061 [US3] Write 403 smoke tests for payment endpoints in `tests/integration/payments/unauthorized.test.ts` — member (no creator grant) calling connect → 403; unauthenticated calling status → 401
+- [X] T060 [US3] Write integration test for Stripe Connect flow in `tests/integration/payments/stripe-connect.test.ts` — mock Stripe API: initiate → callback → verify account stored → status check returns connected; test 403 for non-creator; test 409 for already connected
+- [X] T061 [US3] Write 403 smoke tests for payment endpoints in `tests/integration/payments/unauthorized.test.ts` — member (no creator grant) calling connect → 403; unauthenticated calling status → 401
 
 **Checkpoint**: Stripe Connect Standard onboarding works end-to-end. Creators can connect their Stripe account. Platform stores the account ID for use by future booking/payment features in spec 001/003.
 

@@ -14,6 +14,8 @@ AcroYoga Community connects practitioners with local events, teachers, and each 
 - **Payments & Bookings** — Stripe Connect for creator payouts, concession pricing, credits, and refund policies
 - **User Directory** — Browse, search, and filter community members with relationship status, proximity sort, social link icons, and profile completeness
 - **Cross-Platform UI** — Shared design token pipeline (CSS, TS, Swift, Kotlin) with 17 reusable components and Storybook 10 component explorer
+- **Events Explorer** — Interactive map, calendar, and location tree for advanced event discovery with synchronized filtering
+- **Azure Deployment** — Production deployment on Azure Container Apps with Managed Identity, Front Door CDN, and automated CI/CD
 
 ## Tech Stack
 
@@ -55,8 +57,8 @@ This is an **npm workspaces monorepo** with shared packages:
 │       └── build/              # Generated CSS, TS, Swift, Kotlin
 │
 ├── specs/                      # Spec-Kit feature specifications
-│   ├── constitution.md         # Architectural principles (v1.4.0)
-│   └── 001–009/                # Feature specs with plans, tasks, contracts
+│   ├── constitution.md         # Architectural principles (v1.5.0)
+│   └── 001–012/                # Feature specs with plans, tasks, contracts
 │
 └── .agent.md                   # UI Expert agent configuration
 ```
@@ -67,7 +69,7 @@ This is an **npm workspaces monorepo** with shared packages:
 |-----------|---------|-------------|
 | `apps/web` | `@acroyoga/web` | Next.js 16 web app (App Router, React 19, Turbopack) |
 | `packages/shared` | `@acroyoga/shared` | Shared types and contracts |
-| `packages/shared-ui` | `@acroyoga/shared-ui` | 15 cross-platform UI components with design tokens |
+| `packages/shared-ui` | `@acroyoga/shared-ui` | 17 cross-platform UI components with design tokens |
 | `packages/tokens` | `@acroyoga/tokens` | Design token pipeline (CSS, TS, Swift, Kotlin output) |
 
 ### Specifications
@@ -85,13 +87,17 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 007 | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
 | 007 | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
 | 008 | [Cross-Platform UI](specs/008-cross-platform-ui/) | P0 | Implemented (web) |
-| 009 | [User Directory](specs/009-user-directory/) | P1 | In Progress (core merged) |
+| 009 | [User Directory](specs/009-user-directory/) | P1 | Implemented |
+| 010 | [Events Explorer](specs/010-events-explorer/) | P1 | Implemented |
+| 011 | [Azure Deployment](specs/011-azure-deployment/) | P1 | Specified |
+| 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Specified |
+| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Draft |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Spec 009 has core service, types, schemas, shared-ui components, and integration tests merged; UI polish and action buttons are deferred.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment and are specified but not yet fully deployed. Spec 013 captures documentation gaps and remaining task triage identified during repository review.
 
 ## Architectural Principles
 
-The project is governed by a [constitution](specs/constitution.md) (v1.4.0) defining 13 core principles:
+The project is governed by a [constitution](specs/constitution.md) (v1.5.0) defining 14 core principles:
 
 1. **API-First Design** — Every feature exposes a versioned REST API before any UI
 2. **Test-First Development** — Integration tests against real (in-memory) Postgres; ≥80% service coverage
@@ -106,12 +112,13 @@ The project is governed by a [constitution](specs/constitution.md) (v1.4.0) defi
 11. **Resource Ownership** — Every mutation verifies caller is owner or scoped admin
 12. **Financial Integrity** — Server-side pricing; Stripe Connect; signed OAuth state
 13. **Codespaces Mandate** — All development runs in GitHub Codespaces
+14. **Managed Identity** — Azure Managed Identity with DefaultAzureCredential for all service connections
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 24+ (managed via fnm)
+- Node.js 22+ (managed via fnm)
 - PostgreSQL 15+ (or use PGlite for development/testing)
 - GitHub Codespaces (recommended) or a Linux environment — ensures local–CI parity
 

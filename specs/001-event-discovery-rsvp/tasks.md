@@ -23,7 +23,7 @@
 
 **Purpose**: Database schema, seed data, shared types, and project scaffolding for the event feature. Assumes Spec 004's auth, permissions, and Stripe Connect are already in place.
 
-- [ ] T001 Create database migration file with all 8 entity tables (countries, cities, venues, events, rsvps, waitlist, event_interests, credits) in `src/db/migrations/001_events.sql` — copy SQL from data-model.md
+- [X] T001 Create database migration file with all 8 entity tables (countries, cities, venues, events, rsvps, waitlist, event_interests, credits) in `src/db/migrations/001_events.sql` — copy SQL from data-model.md
 - [ ] T002 Create city/country seed script that populates countries and cities tables with initial platform cities (Bristol, London, Berlin, Lisbon, etc.) and syncs `cities.slug` with `geography.city` from Spec 004 — `src/db/seeds/001_cities.ts`
 - [ ] T003 [P] Add `ical-generator` and `leaflet` + `@types/leaflet` + `react-leaflet` to project dependencies in `package.json`
 - [ ] T004 [P] Add `NEXT_PUBLIC_BASE_URL` environment variable to `.env.local` and `.env.example` per quickstart.md
@@ -36,17 +36,17 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 Define shared TypeScript enums and types (EventCategory, SkillLevel, EventStatus, AcroRole, RsvpStatus, CancellationType) in `src/lib/events/types.ts` — match contract interfaces from `contracts/events-api.ts`
-- [ ] T006 [P] Define RSVP, Waitlist, and Interest TypeScript types in `src/lib/rsvp/types.ts` — match `contracts/rsvp-api.ts`
-- [ ] T007 [P] Define Venue types in `src/lib/venues/types.ts` — match `contracts/venues-api.ts`
-- [ ] T008 [P] Define City types in `src/lib/cities/types.ts` — match `contracts/cities-api.ts`
+- [X] T005 Define shared TypeScript enums and types (EventCategory, SkillLevel, EventStatus, AcroRole, RsvpStatus, CancellationType) in `src/lib/events/types.ts` — match contract interfaces from `contracts/events-api.ts`
+- [X] T006 [P] Define RSVP, Waitlist, and Interest TypeScript types in `src/lib/rsvp/types.ts` — match `contracts/rsvp-api.ts`
+- [X] T007 [P] Define Venue types in `src/lib/venues/types.ts` — match `contracts/venues-api.ts`
+- [X] T008 [P] Define City types in `src/lib/cities/types.ts` — match `contracts/cities-api.ts`
 - [ ] T009 [P] Define Credit types in `src/lib/credits/types.ts` — match `contracts/credits-api.ts`
-- [ ] T010 [P] Create Zod validation schemas for all API request bodies (CreateEventRequest, UpdateEventRequest, CreateRsvpRequest, CancelRsvpRequest, CreateVenueRequest, UpdateVenueRequest, JoinWaitlistRequest, ListEventsQuery, ListCitiesQuery, NearestCityQuery) in `src/lib/events/validation.ts` and `src/lib/rsvp/validation.ts`
-- [ ] T011 Implement City service — `listCities()` (with activeOnly, countryCode, q filters) and `getCityById()` in `src/lib/cities/service.ts`
+- [X] T010 [P] Create Zod validation schemas for all API request bodies (CreateEventRequest, UpdateEventRequest, CreateRsvpRequest, CancelRsvpRequest, CreateVenueRequest, UpdateVenueRequest, JoinWaitlistRequest, ListEventsQuery, ListCitiesQuery, NearestCityQuery) in `src/lib/events/validation.ts` and `src/lib/rsvp/validation.ts`
+- [X] T011 Implement City service — `listCities()` (with activeOnly, countryCode, q filters) and `getCityById()` in `src/lib/cities/service.ts`
 - [ ] T012 Implement geolocation snap — `findNearestCity(lat, lon)` using Haversine distance query against cities with active events, 100km threshold per R-1 in `src/lib/cities/service.ts`
-- [ ] T013 [P] Implement Venue service — `createVenue()`, `getVenue()`, `listVenues()`, `updateVenue()` in `src/lib/venues/service.ts` — enforce `withPermission('createVenue', ...)` on create
-- [ ] T014 Create Cities API routes — `GET /api/cities` (list) in `src/app/api/cities/route.ts` and `GET /api/cities/nearest` (geolocation snap) in `src/app/api/cities/nearest/route.ts`
-- [ ] T015 [P] Create Venues API routes — `GET /api/venues` (list), `POST /api/venues` (create, Creator auth) in `src/app/api/venues/route.ts`; `GET /api/venues/:id` (detail), `PATCH /api/venues/:id` (edit, Owner auth) in `src/app/api/venues/[id]/route.ts`
+- [X] T013 [P] Implement Venue service — `createVenue()`, `getVenue()`, `listVenues()`, `updateVenue()` in `src/lib/venues/service.ts` — enforce `withPermission('createVenue', ...)` on create
+- [X] T014 Create Cities API routes — `GET /api/cities` (list) in `src/app/api/cities/route.ts` and `GET /api/cities/nearest` (geolocation snap) in `src/app/api/cities/nearest/route.ts`
+- [X] T015 [P] Create Venues API routes — `GET /api/venues` (list), `POST /api/venues` (create, Creator auth) in `src/app/api/venues/route.ts`; `GET /api/venues/:id` (detail), `PATCH /api/venues/:id` (edit, Owner auth) in `src/app/api/venues/[id]/route.ts`
 
 **Checkpoint**: City registry, geolocation snap, and venue CRUD are operational. All shared types and validation schemas are available.
 
@@ -60,13 +60,13 @@
 
 ### Implementation
 
-- [ ] T016 Implement Event service — `listEvents(filters)` with pagination in `src/lib/events/service.ts` — query builder joins events→venues→cities, returns `EventSummary[]` with `confirmedCount` (from active RSVPs count) and `interestedCount`
-- [ ] T017 Implement Event service — `createEvent(data, userId)` with Zod validation and `withPermission('createEvent', venueCity)` check in `src/lib/events/service.ts`
-- [ ] T018 Implement Event service — `getEventById(id, userId?)` returning `EventDetail` with venue, role breakdown, and visible attendees in `src/lib/events/service.ts`
-- [ ] T019 Create Events list API route — `GET /api/events` in `src/app/api/events/route.ts` — public access, delegates to `listEvents()`, returns `ListEventsResponse` with `detectedCity` from query params
-- [ ] T020 Create Event create API route — `POST /api/events` in `src/app/api/events/route.ts` — Creator auth via `withPermission('createEvent', ...)`, Zod-validates `CreateEventRequest`
+- [X] T016 Implement Event service — `listEvents(filters)` with pagination in `src/lib/events/service.ts` — query builder joins events→venues→cities, returns `EventSummary[]` with `confirmedCount` (from active RSVPs count) and `interestedCount`
+- [X] T017 Implement Event service — `createEvent(data, userId)` with Zod validation and `withPermission('createEvent', venueCity)` check in `src/lib/events/service.ts`
+- [X] T018 Implement Event service — `getEventById(id, userId?)` returning `EventDetail` with venue, role breakdown, and visible attendees in `src/lib/events/service.ts`
+- [X] T019 Create Events list API route — `GET /api/events` in `src/app/api/events/route.ts` — public access, delegates to `listEvents()`, returns `ListEventsResponse` with `detectedCity` from query params
+- [X] T020 Create Event create API route — `POST /api/events` in `src/app/api/events/route.ts` — Creator auth via `withPermission('createEvent', ...)`, Zod-validates `CreateEventRequest`
 - [ ] T021 Build EventCard component displaying title, date/time, venue name, city, category badge, skill level badge, cost (or "Free"), attendee count, and poster image in `src/components/events/EventCard.tsx`
-- [ ] T022 Build EventsListPage server component at `src/app/events/page.tsx` — reads filters from `searchParams`, calls `GET /api/events`, renders EventCard grid, shows city picker when no geolocation match
+- [X] T022 Build EventsListPage server component at `src/app/events/page.tsx` — reads filters from `searchParams`, calls `GET /api/events`, renders EventCard grid, shows city picker when no geolocation match
 - [ ] T023 Implement client-side geolocation hook that calls `GET /api/cities/nearest` and redirects to `/events?city={slug}` on match, or shows city picker prompt on no-match/denial in `src/hooks/useGeolocation.ts`
 
 **Checkpoint**: Visitors can browse events at `/events`. Geolocation auto-filters work. Event cards display all required metadata.
@@ -81,7 +81,7 @@
 
 ### Implementation
 
-- [ ] T024 [US2] Extend `listEvents()` query builder in `src/lib/events/service.ts` with category (multi-select), skillLevel (multi-select), dateFrom/dateTo range, and status (new/full/past/booked/interested with OR logic per FR-12) filters
+- [X] T024 [US2] Extend `listEvents()` query builder in `src/lib/events/service.ts` with category (multi-select), skillLevel (multi-select), dateFrom/dateTo range, and status (new/full/past/booked/interested with OR logic per FR-12) filters
 - [ ] T025 [US2] Build EventFilters component with category pills, skill level pills, date range calendar picker, status pills (New/Full/Past/Booked/Interested), and city selector in `src/components/events/EventFilters.tsx` — all filters sync to URL query params via `useSearchParams()`
 - [ ] T026 [US2] Wire EventFilters into EventsListPage at `src/app/events/page.tsx` — filters read from and write to URL, triggering server component re-fetch
 
@@ -97,12 +97,12 @@
 
 ### Implementation
 
-- [ ] T027 [US3] Create Event detail API route — `GET /api/events/:id` in `src/app/api/events/[id]/route.ts` — public access, returns `GetEventResponse` with venue detail, role breakdown, and opted-in attendees
+- [X] T027 [US3] Create Event detail API route — `GET /api/events/:id` in `src/app/api/events/[id]/route.ts` — public access, returns `GetEventResponse` with venue detail, role breakdown, and opted-in attendees
 - [ ] T028 [P] [US3] Build EventMap component using Leaflet + OSM tiles, lazy-loaded via `next/dynamic` with `ssr: false`, showing venue pin in `src/components/events/EventMap.tsx`
 - [ ] T029 [P] [US3] Build MapLinks component generating external links (Google Maps, Apple Maps, OSM, What3Words) from venue lat/lon per R-9 in `src/components/events/MapLinks.tsx`
 - [ ] T030 [P] [US3] Build RoleBreakdown component displaying Base/Flyer/Hybrid counts with role balance hint ("Flyers needed!" when imbalanced per FR-14) in `src/components/events/RoleBreakdown.tsx`
 - [ ] T031 [P] [US3] Build AttendeeList component showing names of attendees who opted in (`nameVisible: true`) grouped by role in `src/components/events/AttendeeList.tsx`
-- [ ] T032 [US3] Build EventDetailPage server component at `src/app/events/[id]/page.tsx` — renders title, description, date/time with timezone, venue with EventMap and MapLinks, category/skill badges, prerequisites, cost with currency (`Intl.NumberFormat`), RoleBreakdown, AttendeeList, and "Add to calendar" button
+- [X] T032 [US3] Build EventDetailPage server component at `src/app/events/[id]/page.tsx` — renders title, description, date/time with timezone, venue with EventMap and MapLinks, category/skill badges, prerequisites, cost with currency (`Intl.NumberFormat`), RoleBreakdown, AttendeeList, and "Add to calendar" button
 - [ ] T033 [US3] Implement `generateMetadata()` in `src/app/events/[id]/page.tsx` for Open Graph meta tags (og:title, og:description, og:image, og:url) per R-7 — enables rich social previews (FR-11)
 
 **Checkpoint**: Event detail page fully renders. Map is interactive and lazy-loaded. External map links work. OG meta tags present in page source.
@@ -117,12 +117,12 @@
 
 ### Implementation
 
-- [ ] T034 [US4] Implement atomic capacity check — `checkAndReserveCapacity(eventId, occurrenceDate)` using `SELECT ... FOR UPDATE` per R-2 in `src/lib/events/capacity.ts`
+- [X] T034 [US4] Implement atomic capacity check — `checkAndReserveCapacity(eventId, occurrenceDate)` using `SELECT ... FOR UPDATE` per R-2 in `src/lib/events/capacity.ts`
 - [ ] T035 [US4] Implement Credit service — `getAvailableCredits(userId, creatorId, currency)`, `consumeCredits(credits, amount)` with FIFO ordering, `issueCredit(userId, creatorId, amount, currency, eventId, rsvpId)` in `src/lib/credits/service.ts`
 - [ ] T036 [US4] Implement paid event checkout — `processEventCheckout(userId, eventId, creatorId, amount, currency)` that auto-applies credits then charges remainder via Stripe Connect (reusing 004's stripe-connect.ts) in `src/lib/payments/checkout.ts`
-- [ ] T037 [US4] Implement RSVP service — `createRsvp(eventId, userId, role, nameVisible, occurrenceDate, prerequisiteConfirmed)` orchestrating: Zod validation → capacity check → payment (if paid) → INSERT rsvp → queue notification in `src/lib/rsvp/service.ts`
-- [ ] T038 [US4] Implement RSVP cancellation — `cancelRsvp(rsvpId, userId, refundChoice)` with refund window check, credit issuance or Stripe refund per R-5, and waitlist auto-promotion trigger in `src/lib/rsvp/service.ts`
-- [ ] T039 [US4] Create RSVP API routes — `POST /api/events/:id/rsvp` (create, Member auth) and `DELETE /api/events/:id/rsvp` (cancel, Owner auth) in `src/app/api/events/[id]/rsvp/route.ts` — Zod validation at boundary, delegates to RSVP service
+- [X] T037 [US4] Implement RSVP service — `createRsvp(eventId, userId, role, nameVisible, occurrenceDate, prerequisiteConfirmed)` orchestrating: Zod validation → capacity check → payment (if paid) → INSERT rsvp → queue notification in `src/lib/rsvp/service.ts`
+- [X] T038 [US4] Implement RSVP cancellation — `cancelRsvp(rsvpId, userId, refundChoice)` with refund window check, credit issuance or Stripe refund per R-5, and waitlist auto-promotion trigger in `src/lib/rsvp/service.ts`
+- [X] T039 [US4] Create RSVP API routes — `POST /api/events/:id/rsvp` (create, Member auth) and `DELETE /api/events/:id/rsvp` (cancel, Owner auth) in `src/app/api/events/[id]/rsvp/route.ts` — Zod validation at boundary, delegates to RSVP service
 - [ ] T040 [US4] Build RsvpForm component with role selector (Base/Flyer/Hybrid radio buttons), prerequisite confirmation checkbox (when event has prerequisites), and submit button in `src/components/events/RsvpForm.tsx`
 - [ ] T041 [US4] Build RsvpConfirmation component showing confirmed role, "Add to calendar" button, and "Cancel RSVP" option in `src/components/events/RsvpConfirmation.tsx`
 - [ ] T042 [US4] Build CancelRsvpDialog component with refund window awareness — shows credit (default) vs refund choice within window, or no-refund policy warning after window in `src/components/events/CancelRsvpDialog.tsx`
@@ -141,10 +141,10 @@
 
 ### Implementation
 
-- [ ] T045 [US5] Implement Waitlist service — `joinWaitlist(eventId, userId, role, occurrenceDate)` auto-assigning position, `leaveWaitlist(eventId, userId, occurrenceDate)` in `src/lib/rsvp/waitlist.ts`
-- [ ] T046 [US5] Implement waitlist auto-promotion — `promoteNextWaitlisted(eventId, occurrenceDate)` checking cutoff time, creating RSVP (or pending_payment for paid events), queuing notification per R-3 in `src/lib/rsvp/waitlist.ts`
-- [ ] T047 [US5] Wire auto-promotion into `cancelRsvp()` in `src/lib/rsvp/service.ts` — after successfully cancelling, call `promoteNextWaitlisted()` within the same transaction
-- [ ] T048 [US5] Create Waitlist API routes — `POST /api/events/:id/waitlist` (join, Member auth) and `DELETE /api/events/:id/waitlist` (leave, Owner auth) in `src/app/api/events/[id]/waitlist/route.ts`
+- [X] T045 [US5] Implement Waitlist service — `joinWaitlist(eventId, userId, role, occurrenceDate)` auto-assigning position, `leaveWaitlist(eventId, userId, occurrenceDate)` in `src/lib/rsvp/waitlist.ts`
+- [X] T046 [US5] Implement waitlist auto-promotion — `promoteNextWaitlisted(eventId, occurrenceDate)` checking cutoff time, creating RSVP (or pending_payment for paid events), queuing notification per R-3 in `src/lib/rsvp/waitlist.ts`
+- [X] T047 [US5] Wire auto-promotion into `cancelRsvp()` in `src/lib/rsvp/service.ts` — after successfully cancelling, call `promoteNextWaitlisted()` within the same transaction
+- [X] T048 [US5] Create Waitlist API routes — `POST /api/events/:id/waitlist` (join, Member auth) and `DELETE /api/events/:id/waitlist` (leave, Owner auth) in `src/app/api/events/[id]/waitlist/route.ts`
 - [ ] T049 [US5] Build WaitlistButton component showing "Join Waitlist" for full events, displaying position after joining, and "Leave Waitlist" option in `src/components/events/WaitlistButton.tsx`
 - [ ] T050 [US5] Integrate WaitlistButton into EventDetailPage at `src/app/events/[id]/page.tsx` — show when event is at capacity and user has no active RSVP
 
@@ -160,11 +160,11 @@
 
 ### Implementation
 
-- [ ] T051 [P] [US6] Implement Interest service — `toggleInterest(eventId, userId)` returning `{ interested, interestedCount }` in `src/lib/rsvp/service.ts`
-- [ ] T052 [P] [US6] Create Interest API route — `POST /api/events/:id/interest` (toggle, Member auth) in `src/app/api/events/[id]/interest/route.ts`
+- [X] T051 [P] [US6] Implement Interest service — `toggleInterest(eventId, userId)` returning `{ interested, interestedCount }` in `src/lib/rsvp/service.ts`
+- [X] T052 [P] [US6] Create Interest API route — `POST /api/events/:id/interest` (toggle, Member auth) in `src/app/api/events/[id]/interest/route.ts`
 - [ ] T053 [US6] Build InterestButton component (heart/star toggle) that calls the interest API and updates count optimistically in `src/components/events/InterestButton.tsx`
 - [ ] T054 [US6] Integrate InterestButton into EventCard at `src/components/events/EventCard.tsx` and EventDetailPage at `src/app/events/[id]/page.tsx`
-- [ ] T055 [US6] Ensure "Interested" status filter works in `listEvents()` query builder — filter to events where caller has an event_interests row, already wired via the status=interested filter in Phase 4
+- [X] T055 [US6] Ensure "Interested" status filter works in `listEvents()` query builder — filter to events where caller has an event_interests row, already wired via the status=interested filter in Phase 4
 
 **Checkpoint**: Interest toggle works. Count updates. "Interested" filter returns correct results.
 
@@ -178,8 +178,8 @@
 
 ### Implementation
 
-- [ ] T056 [P] [US7] Implement .ics generation — `generateEventIcs(event, venue)` using `ical-generator` with timezone support per R-6 in `src/lib/events/ics.ts`
-- [ ] T057 [P] [US7] Create .ics API route — `GET /api/events/:id/ics` returning `text/calendar` with `Content-Disposition: attachment` in `src/app/api/events/[id]/ics/route.ts`
+- [X] T056 [P] [US7] Implement .ics generation — `generateEventIcs(event, venue)` using `ical-generator` with timezone support per R-6 in `src/lib/events/ics.ts`
+- [X] T057 [P] [US7] Create .ics API route — `GET /api/events/:id/ics` returning `text/calendar` with `Content-Disposition: attachment` in `src/app/api/events/[id]/ics/route.ts`
 - [ ] T058 [US7] Build ShareButton component with "Copy Link" (using Clipboard API) and "Add to Calendar" (.ics download link) in `src/components/events/ShareButton.tsx`
 - [ ] T059 [US7] Integrate ShareButton into EventDetailPage at `src/app/events/[id]/page.tsx`
 
@@ -191,9 +191,9 @@
 
 **Purpose**: Event editing and cancellation flows that affect multiple stories. These depend on the core event + RSVP infrastructure from Phases 3–6.
 
-- [ ] T060 Implement Event service — `updateEvent(eventId, userId, data)` with owner/admin check via `withPermission('editEvent', ...)` and edge case handling (capacity reduction below current RSVPs shows warning, does not remove RSVPs) in `src/lib/events/service.ts`
+- [X] T060 Implement Event service — `updateEvent(eventId, userId, data)` with owner/admin check via `withPermission('editEvent', ...)` and edge case handling (capacity reduction below current RSVPs shows warning, does not remove RSVPs) in `src/lib/events/service.ts`
 - [ ] T061 Implement Event service — `cancelEvent(eventId, userId)` — cancels all active RSVPs, initiates async Stripe refunds for paid RSVPs (not credits), queues notifications to all attendees + interested users per R-5 Path C in `src/lib/events/service.ts`
-- [ ] T062 Create Event mutation API routes — `PATCH /api/events/:id` (edit, Owner/Admin auth) and `DELETE /api/events/:id` (cancel, Owner/Admin auth) in `src/app/api/events/[id]/route.ts`
+- [X] T062 Create Event mutation API routes — `PATCH /api/events/:id` (edit, Owner/Admin auth) and `DELETE /api/events/:id` (cancel, Owner/Admin auth) in `src/app/api/events/[id]/route.ts`
 - [ ] T063 Add freshness badges logic — extend `listEvents()` to compute `isNew` and `isUpdated` flags by comparing `created_at` / `updated_at` against caller's `last_login_at` per R-10, and add badge rendering to EventCard in `src/components/events/EventCard.tsx`
 
 ---
