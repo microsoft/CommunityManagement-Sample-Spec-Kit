@@ -91,8 +91,9 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 010 | [Events Explorer](specs/010-events-explorer/) | P1 | Implemented |
 | 011 | [Azure Deployment](specs/011-azure-deployment/) | P1 | Specified |
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Specified |
+| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Draft |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment and are specified but not yet fully deployed.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment and are specified but not yet fully deployed. Spec 013 captures documentation gaps and remaining task triage identified during repository review.
 
 ## Architectural Principles
 
