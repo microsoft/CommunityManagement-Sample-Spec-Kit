@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { getDb } from "../lib/db/client";
 
-const MIGRATIONS_DIR = path.resolve(__dirname, "migrations");
+const MIGRATIONS_DIR = process.env.MIGRATIONS_DIR ?? path.resolve(__dirname, "migrations");
 
 async function migrate() {
   const db = getDb();

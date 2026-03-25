@@ -29,6 +29,15 @@
     "nextAuthSecret": {
       "value": "${NEXTAUTH_SECRET}"
     },
+    "entraClientId": {
+      "value": "${ENTRA_CLIENT_ID}"
+    },
+    "entraTenantId": {
+      "value": "${ENTRA_TENANT_ID}"
+    },
+    "entraTenantDomain": {
+      "value": "${ENTRA_TENANT_DOMAIN}"
+    },
     "customDomainHostname": {
       "value": ""
     },
