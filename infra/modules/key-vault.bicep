@@ -108,6 +108,22 @@ resource appInsightsConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@20
   }
 }
 
+resource entraClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (contains(secrets, 'entraClientId')) {
+  parent: keyVault
+  name: 'entra-client-id'
+  properties: {
+    value: secrets.entraClientId
+  }
+}
+
+resource entraTenantIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (contains(secrets, 'entraTenantId')) {
+  parent: keyVault
+  name: 'entra-tenant-id'
+  properties: {
+    value: secrets.entraTenantId
+  }
+}
+
 // Diagnostic settings for audit logging
 resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (logAnalyticsWorkspaceId != '') {
   name: 'kv-diagnostics'

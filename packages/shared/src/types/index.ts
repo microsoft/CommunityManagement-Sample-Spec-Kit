@@ -1,3 +1,4 @@
+export * from "./auth";
 export * from "./cities";
 export * from "./community";
 export * from "./credits";

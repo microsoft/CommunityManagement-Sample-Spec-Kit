@@ -37,6 +37,17 @@ param stripeClientId string
 @secure()
 param nextAuthSecret string
 
+@description('Entra External ID application (client) ID')
+@secure()
+param entraClientId string = ''
+
+@description('Entra External ID tenant UUID')
+@secure()
+param entraTenantId string = ''
+
+@description('Entra External ID CIAM tenant subdomain (e.g. "acroyogacommunity" for acroyogacommunity.ciamlogin.com)')
+param entraTenantDomain string = ''
+
 @description('Custom domain hostname (optional)')
 param customDomainHostname string = ''
 
@@ -153,6 +164,8 @@ module keyVault 'modules/key-vault.bicep' = {
       stripeWebhookSecret: stripeWebhookSecret
       stripeClientId: stripeClientId
       applicationInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+      entraClientId: entraClientId
+      entraTenantId: entraTenantId
     }
   }
 }
@@ -180,6 +193,7 @@ module containerApps 'modules/container-apps.bicep' = {
     storageBlobEndpoint: storage.outputs.blobEndpoint
     pgHost: database.outputs.serverHost
     pgDatabase: database.outputs.databaseName
+    entraTenantDomain: entraTenantDomain
   }
 }
 

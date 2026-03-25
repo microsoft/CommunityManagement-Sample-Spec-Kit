@@ -8,6 +8,8 @@ const envSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(1),
   ENTRA_CLIENT_ID: z.string().uuid(),
   ENTRA_TENANT_ID: z.string().uuid(),
+  // Spec 011: CIAM tenant domain for Entra External ID issuer URL
+  ENTRA_TENANT_DOMAIN: z.string().min(1),
   NEXTAUTH_URL: z.string().url(),
 });
 

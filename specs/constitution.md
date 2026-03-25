@@ -249,22 +249,22 @@ fallback chain that works in Codespaces, CI, and production.
 
 ## Principle–Spec Alignment Matrix
 
-| Principle | 001 Discovery | 002 Social | 003 Recurring | 004 Permissions | 005 Teachers |
-|-----------|:---:|:---:|:---:|:---:|:---:|
-| I. API-First | ✅ | ✅ | ✅ | ✅ | ✅ |
-| II. Test-First | ✅ | ✅ | ✅ | ✅ | ✅ |
-| III. Privacy | ✅ | ✅ | | | ✅ |
-| IV. Server-Side Authority | ✅ | ✅ | ✅ | ✅ | ✅ |
-| V. UX Consistency | ✅ | ✅ | | | ✅ |
-| VI. Performance Budget | ✅ | ✅ | ✅ | | ✅ |
-| VII. Simplicity | | | ✅ | | |
-| VIII. Internationalisation | ✅ | ✅ | | | ✅ |
-| IX. Scoped Permissions | | | | ✅ | ✅ |
-| X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ |
-| XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ |
-| XII. Financial Integrity | | | ✅ | ✅ | ✅ |
-| XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ |
-| XIV. Managed Identity | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Principle | 001 Discovery | 002 Social | 003 Recurring | 004 Permissions | 005 Teachers | 011 Entra External ID |
+|-----------|:---:|:---:|:---:|:---:|:---:|:---:|
+| I. API-First | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| II. Test-First | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| III. Privacy | ✅ | ✅ | | | ✅ | ✅ |
+| IV. Server-Side Authority | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| V. UX Consistency | ✅ | ✅ | | | ✅ | ✅ |
+| VI. Performance Budget | ✅ | ✅ | ✅ | | ✅ | ✅ |
+| VII. Simplicity | | | ✅ | | | ✅ |
+| VIII. Internationalisation | ✅ | ✅ | | | ✅ | ✅ |
+| IX. Scoped Permissions | | | | ✅ | ✅ | ✅ |
+| X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ | |
+| XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ | ✅ |
+| XII. Financial Integrity | | | ✅ | ✅ | ✅ | |
+| XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XIV. Managed Identity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Usage:** Each spec's header SHOULD list the principles that apply.
 > Specs 003, 004, and 005 should be updated to include XI and XII

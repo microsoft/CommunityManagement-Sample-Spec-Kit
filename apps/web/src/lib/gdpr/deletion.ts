@@ -115,9 +115,20 @@ export async function deleteAccount(userId: string, confirmation: string): Promi
   // 18. Delete teacher profiles
   await db().query(`DELETE FROM teacher_profiles WHERE user_id = $1`, [userId]);
 
-  // 19. Anonymise user record (keep for aggregate FK integrity)
+  // 19. Delete linked social accounts (Spec 011 — also handled by CASCADE, but explicit)
+  await db().query(`DELETE FROM linked_accounts WHERE user_id = $1`, [userId]);
+
+  // 20. Anonymise user record (keep for aggregate FK integrity)
+  // Spec 011: clear social PII fields (provider_oid, avatar_url, provider) in addition to email/name
   await db().query(
-    `UPDATE users SET email = $2, name = 'Deleted User' WHERE id = $1`,
+    `UPDATE users SET
+       email        = $2,
+       name         = 'Deleted User',
+       provider_oid = NULL,
+       avatar_url   = NULL,
+       provider     = NULL,
+       updated_at   = now()
+     WHERE id = $1`,
     [userId, `deleted_${userId}@system.local`],
   );
 

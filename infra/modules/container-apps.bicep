@@ -49,6 +49,9 @@ param cpuCores string = '0.5'
 @description('Memory per instance')
 param memorySize string = '1Gi'
 
+@description('Entra External ID CIAM tenant subdomain (e.g. "acroyogacommunity")')
+param entraTenantDomain string = ''
+
 var environmentResourceName = 'cae-acroyoga-${environmentName}'
 var appName = 'ca-acroyoga-web-${environmentName}'
 var imageName = '${containerRegistryLoginServer}/acroyoga-web:${imageTag}'
@@ -139,6 +142,16 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/applicationinsights-connection-string'
           identity: managedIdentityId
         }
+        {
+          name: 'entra-client-id'
+          keyVaultUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/entra-client-id'
+          identity: managedIdentityId
+        }
+        {
+          name: 'entra-tenant-id'
+          keyVaultUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/entra-tenant-id'
+          identity: managedIdentityId
+        }
       ]
     }
     template: {
@@ -158,6 +171,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'STRIPE_WEBHOOK_SECRET', secretRef: 'stripe-webhook-secret' }
             { name: 'STRIPE_CLIENT_ID', secretRef: 'stripe-client-id' }
             { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'applicationinsights-connection-string' }
+            { name: 'ENTRA_CLIENT_ID', secretRef: 'entra-client-id' }
+            { name: 'ENTRA_TENANT_ID', secretRef: 'entra-tenant-id' }
             { name: 'NODE_ENV', value: 'production' }
             { name: 'HOSTNAME', value: '0.0.0.0' }
             { name: 'PORT', value: '3000' }
@@ -169,6 +184,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'PGHOST', value: pgHost }
             { name: 'PGDATABASE', value: pgDatabase }
             { name: 'PGUSER', value: managedIdentityName }
+            { name: 'ENTRA_TENANT_DOMAIN', value: entraTenantDomain }
           ]
           probes: [
             {
