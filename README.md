@@ -84,13 +84,13 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 004 | [Permissions & Creator Accounts](specs/004-permissions-creator-accounts/) | P0 | Implemented |
 | 005 | [Teacher Profiles & Reviews](specs/005-teacher-profiles-reviews/) | P1 | Implemented |
 | 006 | [Code Review Fixes](specs/006-code-review-fixes/) | P0 | Implemented |
-| 007 | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
-| 007 | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
+| 007a | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
+| 007b | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
 | 008 | [Cross-Platform UI](specs/008-cross-platform-ui/) | P0 | Implemented (web) |
 | 009 | [User Directory](specs/009-user-directory/) | P1 | Implemented |
 | 010 | [Events Explorer](specs/010-events-explorer/) | P1 | Implemented |
-| 011 | [Azure Deployment](specs/011-azure-deployment/) | P1 | Implemented |
-| 011 | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
+| 011a | [Azure Deployment](specs/011-azure-deployment/) | P1 | Implemented |
+| 011b | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
 | 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | In Progress |
 

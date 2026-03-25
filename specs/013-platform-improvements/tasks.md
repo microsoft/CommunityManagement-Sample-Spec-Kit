@@ -78,7 +78,7 @@
 
 - [X] T027 Verify README.md accuracy against current codebase state
 - [X] T028 Update specs table in README.md if any spec status changes
-- [ ] T029 Run full validation checklist (tokens:build → typecheck → lint → test → build)
+- [X] T029 Run full validation checklist (tokens:build → typecheck → lint → test → build)
 
 ---
 
