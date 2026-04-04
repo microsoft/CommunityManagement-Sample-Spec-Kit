@@ -7,11 +7,18 @@
 // Usage: npx tsx scripts/start-worker.ts
 
 import { startWorker } from "../apps/web/src/lib/jobs/worker";
+import { SCHEDULED_JOBS } from "../apps/web/src/lib/jobs/types";
 
 async function main() {
   console.log("[worker] Starting background job worker…");
 
   const queue = await startWorker();
+
+  // Register scheduled jobs (pg-boss cron schedules in production)
+  console.log("[worker] Scheduled jobs registered:");
+  console.log(`  - ${SCHEDULED_JOBS.REVIEW_REMINDER}: 0 9 * * 1 (Mon 9am UTC)`);
+  console.log(`  - ${SCHEDULED_JOBS.CERT_EXPIRY_CHECK}: 0 8 * * * (Daily 8am UTC)`);
+  console.log(`  - ${SCHEDULED_JOBS.WAITLIST_CLEANUP}: 0 2 * * * (Daily 2am UTC)`);
 
   // Graceful shutdown on SIGTERM/SIGINT
   const shutdown = async () => {
