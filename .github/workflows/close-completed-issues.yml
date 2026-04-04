@@ -56,8 +56,8 @@ jobs:
                   console.error(`  Failed to close #${issue.number}: ${err.message}`);
                   errors++;
                 }
-                // Small delay to avoid rate limiting
-                await new Promise(r => setTimeout(r, 300));
+                // Delay between API calls to stay within GitHub's secondary rate limits
+                await new Promise(r => setTimeout(r, 1000));
               }
 
               page++;
