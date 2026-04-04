@@ -209,7 +209,8 @@
     "unblock": "Desbloquear",
     "blockConfirm": "Block this user? This will remove any follow relationship.",
     "friends": "Amigos",
-    "followsYou": "Te sigue"
+    "followsYou": "Te sigue",
+    "noMembersFound": "No se encontraron miembros"
   },
   "auth": {
     "loginPageTitle": "Bienvenido a AcroYoga Community",
@@ -364,7 +365,8 @@
     "tableRole": "Role",
     "tableScope": "Scope",
     "tableGranted": "Granted",
-    "tableActions": "Actions"
+    "tableActions": "Actions",
+    "errorLoadingRequests": "Error al cargar solicitudes"
   },
   "bookings": {
     "signInRequired": "Inicia sesión para ver tus reservas.",

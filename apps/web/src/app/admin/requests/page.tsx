@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import type { PermissionRequest } from "@acroyoga/shared/types/requests";
+import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 export default function AdminRequestsPage() {
   const [requests, setRequests] = useState<PermissionRequest[]>([]);
@@ -60,7 +61,7 @@ export default function AdminRequestsPage() {
   if (error) {
     return (
       <div role="alert" className="rounded-md bg-red-50 p-4">
-        <h3 className="text-sm font-medium text-red-800">Error loading requests</h3>
+        <h3 className="text-sm font-medium text-red-800">{msg.errorLoadingRequests}</h3>
         <p className="mt-2 text-sm text-red-700">{error}</p>
         <button
           onClick={() => window.location.reload()}

@@ -35,4 +35,7 @@ export const ADMIN_MESSAGES = {
   tableScope: "Scope",
   tableGranted: "Granted",
   tableActions: "Actions",
+
+  // Requests page
+  errorLoadingRequests: "Error loading requests",
 } as const;

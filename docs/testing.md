@@ -429,4 +429,51 @@ Playwright config lives at `apps/web/playwright.config.ts`. Key settings:
 
 ---
 
+## Internationalisation (i18n) Testing
+
+### Unit Tests for Formatting Helpers
+
+Test file: `apps/web/tests/unit/i18n-format.test.ts`
+
+Tests the shared `Intl` formatting helpers (`formatEventDate`, `formatCurrency`, `formatRelativeTime`, `formatNumber`) with explicit locale and timezone parameters:
+
+```typescript
+import { formatEventDate, formatCurrency } from "@acroyoga/shared/utils/format";
+
+// Always pass explicit locale and timezone for deterministic results
+expect(formatEventDate("2026-04-15T14:30:00Z", "en", "UTC")).toContain("Apr");
+expect(formatCurrency(25.5, "USD", "en")).toContain("$25.50");
+```
+
+### Translation Key Completeness
+
+Test file: `apps/web/tests/unit/i18n-completeness.test.ts`
+
+Validates that every key in `en.json` exists in all other locale files, and vice versa. Runs as part of the standard test suite.
+
+### Mocking next-intl in Integration Tests
+
+For components that use `useTranslations()`:
+
+```typescript
+vi.mock("next-intl", () => ({
+  useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
+  useLocale: () => "en",
+}));
+```
+
+### RTL Layout Testing
+
+Test file: `apps/web/tests/integration/i18n/rtl-layout.test.ts`
+
+Verifies that Arabic locale returns RTL direction and that Arabic translation files exist with proper content. For visual RTL testing, force `dir="rtl"` on the `<html>` element.
+
+### Locale Switching
+
+Test file: `apps/web/tests/integration/i18n/locale-switch.test.ts`
+
+Tests the locale infrastructure: supported locales metadata, direction mapping, and default locale configuration.
+
+---
+
 *For database schema details, see `docs/database.md`. For API endpoint reference, see `docs/api-reference.md`.*
