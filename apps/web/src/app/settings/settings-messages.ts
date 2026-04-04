@@ -13,11 +13,14 @@ export const SETTINGS_MESSAGES = {
   sectionPrivacyDesc: "Manage blocked and muted users.",
   sectionTeacher: "Teacher Application",
   sectionTeacherDesc: "Apply to become a verified teacher.",
+  sectionNotifications: "Notifications",
+  sectionNotificationsDesc: "Choose how and when you receive notifications.",
 
   // Layout
   navOverview: "Overview",
   navAccount: "Account",
   navPrivacy: "Privacy",
+  navNotifications: "Notifications",
   navTeacher: "Teacher Application",
   navPayment: "Payment Setup (coming soon)",
   loading: "Loading\u2026",

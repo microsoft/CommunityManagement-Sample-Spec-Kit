@@ -9,6 +9,7 @@ const settingsLinks = [
   { href: "/settings", label: msg.navOverview },
   { href: "/settings/account", label: msg.navAccount },
   { href: "/settings/privacy", label: msg.navPrivacy },
+  { href: "/settings/notifications", label: msg.navNotifications },
   { href: "/settings/teacher", label: msg.navTeacher },
 ];
 

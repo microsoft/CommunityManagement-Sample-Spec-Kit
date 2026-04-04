@@ -5,29 +5,26 @@
 // Email delivery is stubbed here and implemented in Phase 5.
 
 import type { SendNotificationPayload, SendEmailPayload } from "@/lib/jobs/types";
-import type { NotificationChannel } from "@acroyoga/shared/types/notifications";
+import { NotificationChannel } from "@acroyoga/shared/types/notifications";
+import { getEnabledChannels } from "@/lib/notifications/preferences";
 
 /**
  * Deliver a notification through its target channels.
  * Called by the job worker after a SEND_NOTIFICATION job is picked up.
+ * Checks user preferences before delivering to each channel.
  */
 export async function deliverNotification(
   payload: SendNotificationPayload,
 ): Promise<void> {
-  // Check user preferences before delivering
-  let enabledChannels: NotificationChannel[];
-  try {
-    const { getEnabledChannels } = await import("@/lib/notifications/preferences");
-    enabledChannels = await getEnabledChannels(payload.userId, payload.notificationType);
-  } catch {
-    // If preferences module isn't available yet, deliver to all channels
-    enabledChannels = ["in_app" as NotificationChannel];
-  }
+  const enabledChannels = await getEnabledChannels(
+    payload.userId,
+    payload.notificationType,
+  );
 
   // In-app delivery is already handled by createNotification() in the service.
   // This handler exists for additional async channels (email, push).
 
-  if (enabledChannels.includes("email" as NotificationChannel)) {
+  if (enabledChannels.includes(NotificationChannel.EMAIL)) {
     // Email delivery — implemented in Phase 5
     // For now, this is a no-op stub
   }
