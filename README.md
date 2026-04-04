@@ -92,9 +92,9 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 011a | [Azure Deployment](specs/011-azure-deployment/) | P1 | Implemented |
 | 011b | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
-| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | In Progress |
+| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Complete |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 captures documentation gaps and remaining task triage identified during repository review.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 added CONTRIBUTING.md, API reference docs, database/testing docs, Playwright E2E tests, and triaged all remaining tasks across specs 001–010.
 
 ## Documentation
 
