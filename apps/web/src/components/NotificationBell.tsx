@@ -36,6 +36,8 @@ function getResourceLink(resourceType: string | null, resourceId: string | null)
   }
 }
 
+const POLL_INTERVAL_MS = 30_000;
+
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -64,7 +66,7 @@ export default function NotificationBell() {
 
     const startPolling = () => {
       if (!interval) {
-        interval = setInterval(fetchNotifications, 30000);
+        interval = setInterval(fetchNotifications, POLL_INTERVAL_MS);
       }
     };
     const stopPolling = () => {
