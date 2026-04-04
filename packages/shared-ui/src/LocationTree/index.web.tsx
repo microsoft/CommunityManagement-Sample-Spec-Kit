@@ -42,7 +42,7 @@ function TreeNode({
   const isSelected = node.id === selectedId;
   // Auto-expand if this node is an ancestor of the selected node
   const isAncestor = selectedId != null && selectedId.startsWith(node.id + "/");
-  const expanded = expandAll ? true : (manualExpanded ?? (isSelected || isAncestor || level <= 1));
+  const expanded = expandAll || (manualExpanded ?? (isSelected || isAncestor || level <= 1));
 
   return (
     <div role="treeitem" aria-expanded={hasChildren ? expanded : undefined} aria-selected={isSelected}>
