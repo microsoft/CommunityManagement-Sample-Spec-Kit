@@ -84,16 +84,26 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 004 | [Permissions & Creator Accounts](specs/004-permissions-creator-accounts/) | P0 | Implemented |
 | 005 | [Teacher Profiles & Reviews](specs/005-teacher-profiles-reviews/) | P1 | Implemented |
 | 006 | [Code Review Fixes](specs/006-code-review-fixes/) | P0 | Implemented |
-| 007 | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
-| 007 | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
+| 007a | [Mock Authentication](specs/007-mock-auth/) | P1 | Implemented |
+| 007b | [Simple UI Pages](specs/007-simple-ui-pages/) | P0 | Implemented |
 | 008 | [Cross-Platform UI](specs/008-cross-platform-ui/) | P0 | Implemented (web) |
 | 009 | [User Directory](specs/009-user-directory/) | P1 | Implemented |
 | 010 | [Events Explorer](specs/010-events-explorer/) | P1 | Implemented |
-| 011 | [Azure Deployment](specs/011-azure-deployment/) | P1 | Specified |
-| 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Specified |
-| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Draft |
+| 011a | [Azure Deployment](specs/011-azure-deployment/) | P1 | Implemented |
+| 011b | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
+| 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
+| 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | In Progress |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment and are specified but not yet fully deployed. Spec 013 captures documentation gaps and remaining task triage identified during repository review.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 captures documentation gaps and remaining task triage identified during repository review.
+
+## Documentation
+
+- **[Contributing Guide](CONTRIBUTING.md)** — Setup, workflow, conventions, and quality gates
+- **[API Reference](docs/api-reference.md)** — All 92 API endpoints with auth requirements
+- **[Database Schema](docs/database.md)** — 39 tables, relationships, and migration process
+- **[Testing Guide](docs/testing.md)** — PGlite setup, test patterns, and coverage areas
+- **[Deployment Runbook](docs/deployment-runbook.md)** — Azure deployment procedures
+- **[Environment Setup](docs/environment-setup.md)** — Environment variables and configuration
 
 ## Architectural Principles
 

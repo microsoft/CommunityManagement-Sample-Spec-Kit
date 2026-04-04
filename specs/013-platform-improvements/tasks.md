@@ -7,9 +7,9 @@
 
 **Goal**: Enable new contributors to onboard quickly
 
-- [ ] T001 [US1] Create `CONTRIBUTING.md` at repo root with sections: prerequisites, setup, development workflow, spec-kit process, PR guidelines, quality gates, code conventions
-- [ ] T002 [US1] Add Codespaces quick-start instructions referencing `.devcontainer/devcontainer.json`
-- [ ] T003 [US1] Add section on running validation checklist: tokens:build → typecheck → lint → test → build
+- [X] T001 [US1] Create `CONTRIBUTING.md` at repo root with sections: prerequisites, setup, development workflow, spec-kit process, PR guidelines, quality gates, code conventions
+- [X] T002 [US1] Add Codespaces quick-start instructions referencing `.devcontainer/devcontainer.json`
+- [X] T003 [US1] Add section on running validation checklist: tokens:build → typecheck → lint → test → build
 
 **Checkpoint**: New contributors have a clear onboarding path
 
@@ -19,13 +19,13 @@
 
 **Goal**: Document all 80+ API endpoints
 
-- [ ] T004 [US2] Create `docs/api-reference.md` with endpoint inventory grouped by domain (events, community, permissions, teachers, payments, etc.)
-- [ ] T005 [P] [US2] Document Events domain endpoints (15 routes) with method, path, auth requirements, request/response schemas, error codes
-- [ ] T006 [P] [US2] Document Community domain endpoints (follows, blocks, mutes, threads, reports — 20+ routes)
-- [ ] T007 [P] [US2] Document Permissions domain endpoints (grants, requests, check — 4 routes)
-- [ ] T008 [P] [US2] Document Teachers domain endpoints (profiles, certifications, reviews, applications — 14 routes)
-- [ ] T009 [P] [US2] Document Payments domain endpoints (Stripe Connect, webhooks, bookings, concessions — 12 routes)
-- [ ] T010 [P] [US2] Document Directory, Profiles, GDPR, and Health endpoints (10+ routes)
+- [X] T004 [US2] Create `docs/api-reference.md` with endpoint inventory grouped by domain (events, community, permissions, teachers, payments, etc.)
+- [X] T005 [P] [US2] Document Events domain endpoints (15 routes) with method, path, auth requirements, request/response schemas, error codes
+- [X] T006 [P] [US2] Document Community domain endpoints (follows, blocks, mutes, threads, reports — 20+ routes)
+- [X] T007 [P] [US2] Document Permissions domain endpoints (grants, requests, check — 4 routes)
+- [X] T008 [P] [US2] Document Teachers domain endpoints (profiles, certifications, reviews, applications — 14 routes)
+- [X] T009 [P] [US2] Document Payments domain endpoints (Stripe Connect, webhooks, bookings, concessions — 12 routes)
+- [X] T010 [P] [US2] Document Directory, Profiles, GDPR, and Health endpoints (10+ routes)
 
 **Checkpoint**: Complete API reference available
 
@@ -35,11 +35,11 @@
 
 **Goal**: Document data model and testing patterns
 
-- [ ] T011 [US3] Create `docs/database.md` with table inventory, entity-relationship descriptions, and migration process
-- [ ] T012 [US3] Document cross-spec table dependencies (which migrations depend on which)
-- [ ] T013 [US4] Create `docs/testing.md` with PGlite setup, createTestDb() pattern, mock auth helpers, test file conventions
-- [ ] T014 [US4] Document integration test patterns (API route testing, ownership checks, 403 verification)
-- [ ] T015 [US4] Document component test patterns (axe-core accessibility, Storybook integration)
+- [X] T011 [US3] Create `docs/database.md` with table inventory, entity-relationship descriptions, and migration process
+- [X] T012 [US3] Document cross-spec table dependencies (which migrations depend on which)
+- [X] T013 [US4] Create `docs/testing.md` with PGlite setup, createTestDb() pattern, mock auth helpers, test file conventions
+- [X] T014 [US4] Document integration test patterns (API route testing, ownership checks, 403 verification)
+- [X] T015 [US4] Document component test patterns (axe-core accessibility, Storybook integration)
 
 **Checkpoint**: Developers can understand schema and write tests without reading source
 
@@ -76,9 +76,9 @@
 
 ## Phase 6: Polish
 
-- [ ] T027 Verify README.md accuracy against current codebase state
-- [ ] T028 Update specs table in README.md if any spec status changes
-- [ ] T029 Run full validation checklist (tokens:build → typecheck → lint → test → build)
+- [X] T027 Verify README.md accuracy against current codebase state
+- [X] T028 Update specs table in README.md if any spec status changes
+- [X] T029 Run full validation checklist (tokens:build → typecheck → lint → test → build)
 
 ---
 
