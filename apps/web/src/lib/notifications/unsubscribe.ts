@@ -16,7 +16,14 @@ export interface UnsubscribeTokenPayload {
 const TOKEN_EXPIRY_DAYS = 30;
 
 function getSecret(): string {
-  return process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "dev-secret-for-testing";
+  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXTAUTH_SECRET or AUTH_SECRET must be set in production");
+    }
+    return "dev-secret-for-testing";
+  }
+  return secret;
 }
 
 /**

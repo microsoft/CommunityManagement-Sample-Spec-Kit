@@ -63,7 +63,7 @@ export async function createNotification(
   const template = getNotificationTemplate(input.type);
   const title = input.title ?? template.title;
   const body = input.body ?? template.body;
-  const resourceType = input.resourceType ?? getResourceTypeForNotification(input.type) as NotificationResourceType | undefined;
+  const resourceType = input.resourceType ?? getResourceTypeForNotification(input.type);
 
   const result = await db().query<NotificationRow>(
     `INSERT INTO notifications (user_id, type, title, body, resource_type, resource_id)

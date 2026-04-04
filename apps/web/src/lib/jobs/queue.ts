@@ -146,8 +146,10 @@ let queueInstance: JobQueue | null = null;
 /** Get or create the job queue singleton */
 export function getQueue(): JobQueue {
   if (!queueInstance) {
-    // In production with pg-boss, we'd check for DATABASE_URL and create PgBossJobQueue.
-    // For now, always use MemoryJobQueue which works with PGlite in dev/test.
+    // MemoryJobQueue is used in development and testing.
+    // In production, replace with PgBossJobQueue connecting to the
+    // same PostgreSQL database used by the application (via DATABASE_URL).
+    // pg-boss manages its own schema tables (job, schedule, archive).
     queueInstance = new MemoryJobQueue();
   }
   return queueInstance;

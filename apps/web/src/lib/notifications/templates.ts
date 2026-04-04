@@ -4,6 +4,7 @@
 // Returns title + body + resource link for rendering in UI and email.
 
 import { NotificationType } from "@acroyoga/shared/types/notifications";
+import type { NotificationResourceType } from "@acroyoga/shared/types/notifications";
 
 export interface NotificationTemplate {
   title: string;
@@ -73,7 +74,7 @@ export function getNotificationTemplate(
  */
 export function getResourceTypeForNotification(
   type: NotificationType,
-): string | undefined {
+): NotificationResourceType | undefined {
   switch (type) {
     case NotificationType.EVENT_RSVP:
     case NotificationType.WAITLIST_PROMOTION:
