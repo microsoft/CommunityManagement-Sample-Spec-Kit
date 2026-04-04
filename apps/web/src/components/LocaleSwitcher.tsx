@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { SUPPORTED_LOCALES } from "@acroyoga/shared/types/i18n";
 import type { Locale } from "@acroyoga/shared/types/i18n";
 
@@ -15,7 +15,6 @@ import type { Locale } from "@acroyoga/shared/types/i18n";
 export function LocaleSwitcher() {
   const currentLocale = useLocale() as Locale;
   const router = useRouter();
-  const pathname = usePathname();
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const newLocale = e.target.value as Locale;
@@ -27,8 +26,6 @@ export function LocaleSwitcher() {
     // Refresh the page to trigger server-side re-render with new locale
     router.refresh();
   }
-
-  const currentEntry = SUPPORTED_LOCALES.find((l) => l.code === currentLocale);
 
   return (
     <select

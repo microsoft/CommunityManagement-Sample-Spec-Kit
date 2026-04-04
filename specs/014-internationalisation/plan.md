@@ -2,7 +2,7 @@
 
 **Branch**: `014-internationalisation` | **Date**: 2026-04-04 | **Spec**: [specs/014-internationalisation/spec.md](spec.md)
 **Input**: Feature specification from `/specs/014-internationalisation/spec.md`
-**Status**: Draft
+**Status**: Implemented
 
 ## Summary
 

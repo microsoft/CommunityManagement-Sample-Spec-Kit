@@ -93,7 +93,7 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 011b | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
 | 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Complete |
-| 014 | [Internationalisation](specs/014-internationalisation/) | P1 | Planned |
+| 014 | [Internationalisation](specs/014-internationalisation/) | P1 | Implemented |
 | 015 | [Background Jobs & Notifications](specs/015-background-jobs-notifications/) | P1 | Planned |
 | 016 | [Mobile App (Expo/React Native)](specs/016-mobile-app/) | P1 | Planned |
 
@@ -136,7 +136,7 @@ The project is governed by a [constitution](specs/constitution.md) (v1.5.0) defi
 5. **UX Consistency** — WCAG 2.1 AA; mobile-first; shared design tokens
 6. **Performance Budget** — LCP <2.5s; initial JS <200KB; no N+1 queries
 7. **Simplicity** — No premature abstraction; dependencies justified in PRs
-8. **Internationalisation** — All strings extractable; locale-aware formatting
+8. **Internationalisation** — All strings in `apps/web/messages/*.json`; `next-intl` locale switching; `Intl.DateTimeFormat`/`Intl.NumberFormat` formatting; RTL structural support; CI-blocking lint
 9. **Scoped Permissions** — Geographic RBAC with `withPermission()` middleware
 10. **Notification Architecture** — Multi-channel, user-configurable, async delivery
 11. **Resource Ownership** — Every mutation verifies caller is owner or scoped admin
