@@ -1,6 +1,10 @@
 name: Close Completed Issues
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/close-completed-issues.yml'
   workflow_dispatch:
 
 permissions:
@@ -14,46 +18,49 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // All open issues are from specs 008 and 009, both fully complete
-            const issueNumbers = [
-              370, 371, 372, 373, 374, 375, 376, 377, 378, 379,
-              380, 381, 382, 383, 384, 385, 386, 387, 388, 389,
-              390, 391, 392, 393, 394, 395, 396, 397, 398,
-              409, 410, 411, 412, 413, 414, 416, 417, 419, 421, 422,
-              428, 429, 431, 436,
-              439, 440, 441, 442, 443, 444, 445, 446, 447, 448,
-              449, 450, 451, 452, 453, 454, 455, 456, 457, 458,
-              459, 460, 461, 462, 463, 464, 465, 466, 467, 468,
-              469, 470, 471, 472, 473, 474, 475, 476, 477, 478,
-              479, 480, 481, 482, 483, 484, 485, 486, 487, 488,
-              489, 490, 491, 492, 493, 494, 495, 496, 497, 498,
-              499, 500
-            ];
-
-            console.log(`Closing ${issueNumbers.length} completed issues...`);
-
+            // All 106 open issues are from specs 008 and 009
+            // Both specs have all tasks marked [X] complete (verified 2026-04-04)
+            // Fetch all open issues and close them
+            let page = 1;
             let closed = 0;
             let errors = 0;
 
-            for (const num of issueNumbers) {
-              try {
-                await github.rest.issues.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: num,
-                  state: 'closed',
-                  state_reason: 'completed'
-                });
-                closed++;
-                if (closed % 10 === 0) {
-                  console.log(`  Progress: ${closed}/${issueNumbers.length} closed`);
+            while (true) {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                per_page: 100,
+                page: page
+              });
+
+              if (issues.length === 0) break;
+
+              for (const issue of issues) {
+                // Only close auto-generated spec issues (not PRs)
+                if (issue.pull_request) continue;
+
+                try {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    state: 'closed',
+                    state_reason: 'completed'
+                  });
+                  closed++;
+                  if (closed % 10 === 0) {
+                    console.log(`  Progress: ${closed} issues closed`);
+                  }
+                } catch (err) {
+                  console.error(`  Failed to close #${issue.number}: ${err.message}`);
+                  errors++;
                 }
-              } catch (err) {
-                console.error(`  Failed to close #${num}: ${err.message}`);
-                errors++;
+                // Small delay to avoid rate limiting
+                await new Promise(r => setTimeout(r, 300));
               }
-              // Small delay to avoid rate limiting
-              await new Promise(r => setTimeout(r, 500));
+
+              page++;
             }
 
             console.log(`\nDone! Closed: ${closed}, Errors: ${errors}`);
