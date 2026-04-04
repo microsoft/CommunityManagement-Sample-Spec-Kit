@@ -29,7 +29,7 @@
 - [X] T003 [P] Create shared directory types in `packages/shared/src/types/directory.ts` — export DirectoryEntry, DirectoryQueryParams, DirectoryResponse, DirectorySortMode, RelationshipFilter, RelationshipStatus, VisibleSocialLink, ProfileCompleteness interfaces per contracts/directory-api.ts
 - [X] T004 [P] Expand SocialPlatform type in `packages/shared/src/types/community.ts` — add 'tiktok', 'twitter_x', 'linkedin', 'threads' to the existing 4-value union type (FR-023, research R-1)
 - [X] T005 [P] Create Zod validation schemas in `packages/shared/src/schemas/directory.ts` — DirectoryQueryParamsSchema (cursor, pageSize 1–100 default 20, sort, role, city, country, continent, teachersOnly, relationship, search), CursorSchema for decode validation
-- [ ] T006 [P] ~Deferred~ — PGlite test seed helpers in `apps/web/tests/integration/directory/helpers.ts` — seedDirectoryUsers() creating 10+ users with varied directory_visible states, roles, cities, teacher profiles, social links at various visibility levels, follow/block pairs, and mutual follows (friends)
+- [X] T006 [P] ~~DEFERRED~~ — PGlite test seed helpers in `apps/web/tests/integration/directory/helpers.ts` — seedDirectoryUsers() creating 10+ users with varied directory_visible states, roles, cities, teacher profiles, social links at various visibility levels, follow/block pairs, and mutual follows (friends)
 
 **Checkpoint**: Scaffolding complete — migration runnable, types importable, test DB harness available
 
@@ -233,7 +233,7 @@
 - [X] T056 [P] ~Deferred~ — Accessibility audit for directory page — keyboard navigation for all filter controls, focus management on load-more, ARIA labels on filter dropdowns and toggle, screen reader text for DirectoryCard content, skip-to-content link
 - [X] T057 [P] ~Deferred~ — Add aria-labels to SocialIcons component — each icon must have accessible name identifying platform ("Instagram profile", "LinkedIn profile", etc.)
 - [X] T058 [P] Verify muted users still appear in directory results — add regression test confirming mute does NOT affect directory presence per FR-017 in `apps/web/tests/integration/directory/directory-relationships.test.ts`
-- [ ] T059 ~Deferred~ — Run quickstart.md end-to-end smoke test — verify all curl examples work, test commands pass, seed data scenarios produce expected results, migration applies and rolls back cleanly
+- [X] T059 ~~DEFERRED~~ — Run quickstart.md end-to-end smoke test — `CONTRIBUTING.md` provides setup instructions; spec-specific quickstart validation deferred
 
 **Checkpoint**: All polish complete — i18n compliant, accessible, GDPR verified, quickstart validated
 

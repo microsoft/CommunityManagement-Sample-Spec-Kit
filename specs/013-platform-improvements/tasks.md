@@ -63,12 +63,12 @@
 
 **Goal**: Triage and resolve remaining unchecked tasks across all specs
 
-- [ ] T021 [US6] Triage Spec 001 remaining 36 tasks — complete, defer with rationale, or remove
-- [ ] T022 [US6] Triage Spec 003 remaining 7 tasks — complete or defer
-- [ ] T023 [US6] Triage Spec 004 remaining 26 tasks — complete or defer
-- [ ] T024 [US6] Triage Spec 005 remaining 9 tasks — complete or defer
-- [ ] T025 [US6] Triage Spec 009 remaining 2 tasks — complete or defer
-- [ ] T026 [US6] Triage Spec 010 remaining 6 tasks — complete or defer
+- [X] T021 [US6] Triage Spec 001 remaining 36 tasks — 15 marked complete (already implemented), 21 marked deferred with rationale (UI components, polish, SEO)
+- [X] T022 [US6] Triage Spec 003 remaining 7 tasks — 2 marked complete (occurrences page, RSVP validation), 5 marked deferred with rationale (notifications, i18n, audit)
+- [X] T023 [US6] Triage Spec 004 remaining 26 tasks — 25 marked complete (all infrastructure implemented), 1 marked deferred (creator settings page)
+- [X] T024 [US6] Triage Spec 005 remaining 9 tasks — 3 marked complete (event-teachers, reviews API), 6 marked deferred (proof docs, jobs, reports)
+- [X] T025 [US6] Triage Spec 009 remaining 2 tasks — both confirmed deferred (seed helpers, quickstart validation)
+- [X] T026 [US6] Triage Spec 010 remaining 3 tasks — all confirmed deferred (geolocation tests, heatmap feature)
 
 **Checkpoint**: All spec tasks are either completed or explicitly deferred with rationale
 
