@@ -25,6 +25,7 @@ export interface ExplorerFilterState {
 
 export interface ExplorerFilterActions {
   setFilter: <K extends keyof ExplorerFilterState>(key: K, value: ExplorerFilterState[K]) => void;
+  setDateRange: (dateFrom: string, dateTo: string) => void;
   toggleCategory: (category: EventCategory) => void;
   setAllCategories: (all: boolean) => void;
   resetFilters: () => void;

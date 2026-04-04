@@ -86,6 +86,7 @@ export default function LocationTreePanel({ selectedLocation, onLocationSelect, 
           nodes={treeWithCounts}
           selectedId={selectedLocation}
           onSelect={handleSelect}
+          expandAll={searchTerm.trim().length > 0}
         />
         {/* City-level: show individual events */}
         {isCityLevel && (

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { WebLocationTreeProps } from "./LocationTree.js";
 import type { LocationNode } from "@acroyoga/shared/types/explorer";
 
-export function LocationTree({ nodes, selectedId, onSelect, className, style }: WebLocationTreeProps) {
+export function LocationTree({ nodes, selectedId, onSelect, className, style, expandAll }: WebLocationTreeProps) {
   return (
     <div
       className={className}
@@ -17,6 +17,7 @@ export function LocationTree({ nodes, selectedId, onSelect, className, style }: 
           selectedId={selectedId}
           onSelect={onSelect}
           level={0}
+          expandAll={expandAll}
         />
       ))}
     </div>
@@ -28,18 +29,20 @@ function TreeNode({
   selectedId,
   onSelect,
   level,
+  expandAll,
 }: {
   node: LocationNode;
   selectedId: string | null;
   onSelect: (node: LocationNode) => void;
   level: number;
+  expandAll?: boolean;
 }) {
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null);
   const hasChildren = node.children.length > 0;
   const isSelected = node.id === selectedId;
   // Auto-expand if this node is an ancestor of the selected node
   const isAncestor = selectedId != null && selectedId.startsWith(node.id + "/");
-  const expanded = manualExpanded ?? (isSelected || isAncestor || level === 0);
+  const expanded = expandAll ? true : (manualExpanded ?? (isSelected || isAncestor || level <= 1));
 
   return (
     <div role="treeitem" aria-expanded={hasChildren ? expanded : undefined} aria-selected={isSelected}>
@@ -116,6 +119,7 @@ function TreeNode({
               selectedId={selectedId}
               onSelect={onSelect}
               level={level + 1}
+              expandAll={expandAll}
             />
           ))}
         </div>

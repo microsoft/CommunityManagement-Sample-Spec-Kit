@@ -91,6 +91,17 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
     [updateParams]
   );
 
+  const setDateRange = useCallback(
+    (dateFrom: string, dateTo: string) => {
+      updateParams((params) => {
+        params.delete("page");
+        params.set("dateFrom", dateFrom);
+        params.set("dateTo", dateTo);
+      });
+    },
+    [updateParams],
+  );
+
   const toggleCategory = useCallback(
     (category: EventCategory) => {
       updateParams((params) => {
@@ -168,5 +179,5 @@ export function useExplorerFilters(): ExplorerFilterState & ExplorerFilterAction
     [updateParams]
   );
 
-  return { ...filters, setFilter, toggleCategory, setAllCategories, resetFilters, applyQuickPick };
+  return { ...filters, setFilter, setDateRange, toggleCategory, setAllCategories, resetFilters, applyQuickPick };
 }

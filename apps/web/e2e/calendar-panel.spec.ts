@@ -41,6 +41,8 @@ test.describe("Calendar panel journey", () => {
 
     /* Click previous again to go before the initial month */
     await prevBtn.click();
+    /* Wait for the label to update (router.push is async) */
+    await expect(monthLabel).not.toHaveText(initial!);
     const afterPrev = await monthLabel.textContent();
     expect(afterPrev).not.toBe(initial);
     expect(afterPrev).not.toBe(afterNext);
@@ -49,13 +51,20 @@ test.describe("Calendar panel journey", () => {
   test("clicking a day cell selects it", async ({ explorerPage: page }) => {
     const grid = page.locator('[role="grid"][aria-label="Calendar month view"]');
 
-    /* Click the first gridcell in the current month that is fully opaque */
-    const cells = grid.locator('[role="gridcell"]');
-    const firstActiveCell = cells.first();
-    await firstActiveCell.click();
+    /* Determine the current month name from the calendar header so the
+       selector works regardless of what month the test runs in. */
+    const calendarRegion = page.locator('[role="region"][aria-label="Event calendar"]');
+    const monthLabel = calendarRegion.locator("span").filter({ hasText: /\w+ \d{4}/ }).first();
+    const monthText = await monthLabel.textContent();
+    const monthName = monthText!.split(" ")[0]; // e.g. "April"
+
+    /* Click the first gridcell in the current month (skip padding days from
+       adjacent months by filtering on the month name in the aria-label). */
+    const currentMonthCell = grid.locator(`[role="gridcell"][aria-label*="${monthName}"]`).first();
+    await currentMonthCell.click();
 
     /* The cell should now be aria-selected */
-    await expect(firstActiveCell).toHaveAttribute("aria-selected", "true");
+    await expect(currentMonthCell).toHaveAttribute("aria-selected", "true");
   });
 
   test("toggling event count bubbles via the # button", async ({
