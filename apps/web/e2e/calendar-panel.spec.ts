@@ -19,23 +19,27 @@ test.describe("Calendar panel journey", () => {
   });
 
   test("navigates to previous and next months", async ({ explorerPage: page }) => {
-    /* Capture the initial month label */
-    const monthLabel = page.locator("text=/\\w+ \\d{4}/").first();
+    /* The month label sits between the prev/next buttons in the calendar header.
+       Target by position: it's a <span> between the two navigation buttons. */
+    const calendarRegion = page.locator('[role="region"][aria-label="Event calendar"]');
+    const prevBtn = calendarRegion.getByLabel("Previous month");
+    const nextBtn = calendarRegion.getByLabel("Next month");
+    /* The month label is a span sibling of the navigation buttons */
+    const monthLabel = calendarRegion.locator("span").filter({ hasText: /\w+ \d{4}/ }).first();
+
     const initial = await monthLabel.textContent();
     expect(initial).toBeTruthy();
 
     /* Click next month */
-    const nextBtn = page.getByLabel("Next month");
     await nextBtn.click();
     await expect(monthLabel).not.toHaveText(initial!);
     const afterNext = await monthLabel.textContent();
 
-    /* Click previous month twice to go before the initial month */
-    const prevBtn = page.getByLabel("Previous month");
+    /* Click previous month to return to initial */
     await prevBtn.click();
     await expect(monthLabel).toHaveText(initial!);
 
-    /* Click previous again */
+    /* Click previous again to go before the initial month */
     await prevBtn.click();
     const afterPrev = await monthLabel.textContent();
     expect(afterPrev).not.toBe(initial);

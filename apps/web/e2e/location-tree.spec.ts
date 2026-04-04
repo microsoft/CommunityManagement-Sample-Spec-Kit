@@ -70,10 +70,9 @@ test.describe("Location tree journey", () => {
     const europeNode = sidebar.getByText("Europe").first();
     await europeNode.click();
 
-    /* Give the router time to update the URL */
-    await page.waitForTimeout(500);
+    /* Wait for the router to update the URL with a location param */
+    await expect(page).toHaveURL(/[?&]location=/, { timeout: 5_000 });
 
-    /* The URL should now include location in the search params */
     const url = new URL(page.url());
     const loc = url.searchParams.get("location");
     /* The location param should be set (could be "EU" or "EU/..." depending on the tree) */
