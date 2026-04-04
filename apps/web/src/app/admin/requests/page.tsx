@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import type { PermissionRequest } from "@acroyoga/shared/types/requests";
 
 export default function AdminRequestsPage() {
@@ -90,7 +91,7 @@ export default function AdminRequestsPage() {
                   </p>
                   {req.message && <p className="mt-2 text-sm text-gray-600 italic">&ldquo;{req.message}&rdquo;</p>}
                   <p className="mt-1 text-xs text-gray-400">
-                    Submitted {new Date(req.createdAt).toLocaleDateString()}
+                    Submitted {formatEventDate(req.createdAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>
                 <div className="flex space-x-2" role="group" aria-label="Review actions">

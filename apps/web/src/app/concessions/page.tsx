@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { CONCESSION_MESSAGES as msg } from "./concession-messages";
 
 interface ConcessionStatus {
@@ -52,16 +53,16 @@ export default function ConcessionPage() {
           <p className="font-semibold capitalize">{msg.status} {concession.status}</p>
           <p className="text-sm text-gray-600 mt-1">{msg.evidence} {concession.evidence}</p>
           <p className="text-xs text-gray-400 mt-1">
-            {msg.applied} {new Date(concession.created_at).toLocaleDateString()}
+            {msg.applied} {formatEventDate(concession.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
           </p>
           {concession.approved_at && (
             <p className="text-xs text-green-600">
-              Approved: {new Date(concession.approved_at).toLocaleDateString()}
+              Approved: {formatEventDate(concession.approved_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
           )}
           {concession.rejected_at && (
             <p className="text-xs text-red-600">
-              Rejected: {new Date(concession.rejected_at).toLocaleDateString()}
+              Rejected: {formatEventDate(concession.rejected_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
           )}
         </div>

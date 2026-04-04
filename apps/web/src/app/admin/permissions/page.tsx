@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PermissionGrant } from "@acroyoga/shared/types/permissions";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 export default function AdminPermissionsPage() {
@@ -109,7 +110,7 @@ export default function AdminPermissionsPage() {
                     {grant.scopeValue ? ` / ${grant.scopeValue}` : ""}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(grant.grantedAt).toLocaleDateString()}
+                    {formatEventDate(grant.grantedAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button

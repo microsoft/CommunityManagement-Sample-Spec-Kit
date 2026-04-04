@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import type { EventDetail } from "@acroyoga/shared/types/events";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { EVENT_MESSAGES as msg } from "./event-messages";
 
 export default function EventDetailPage() {
@@ -69,7 +70,7 @@ export default function EventDetailPage() {
       {/* Date & Time */}
       <div className="mt-4 text-foreground">
         <p>
-          {new Date(event.startDatetime).toLocaleString()} — {new Date(event.endDatetime).toLocaleString()}
+          {formatEventDate(event.startDatetime)} — {formatEventDate(event.endDatetime)}
         </p>
       </div>
 

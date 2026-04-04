@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { AUTH_MESSAGES } from "./auth-messages";
 import type { LinkedAccount } from "@acroyoga/shared/types/auth";
 
@@ -177,7 +178,7 @@ export default function LinkedAccountsList({
                     }}
                   >
                     {AUTH_MESSAGES.linkedAccountsLinkedAt}{" "}
-                    {new Date(account.linkedAt).toLocaleDateString()}
+                    {formatEventDate(account.linkedAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
 

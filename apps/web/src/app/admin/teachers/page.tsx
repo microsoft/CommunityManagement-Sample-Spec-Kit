@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 interface TeacherRequest {
@@ -69,7 +70,7 @@ export default function AdminTeachersPage() {
                 <div>
                   <h2 className="font-semibold">{r.display_name}</h2>
                   <p className="text-sm text-gray-500">
-                    Applied {new Date(r.created_at).toLocaleDateString()}
+                    Applied {formatEventDate(r.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 
 interface Occurrence {
   eventId: string;
@@ -46,9 +47,9 @@ export default function OccurrencesPage() {
               <div>
                 <p className="font-semibold">{occ.title}</p>
                 <p className="text-sm text-gray-600">
-                  {new Date(occ.startDatetime).toLocaleDateString()} &mdash;{" "}
-                  {new Date(occ.startDatetime).toLocaleTimeString()} to{" "}
-                  {new Date(occ.endDatetime).toLocaleTimeString()}
+                  {formatEventDate(occ.startDatetime, "en", undefined, { month: "short", day: "numeric" })} &mdash;{" "}
+                  {formatEventDate(occ.startDatetime, "en", undefined, { hour: "numeric", minute: "2-digit" })} to{" "}
+                  {formatEventDate(occ.endDatetime, "en", undefined, { hour: "numeric", minute: "2-digit" })}
                 </p>
                 {occ.isModified && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">

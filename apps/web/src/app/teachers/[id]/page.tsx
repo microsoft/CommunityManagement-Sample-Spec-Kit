@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { TEACHER_MESSAGES as msg } from "../teacher-messages";
 
 interface Certification {
@@ -165,7 +166,7 @@ export default function TeacherProfilePage() {
                   </span>
                   {c.expiry_date && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Expires: {new Date(c.expiry_date).toLocaleDateString()}
+                      Expires: {formatEventDate(c.expiry_date, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                     </p>
                   )}
                 </div>
@@ -186,7 +187,7 @@ export default function TeacherProfilePage() {
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{r.reviewer_name}</span>
                   <span className="text-gray-400">
-                    {new Date(r.created_at).toLocaleDateString()}
+                    {formatEventDate(r.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">{r.event_title}</p>

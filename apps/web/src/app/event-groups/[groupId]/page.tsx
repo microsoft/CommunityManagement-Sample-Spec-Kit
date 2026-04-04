@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 
 interface GroupDetail {
   id: string;
@@ -48,8 +49,8 @@ export default function EventGroupDetailPage() {
       <h1 className="text-2xl font-bold">{group.name}</h1>
       <p className="text-sm text-gray-500 capitalize mb-2">{group.type}</p>
       <p className="text-gray-600 mb-4">
-        {new Date(group.start_date).toLocaleDateString()} &ndash;{" "}
-        {new Date(group.end_date).toLocaleDateString()} &middot; {group.currency}
+        {formatEventDate(group.start_date, "en", undefined, { year: "numeric", month: "short", day: "numeric" })} &ndash;{" "}
+        {formatEventDate(group.end_date, "en", undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {group.currency}
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-3">Events ({group.members.length})</h2>

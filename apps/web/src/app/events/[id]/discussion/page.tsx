@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { DISCUSSION_MESSAGES as msg } from "./discussion-messages";
 
 interface MessageData {
@@ -129,7 +130,7 @@ export default function EventDiscussionPage({ params }: { params: Promise<{ id: 
             <div className="flex justify-between items-baseline">
               <span className="text-sm font-medium">{m.authorName ?? msg.unknownAuthor}</span>
               <span className="text-xs text-gray-400">
-                {new Date(m.createdAt).toLocaleString()}
+                {formatEventDate(m.createdAt)}
                 {m.editedAt && " (edited)"}
               </span>
             </div>
