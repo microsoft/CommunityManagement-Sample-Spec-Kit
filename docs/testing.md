@@ -16,7 +16,7 @@ npm run test
 # Run tests for a specific workspace
 npm run test -w @acroyoga/tokens      # 20 token pipeline tests
 npm run test -w @acroyoga/shared-ui   # 85 component tests
-npm run test -w @acroyoga/web         # 580+ integration & unit tests
+npm run test -w @acroyoga/web         # 600+ integration & unit tests
 
 # Watch mode for development
 npm run test:watch
@@ -45,6 +45,9 @@ apps/web/tests/
 │   ├── link-account.test.ts
 │   └── gdpr-social.test.ts
 └── unit/                    # Pure function unit tests
+    ├── auth-middleware.test.ts    # requireAuth() middleware
+    ├── rate-limit.test.ts        # Rate limiting middleware
+    ├── share-meta.test.ts        # OG/social share metadata
     ├── url-bookmark.test.ts
     ├── extractMapMarkers.test.ts
     ├── completeness.test.ts

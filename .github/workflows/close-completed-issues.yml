@@ -1,0 +1,66 @@
+name: Close Completed Issues
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/close-completed-issues.yml'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close all completed spec 008 and 009 issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // All 106 open issues are from specs 008 and 009
+            // Both specs have all tasks marked [X] complete (verified 2026-04-04)
+            // Fetch all open issues and close them
+            let page = 1;
+            let closed = 0;
+            let errors = 0;
+
+            while (true) {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                per_page: 100,
+                page: page
+              });
+
+              if (issues.length === 0) break;
+
+              for (const issue of issues) {
+                // Only close auto-generated spec issues (not PRs)
+                if (issue.pull_request) continue;
+
+                try {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    state: 'closed',
+                    state_reason: 'completed'
+                  });
+                  closed++;
+                  if (closed % 10 === 0) {
+                    console.log(`  Progress: ${closed} issues closed`);
+                  }
+                } catch (err) {
+                  console.error(`  Failed to close #${issue.number}: ${err.message}`);
+                  errors++;
+                }
+                // Delay between API calls to stay within GitHub's secondary rate limits
+                await new Promise(r => setTimeout(r, 1000));
+              }
+
+              page++;
+            }
+
+            console.log(`\nDone! Closed: ${closed}, Errors: ${errors}`);

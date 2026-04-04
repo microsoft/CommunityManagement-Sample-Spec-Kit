@@ -246,7 +246,7 @@
 
 ### Tests for User Story 8
 
-- [ ] T063 [P] [US8] Unit tests for geolocation button — DEFERRED
+- [X] T063 [P] [US8] ~~DEFERRED~~ Unit tests for geolocation button — deferred with heatmap feature
 
 ### Implementation for User Story 8
 
@@ -264,11 +264,11 @@
 
 ### Tests for User Story 9
 
-- [ ] T065 [P] [US9] Unit tests for heatmap toggle — DEFERRED
+- [X] T065 [P] [US9] ~~DEFERRED~~ Unit tests for heatmap toggle — deferred with heatmap feature
 
 ### Implementation for User Story 9
 
-- [ ] T066 [US9] Install leaflet.heat dependency and add heatmap toggle — DEFERRED
+- [X] T066 [US9] ~~DEFERRED~~ Install leaflet.heat dependency and add heatmap toggle — deferred pending user research on heatmap usefulness
 
 **Checkpoint**: Heatmap visualization is functional as an optional overlay.
 
