@@ -16,7 +16,7 @@ npm run test
 # Run tests for a specific workspace
 npm run test -w @acroyoga/tokens      # 20 token pipeline tests
 npm run test -w @acroyoga/shared-ui   # 85 component tests
-npm run test -w @acroyoga/web         # 600+ integration & unit tests
+npm run test -w @acroyoga/web         # 630+ integration & unit tests
 
 # Watch mode for development
 npm run test:watch
@@ -30,15 +30,16 @@ apps/web/tests/
 │   ├── db.ts                # createTestDb(), applyMigrations(), setTestDb(), clearTestDb()
 │   └── users.ts             # seedSampleUsers(), seedSampleUser()
 ├── integration/             # API route integration tests
+│   ├── account/             # GDPR export download
 │   ├── community/           # Follows, blocks, profiles, threads, GDPR
 │   ├── events/              # CRUD, RSVP, waitlist, venues, credits
 │   ├── gdpr/                # Data export
 │   ├── journeys/            # Cross-feature user journeys
-│   ├── payments/            # Stripe Connect, unauthorized access
+│   ├── payments/            # Stripe Connect, webhook, callback, auth, status
 │   ├── permissions/         # Grants, scope hierarchy, audit log
 │   ├── recurring/           # Event groups, bookings, concessions
 │   ├── requests/            # Permission request lifecycle
-│   ├── teachers/            # Profiles, certifications, reviews
+│   ├── teachers/            # Profiles, certifications, reviews, photos
 │   ├── social-user.test.ts  # Social login provisioning
 │   ├── login-redirect.test.ts
 │   ├── health.test.ts
@@ -191,6 +192,34 @@ const { POST } = await import("../../src/app/api/my-route/route");
 const response = await POST(request);
 ```
 
+### vi.mock Pattern for Session Control
+
+For HTTP-level route tests, use `vi.mock` to control `getServerSession`:
+
+```typescript
+import { vi } from "vitest";
+
+// Mock session at module level
+vi.mock("@/lib/auth/session", () => ({
+  getServerSession: vi.fn(),
+}));
+
+import { getServerSession } from "@/lib/auth/session";
+const mockGetServerSession = vi.mocked(getServerSession);
+
+// In tests — set auth state
+mockGetServerSession.mockResolvedValue({ userId: "user-123" }); // authenticated
+mockGetServerSession.mockResolvedValue(null);                    // unauthenticated
+
+// Call route handler directly
+const { GET } = await import("@/app/api/my-route/route");
+const response = await GET();
+expect(response.status).toBe(200);
+
+// Clean up
+afterEach(() => { vi.resetAllMocks(); });
+```
+
 ### Testing 403 for Unauthorized Callers
 
 **Constitution QG-10 requires** every new mutation endpoint to include a test proving 403 for an unauthorized caller:
@@ -317,11 +346,11 @@ export default defineConfig({
 | Community | 5 | Profiles, threads, reports, GDPR, follows, blocks/mutes |
 | Permissions | 6 | Grant/revoke, scope hierarchy, unauthorized access, audit log, multi-grant |
 | Recurring | 4 | Event groups, recurrence, bookings, concessions/capacity |
-| Teachers | 5 | Profiles, certifications, event-teachers, applications, reviews |
-| Payments | 2 | Stripe Connect, unauthorized access |
+| Teachers | 6 | Profiles, certifications, event-teachers, applications, reviews, photo CRUD |
+| Payments | 6 | Stripe Connect, webhook signature validation, OAuth callback, connect authorization, status endpoint, unauthorized access |
 | Requests | 2 | Request lifecycle, unauthorized access |
 | Auth | 4 | Social user provisioning, login redirect, account linking, GDPR social |
-| GDPR | 1 | Data export |
+| GDPR | 2 | Data export, export download (ownership, status validation) |
 | Explorer | 3 | Calendar views, category filter, responsive layout |
 | Journeys | 2 | Friend visibility, blocked user visibility |
 | Health | 1 | Health check endpoints |
