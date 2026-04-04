@@ -1,17 +1,13 @@
 import React from "react";
 import type { WebEventCardProps } from "./EventCard.js";
+import { formatEventDate, formatCurrency } from "@acroyoga/shared/utils/format";
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-}
+export function EventCard({ event, onPress, labels, style, ...rest }: WebEventCardProps) {
+  const freeLabel = labels?.free ?? "Free";
+  const spotsLabel = labels?.spots ?? `${event.confirmedCount}/${event.capacity} spots`;
+  const costDisplay = event.cost === 0 ? freeLabel : formatCurrency(event.cost, event.currency);
+  const dateDisplay = formatEventDate(event.startDatetime);
 
-function formatCost(cost: number, currency: string): string {
-  if (cost === 0) return "Free";
-  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cost);
-}
-
-export function EventCard({ event, onPress, style, ...rest }: WebEventCardProps) {
   return (
     <div
       role="article"
@@ -66,14 +62,14 @@ export function EventCard({ event, onPress, style, ...rest }: WebEventCardProps)
           {event.title}
         </h3>
         <p style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-surface-muted-foreground)" }}>
-          {formatDate(event.startDatetime)} · {event.venueName}, {event.cityName}
+          {dateDisplay} · {event.venueName}, {event.cityName}
         </p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--spacing-2)" }}>
           <span style={{ fontSize: "var(--font-size-sm)", fontWeight: "var(--font-weight-medium)" as string }}>
-            {formatCost(event.cost, event.currency)}
+            {costDisplay}
           </span>
           <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-surface-muted-foreground)" }}>
-            {event.confirmedCount}/{event.capacity} spots
+            {spotsLabel}
           </span>
         </div>
         {event.userRsvpStatus && (

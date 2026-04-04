@@ -14,9 +14,19 @@ export interface DirectoryCardData {
   relationshipStatus: string;
 }
 
+/** Translatable labels for the DirectoryCard component */
+export interface DirectoryCardLabels {
+  unnamedMember?: string;
+  verifiedTeacher?: string;
+  friends?: string;
+  followsYou?: string;
+}
+
 export interface DirectoryCardProps {
   member: DirectoryCardData;
   onPress?: (userId: string) => void;
+  /** Override default English labels for i18n */
+  labels?: DirectoryCardLabels;
 }
 
 export type WebDirectoryCardProps = DirectoryCardProps & Omit<HTMLAttributes<HTMLDivElement>, "children">;

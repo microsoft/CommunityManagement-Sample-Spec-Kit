@@ -16,9 +16,17 @@ export interface EventCardData {
   userRsvpStatus?: string | null;
 }
 
+/** Translatable labels for the EventCard component */
+export interface EventCardLabels {
+  free?: string;
+  spots?: string;
+}
+
 export interface EventCardProps {
   event: EventCardData;
   onPress?: (id: string) => void;
+  /** Override default English labels for i18n */
+  labels?: EventCardLabels;
 }
 
 export type WebEventCardProps = EventCardProps & Omit<HTMLAttributes<HTMLDivElement>, "children">;
