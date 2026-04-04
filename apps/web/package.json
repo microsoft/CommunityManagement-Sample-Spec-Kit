@@ -16,7 +16,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed:geography": "tsx src/db/seeds/geography.ts",
     "db:seed:admin": "tsx src/db/seeds/admin.ts",
-    "db:seed:dev": "tsx src/db/seeds/dev.ts"
+    "db:seed:dev": "tsx src/db/seeds/dev.ts",
+    "test:e2e": "npx playwright test --config playwright.config.ts"
   },
   "dependencies": {
     "@acroyoga/shared": "*",
@@ -46,6 +47,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.16",
     "@next/bundle-analyzer": "^16.2.0",
+    "@playwright/test": "^1.59.1",
     "@storybook/addon-a11y": "^10.3.0",
     "@storybook/addon-themes": "^10.3.0",
     "@storybook/react": "^10.3.0",

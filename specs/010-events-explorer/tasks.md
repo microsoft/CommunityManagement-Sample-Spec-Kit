@@ -82,7 +82,7 @@
 
 - [X] T019 [P] [US1] Unit tests for CalendarPanel — renders month grid, displays event count bubbles with category colors, handles empty days in apps/web/tests/unit/CalendarPanel.test.tsx
 - [X] T020 [P] [US1] Integration test for calendar — mount ExplorerShell, verify month rendering and navigation in apps/web/tests/integration/calendar-views.test.tsx
-- [ ] T021 [P] [US1] E2E test for calendar user journey — DEFERRED (requires Playwright setup)
+- [X] T021 [P] [US1] E2E test for calendar user journey — Implemented in apps/web/e2e/calendar-panel.spec.ts (Spec 013 T017)
 
 ### Implementation for User Story 1
 
@@ -134,7 +134,7 @@
 
 - [X] T035 [P] [US3] Unit tests for MapMarkerPopup — renders event name, date, category, location in apps/web/tests/unit/MapMarkerPopup.test.tsx
 - [X] T036 [P] [US3] Unit tests for extractMapMarkers — filters events without coords, maps to MapMarkerData correctly in apps/web/tests/unit/extractMapMarkers.test.ts
-- [ ] T037 [P] [US3] E2E test for map interactions — DEFERRED (requires Playwright setup)
+- [X] T037 [P] [US3] E2E test for map interactions — Implemented in apps/web/e2e/map-interactions.spec.ts (Spec 013 T018)
 
 ### Implementation for User Story 3
 
@@ -161,7 +161,7 @@
 
 - [X] T044 [P] [US4] Unit tests for LocationTree shared component — renders 3-level hierarchy, expands/collapses nodes, shows event counts, fires onSelect callback in packages/shared-ui/src/LocationTree/LocationTree.test.tsx
 - [X] T045 [P] [US4] Unit tests for LocationTreePanel — search input filters tree nodes, clears selection resets filters in apps/web/tests/unit/LocationTreePanel.test.tsx
-- [ ] T046 [P] [US4] E2E test for location tree journey — DEFERRED (requires Playwright setup)
+- [X] T046 [P] [US4] E2E test for location tree journey — Implemented in apps/web/e2e/location-tree.spec.ts (Spec 013 T019)
 
 ### Implementation for User Story 4
 

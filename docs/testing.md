@@ -1,6 +1,7 @@
 # Testing Guide
 
 > **Test Runner**: [Vitest 4](https://vitest.dev) with global APIs  
+> **E2E**: [Playwright](https://playwright.dev) for browser-level testing  
 > **Database**: [PGlite](https://electric-sql.com/product/pglite) — in-memory PostgreSQL  
 > **DOM**: jsdom for React component tests  
 > **Accessibility**: axe-core via Storybook  
@@ -338,6 +339,61 @@ export default defineConfig({
 6. **30-second timeout** — PGlite operations can be slow on first run. The 30-second timeout accommodates migration application.
 
 7. **No skipped tests** — Skipped tests require a linked GitHub issue. CI enforces this.
+
+---
+
+## E2E Tests (Playwright)
+
+> **Runner**: [Playwright](https://playwright.dev)  
+> **Browser**: Chromium  
+> **Mocking**: Route interception — no real database needed
+
+### Running E2E Tests
+
+```bash
+# Install browsers (first time only)
+npx playwright install --with-deps chromium
+
+# Run E2E tests (starts Next.js dev server automatically)
+npm run test:e2e -w @acroyoga/web
+```
+
+### Test Organization
+
+```
+apps/web/e2e/
+├── fixtures.ts                   # Shared fixtures, mock data, API interception
+├── calendar-panel.spec.ts        # Calendar month grid, navigation, day selection
+├── map-interactions.spec.ts      # Map rendering, tile layer, count toggle
+└── location-tree.spec.ts         # Location tree, search filtering, URL updates
+```
+
+### How API Mocking Works
+
+E2E tests use Playwright's `page.route()` to intercept API calls and return
+deterministic mock data. This means tests run without a database or external
+services:
+
+```typescript
+import { test, expect } from "./fixtures";
+
+test("my test", async ({ explorerPage: page }) => {
+  // `explorerPage` fixture automatically:
+  // 1. Intercepts /api/events and /api/cities with mock data
+  // 2. Navigates to /events
+  // 3. Waits for the page to load
+  await expect(page.locator('[role="grid"]')).toBeVisible();
+});
+```
+
+### Configuration
+
+Playwright config lives at `apps/web/playwright.config.ts`. Key settings:
+
+- **webServer**: Starts `next dev` on port 3000 automatically
+- **retries**: 1 on CI, 0 locally
+- **trace**: Captured on first retry for debugging
+- **screenshots**: Captured on failure
 
 ---
 
