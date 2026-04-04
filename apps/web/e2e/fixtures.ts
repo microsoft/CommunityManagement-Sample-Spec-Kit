@@ -134,9 +134,13 @@ export const test = base.extend<{ explorerPage: Page }>({
   explorerPage: async ({ page }, use) => {
     await mockExplorerAPIs(page);
     await page.goto("/events");
-    /* Wait for loading to finish */
-    await page.waitForSelector('[role="grid"], [role="tablist"]', {
-      timeout: 15_000,
+    /* Wait for the explorer shell to render (indicates loading finished and
+       mock API data was consumed).  We target the shell container rather than
+       a CSS comma-selector because the mobile tablist (role="tablist") has
+       display:none on desktop, causing waitForSelector to time out. */
+    await page.locator(".explorer-shell").waitFor({
+      state: "visible",
+      timeout: 30_000,
     });
     await use(page);
   },

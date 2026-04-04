@@ -38,9 +38,13 @@ export default defineConfig({
     },
   ],
 
-  /* Start the Next.js dev server before running tests */
+  /* Start the Next.js server before running tests.
+     CI already has a production build, so use `next start` for speed.
+     Local dev uses `next dev` for hot-reload convenience. */
   webServer: {
-    command: "npx next dev --port 3000",
+    command: process.env.CI
+      ? "npx next start --port 3000"
+      : "npx next dev --port 3000",
     port: 3000,
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
