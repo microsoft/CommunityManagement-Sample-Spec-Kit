@@ -5,7 +5,7 @@
 
 **Tests**: Constitution mandates test-first development. Tests are included and MUST fail before implementation.
 
-**Organization**: Tasks are grouped by phase. This is the largest spec — 9 phases with 60+ tasks. Many tasks map directly to Spec 008's deferred Phase 6 tasks (T051–T079).
+**Organization**: Tasks are grouped by phase. This is the largest spec — 10 phases with 63 tasks. Many tasks map directly to Spec 008's deferred Phase 6 tasks (T051–T079).
 
 ## Format: `[ID] [P?] [Story] Description`
 
