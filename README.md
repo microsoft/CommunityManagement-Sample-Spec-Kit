@@ -58,7 +58,7 @@ This is an **npm workspaces monorepo** with shared packages:
 │
 ├── specs/                      # Spec-Kit feature specifications
 │   ├── constitution.md         # Architectural principles (v1.5.0)
-│   └── 001–012/                # Feature specs with plans, tasks, contracts
+│   └── 001–016/                # Feature specs with plans, tasks, contracts
 │
 └── .agent.md                   # UI Expert agent configuration
 ```
@@ -93,8 +93,28 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 011b | [Entra External ID](specs/011-entra-external-id/) | P1 | Implemented |
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
 | 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Complete |
+| 014 | [Internationalisation](specs/014-internationalisation/) | P1 | Planned |
+| 015 | [Background Jobs & Notifications](specs/015-background-jobs-notifications/) | P1 | Planned |
+| 016 | [Mobile App (Expo/React Native)](specs/016-mobile-app/) | P1 | Planned |
 
-> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Spec 008 mobile phases are deferred. Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 added CONTRIBUTING.md, API reference docs, database/testing docs, Playwright E2E tests, and triaged all remaining tasks across specs 001–010.
+> Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 added CONTRIBUTING.md, API reference docs, database/testing docs, Playwright E2E tests, and triaged all remaining tasks across specs 001–010. Specs 014–016 are the next wave of features — i18n (Constitution VIII), background jobs & notifications (Constitution X), and native mobile apps completing the cross-platform vision from Spec 008.
+
+## Roadmap
+
+The platform is **feature-complete for web**. All P0 and P1 features are implemented across 13 specs (001–013). The next wave of work is captured in three new specs:
+
+| Priority | Spec | Scope | Tasks |
+|----------|------|-------|-------|
+| **Next** | [014 — Internationalisation](specs/014-internationalisation/) | `next-intl` integration, string extraction (~200+ strings), `Intl.DateTimeFormat` migration, RTL support, locale switcher, CI enforcement | 44 tasks, 6 phases |
+| **Next** | [015 — Background Jobs & Notifications](specs/015-background-jobs-notifications/) | `pg-boss` job queue, in-app notifications, email delivery (Azure Communication Services), notification preferences, scheduled jobs (review reminders, cert-expiry) | 45 tasks, 7 phases |
+| **Future** | [016 — Mobile App](specs/016-mobile-app/) | Expo/React Native, 5-tab navigation, JWT auth, TanStack Query + MMKV offline, push notifications. Completes Spec 008's deferred mobile phases | 63 tasks, 10 phases |
+
+Additional deferred work (lower priority, not yet specced):
+- **UI Component Extraction** — 21 presentational component wrappers (Spec 001 deferred tasks)
+- **Performance Optimization** — Image optimization, lazy loading, skeleton loaders
+- **WCAG Manual Audit** — Keyboard navigation and screen reader testing beyond axe-core automation
+- **SEO & Social Sharing** — OG metadata generation, event sharing cards
+- **Geolocation & Heatmap** — "Near Me" button and event density heatmap (Spec 010 deferred)
 
 ## Documentation
 
