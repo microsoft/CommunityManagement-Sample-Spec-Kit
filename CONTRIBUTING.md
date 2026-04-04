@@ -96,7 +96,7 @@ npm run typecheck
 # 3. Lint — zero warnings (warnings are errors)
 npm run lint -w @acroyoga/web
 
-# 4. Run all tests — tokens (20) → shared-ui (85) → web (580+)
+# 4. Run all tests — tokens (20) → shared-ui (85) → web (630+)
 npm run test
 
 # 5. Production build — must succeed
