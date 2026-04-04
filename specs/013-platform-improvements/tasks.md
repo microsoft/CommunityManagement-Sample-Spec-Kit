@@ -49,11 +49,11 @@
 
 **Goal**: Add Playwright E2E tests for Events Explorer
 
-- [ ] T016 [US5] Install and configure Playwright for Next.js App Router
-- [ ] T017 [US5] Create E2E test for calendar panel user journey (Spec 010 T021)
-- [ ] T018 [US5] Create E2E test for map interactions (Spec 010 T037)
-- [ ] T019 [US5] Create E2E test for location tree journey (Spec 010 T046)
-- [ ] T020 [US5] Add Playwright E2E step to CI pipeline
+- [X] T016 [US5] Install and configure Playwright for Next.js App Router
+- [X] T017 [US5] Create E2E test for calendar panel user journey (Spec 010 T021)
+- [X] T018 [US5] Create E2E test for map interactions (Spec 010 T037)
+- [X] T019 [US5] Create E2E test for location tree journey (Spec 010 T046)
+- [X] T020 [US5] Add Playwright E2E step to CI pipeline
 
 **Checkpoint**: Critical UI journeys covered by E2E tests
 

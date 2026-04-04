@@ -5,6 +5,7 @@ export interface LocationTreeProps {
   nodes: LocationNode[];
   selectedId: string | null;
   onSelect: (node: LocationNode) => void;
+  expandAll?: boolean;
 }
 
 export interface WebLocationTreeProps extends LocationTreeProps {

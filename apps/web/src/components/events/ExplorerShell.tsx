@@ -48,6 +48,7 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
     dateFrom,
     dateTo,
     setFilter,
+    setDateRange,
     toggleCategory,
     setAllCategories,
     resetFilters,
@@ -97,19 +98,17 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
 
   const handleDateChange = useCallback(
     (from: string, to: string) => {
-      setFilter("dateFrom", from);
-      setFilter("dateTo", to);
+      setDateRange(from, to);
     },
-    [setFilter],
+    [setDateRange],
   );
 
   const handleDayClick = useCallback(
     (from: string, to: string) => {
       setQuickPick(null);
-      setFilter("dateFrom", from);
-      setFilter("dateTo", to);
+      setDateRange(from, to);
     },
-    [setFilter],
+    [setDateRange],
   );
 
   const handleQuickPick = useCallback(
