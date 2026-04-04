@@ -117,7 +117,36 @@ export async function createRsvp(
     ],
   );
 
+  // Notify event creator about new RSVP (Spec 015 T038)
+  await notifyRsvpCreated(eventId, userId);
+
   return { rsvp: rowToRsvp(insertResult.rows[0]) };
+}
+
+/**
+ * Dispatch notification to event creator when someone RSVPs (Spec 015 T038).
+ */
+async function notifyRsvpCreated(eventId: string, rsvpUserId: string): Promise<void> {
+  try {
+    const creatorResult = await db().query<{ created_by: string }>(
+      "SELECT created_by FROM events WHERE id = $1",
+      [eventId],
+    );
+    if (creatorResult.rows.length === 0) return;
+    const creatorId = creatorResult.rows[0].created_by;
+    if (creatorId === rsvpUserId) return; // Don't notify self
+
+    const { createNotification } = await import("@/lib/notifications/service");
+    const { NotificationType } = await import("@acroyoga/shared/types/notifications");
+    await createNotification({
+      userId: creatorId,
+      type: NotificationType.EVENT_RSVP,
+      resourceType: "event",
+      resourceId: eventId,
+    });
+  } catch {
+    // Notification failure should not block RSVP creation
+  }
 }
 
 /**
@@ -276,6 +305,20 @@ async function autoPromoteWaitlist(eventId: string, occurrenceDate: string | nul
     `UPDATE waitlist SET promoted_at = now() WHERE id = $1`,
     [waitlistEntry.id],
   );
+
+  // Notify promoted user (Spec 015 T038)
+  try {
+    const { createNotification } = await import("@/lib/notifications/service");
+    const { NotificationType } = await import("@acroyoga/shared/types/notifications");
+    await createNotification({
+      userId: waitlistEntry.user_id,
+      type: NotificationType.WAITLIST_PROMOTION,
+      resourceType: "event",
+      resourceId: eventId,
+    });
+  } catch {
+    // Notification failure should not block waitlist promotion
+  }
 }
 
 /**

@@ -121,7 +121,7 @@
 - [X] T034 [US3] Implement review service in src/lib/reviews/service.ts: submitReview (check confirmed RSVP via rsvps table, check event_teachers assignment exists, compute review_window_closes_at from event end_datetime + 14 days — for recurring events use occurrence end date per R-4, check window open, check unique constraint, insert review, call recalculateAggregate within same transaction), listReviewsForTeacher (paginated, exclude hidden, sort by recent/highest/lowest, include rating distribution), listReviewsForEvent (paginated, exclude hidden, optional teacher filter)
 - [X] T035 [US3] Implement aggregate rating calculation in src/lib/reviews/aggregate.ts: recalculateAggregate (UPDATE teacher_profiles SET average_rating = AVG(rating) WHERE hidden_at IS NULL, review_count = COUNT(*) WHERE hidden_at IS NULL — runs within review submission transaction per R-5)
 - [X] T036 [US3] Implement review moderation functions in src/lib/reviews/service.ts: hideReview (set hidden_at/hidden_by/hidden_reason, recalculate aggregate), unhideReview (clear hidden fields, recalculate), integrates with Spec 002 Report system (reported_content_type='review')
-- [X] T037 [US3] ~~DEFERRED~~ Review reminder job — `processReviewReminders()` function exists in `src/lib/teachers/reviews.ts`; cron/job scheduling deferred to background jobs sprint
+- [X] T037 [US3] ~~DEFERRED~~ Review reminder job — `processReviewReminders()` function exists in `src/lib/teachers/reviews.ts`; cron/job scheduling addressed by Spec 015
 
 ### API Routes
 
@@ -144,7 +144,7 @@
 - [X] T045 [P] Build admin expiring certifications dashboard page in src/app/admin/teachers/certifications/page.tsx: list certs expiring within 30 days and already-expired, teacher name + city, days until expiry, link to verify/revoke/view proof doc
 - [X] T046 ~~DEFERRED~~ Extend report system for `reported_content_type='review'` — report system exists with generic reporting; review-specific content type deferred to content moderation sprint
 - [X] T047 Extend Spec 002 GDPR data export (ExportFileSchema) with teacherProfile section: include display_name, bio, specialties, certifications (name, issuing body, expiry, status), photos, reviewsReceived, reviewsWritten per data-model.md export schema
-- [X] T048 [P] ~~DEFERRED~~ Scheduled job registration — `processReviewReminders()` and cert-expiry functions exist; cron/job scheduling deferred to background jobs sprint
+- [X] T048 [P] ~~DEFERRED~~ Scheduled job registration — `processReviewReminders()` and cert-expiry functions exist; cron/job scheduling addressed by Spec 015
 - [X] T049 ~~DEFERRED~~ Quickstart validation — `CONTRIBUTING.md` provides setup instructions; spec-specific quickstart validation deferred
 
 ---

@@ -64,6 +64,26 @@ export async function submitReview(
   // Recalculate aggregate
   await recalculateAggregate(data.teacherProfileId);
 
+  // Notify teacher about new review (Spec 015 T040)
+  try {
+    const teacherResult = await db().query<{ user_id: string }>(
+      "SELECT user_id FROM teacher_profiles WHERE id = $1",
+      [data.teacherProfileId],
+    );
+    if (teacherResult.rows.length > 0 && teacherResult.rows[0].user_id !== reviewerId) {
+      const { createNotification } = await import("@/lib/notifications/service");
+      const { NotificationType } = await import("@acroyoga/shared/types/notifications");
+      await createNotification({
+        userId: teacherResult.rows[0].user_id,
+        type: NotificationType.REVIEW_POSTED,
+        resourceType: "review",
+        resourceId: result.rows[0].id,
+      });
+    }
+  } catch {
+    // Notification failure should not block review submission
+  }
+
   return result.rows[0];
 }
 

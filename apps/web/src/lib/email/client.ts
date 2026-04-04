@@ -25,6 +25,8 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
   }
 
   try {
+    // Dynamic imports — these packages are only available in production Azure environments
+    // @ts-expect-error -- @azure/communication-email is an optional production dependency
     const { EmailClient } = await import("@azure/communication-email");
     const { DefaultAzureCredential } = await import("@azure/identity");
 
