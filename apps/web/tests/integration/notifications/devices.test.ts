@@ -3,6 +3,7 @@
  * Spec: 016-mobile-app (T045)
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 const mockGetServerSession = vi.fn();
 vi.mock("@/lib/auth/session", () => ({
@@ -12,8 +13,8 @@ vi.mock("@/lib/auth/session", () => ({
 const routeModule = () =>
   import("../../../src/app/api/notifications/devices/route");
 
-function makeRequest(body: Record<string, unknown>): Request {
-  return new Request("http://localhost:3000/api/notifications/devices", {
+function makeRequest(body: Record<string, unknown>): NextRequest {
+  return new NextRequest("http://localhost:3000/api/notifications/devices", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
