@@ -43,7 +43,9 @@ export const GET = withPermission("viewAdminPanel", () => ({
     });
   }
 
-  // For production pg-boss queue, we'd query pg-boss tables
+  // For production pg-boss queue, query pg-boss tables for metrics.
+  // TODO: Implement pg-boss metrics via boss.getQueueSize() and boss.getQueues()
+  // once PgBossJobQueue exposes the underlying boss instance or a stats method.
   return NextResponse.json({
     queue: {
       pending: 0,

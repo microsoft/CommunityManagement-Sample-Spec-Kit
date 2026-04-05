@@ -190,7 +190,10 @@ export class PgBossJobQueue implements JobQueue {
     }
 
     const id = await this.boss.send(type, payload as object, sendOptions);
-    return id ?? crypto.randomUUID();
+    if (!id) {
+      throw new Error(`pg-boss send() returned null for job type ${type} — deduplication key may already exist`);
+    }
+    return id;
   }
 
   registerHandler(type: JobType, handler: JobHandler): void {
@@ -208,7 +211,12 @@ export class PgBossJobQueue implements JobQueue {
 
       await this.boss.work(type, async (jobs) => {
         for (const job of jobs) {
-          await handler(job.data as JobPayload);
+          try {
+            await handler(job.data as JobPayload);
+          } catch (err) {
+            console.error(`PgBossJobQueue: handler failed for job ${job.id} (${type})`, err);
+            throw err; // Re-throw so pg-boss marks the job as failed/retries
+          }
         }
       });
     }
