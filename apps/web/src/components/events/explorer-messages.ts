@@ -87,4 +87,5 @@ export const EXPLORER_MESSAGES = {
   // City-level event list
   cityEventsTitle: (city: string) => `Events in ${city}`,
   noCityEvents: "No events found.",
+  loadingMap: "Loading map\u2026",
 } as const;

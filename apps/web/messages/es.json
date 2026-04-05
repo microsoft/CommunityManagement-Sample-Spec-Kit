@@ -117,7 +117,8 @@
     "ariaToggleCalendarCounts": "Toggle event counts on calendar",
     "ariaToggleFilterCounts": "Toggle event counts on filters",
     "cityEventsTitle": "Eventos en {city}",
-    "noCityEvents": "No se encontraron eventos."
+    "noCityEvents": "No se encontraron eventos.",
+    "loadingMap": "Cargando mapa…"
   },
   "community": {
     "discussionTitle": "Discusión del evento",

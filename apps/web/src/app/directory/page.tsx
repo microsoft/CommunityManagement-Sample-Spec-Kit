@@ -96,7 +96,7 @@ function MemberCard({
             )}
             {entry.relationshipStatus !== "none" && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 capitalize">
-                {entry.relationshipStatus === "friend" ? "Friends" : entry.relationshipStatus === "follows_me" ? "Follows you" : entry.relationshipStatus}
+                {entry.relationshipStatus === "friend" ? msg.friends : entry.relationshipStatus === "follows_me" ? msg.followsYou : entry.relationshipStatus}
               </span>
             )}
           </div>

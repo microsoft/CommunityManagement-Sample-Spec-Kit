@@ -2,11 +2,11 @@ import React from "react";
 import type { WebEventCardProps } from "./EventCard.js";
 import { formatEventDate, formatCurrency } from "@acroyoga/shared/utils/format";
 
-export function EventCard({ event, onPress, labels, style, ...rest }: WebEventCardProps) {
+export function EventCard({ event, onPress, labels, locale, style, ...rest }: WebEventCardProps) {
   const freeLabel = labels?.free ?? "Free";
   const spotsLabel = labels?.spots ?? `${event.confirmedCount}/${event.capacity} spots`;
-  const costDisplay = event.cost === 0 ? freeLabel : formatCurrency(event.cost, event.currency);
-  const dateDisplay = formatEventDate(event.startDatetime);
+  const costDisplay = event.cost === 0 ? freeLabel : formatCurrency(event.cost, event.currency, locale);
+  const dateDisplay = formatEventDate(event.startDatetime, locale);
 
   return (
     <div
