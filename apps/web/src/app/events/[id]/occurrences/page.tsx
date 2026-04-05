@@ -59,7 +59,7 @@ export default function OccurrencesPage() {
                   </span>
                 )}
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-sm">
                   {occ.rsvpCount} / {occ.capacity} RSVPs
                 </p>

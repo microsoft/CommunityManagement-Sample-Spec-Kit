@@ -39,8 +39,9 @@ for dir in "${SCAN_DIRS[@]}"; do
   # Find TSX/JSX files (skip tests, stories, and message definition files)
   while IFS= read -r -d '' file; do
     # Look for JSX text content: >Some text< (multi-word strings between tags)
-    # This catches: <h1>Welcome to the App</h1>, <p>Click here</p>, etc.
-    RAW_STRINGS=$(grep -nE '>[[:space:]]*[A-Z][a-z]+([[:space:]]+[a-z]+){2,}[[:space:]]*<' "$file" 2>/dev/null || true)
+    # This catches: <h1>Welcome Home</h1>, <p>Click here to continue</p>, etc.
+    # Pattern: 2+ words starting with a capital letter between > and <
+    RAW_STRINGS=$(grep -nE '>[[:space:]]*[A-Z][a-z]+([[:space:]]+[a-z]+)+[[:space:]]*<' "$file" 2>/dev/null || true)
 
     if [ -n "$RAW_STRINGS" ]; then
       echo ""

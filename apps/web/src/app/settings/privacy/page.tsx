@@ -114,8 +114,8 @@ export default function PrivacySettingsPage() {
                 aria-hidden="true"
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    directoryVisible ? "translate-x-4" : "translate-x-0"
+                  className={`absolute top-0.5 start-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    directoryVisible ? "ltr:translate-x-4 rtl:-translate-x-4" : "translate-x-0"
                   }`}
                 />
               </div>

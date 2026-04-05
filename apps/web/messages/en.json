@@ -211,7 +211,8 @@
     "blockConfirm": "Block this user? This will remove any follow relationship.",
     "friends": "Friends",
     "followsYou": "Follows you",
-    "noMembersFound": "No members found"
+    "noMembersFound": "No members found",
+    "allRoles": "All roles"
   },
   "auth": {
     "loginPageTitle": "Welcome to AcroYoga Community",
@@ -367,7 +368,20 @@
     "tableScope": "Scope",
     "tableGranted": "Granted",
     "tableActions": "Actions",
-    "errorLoadingRequests": "Error loading requests"
+    "errorLoadingRequests": "Error loading requests",
+    "panelTitle": "Admin Panel",
+    "navDashboard": "Dashboard",
+    "navTeacherRequests": "Teacher Requests",
+    "navConcessions": "Concessions",
+    "navPermissions": "Permissions",
+    "navRequests": "Requests",
+    "thTeacher": "Teacher",
+    "thCertification": "Certification",
+    "thIssuingBody": "Issuing Body",
+    "thExpiryDate": "Expiry Date",
+    "thStatus": "Status",
+    "certPageTitle": "Expiring Certifications",
+    "certNone": "No certifications expiring soon."
   },
   "bookings": {
     "signInRequired": "Please sign in to view your bookings.",
@@ -386,7 +400,16 @@
   "eventGroups": {
     "loading": "Loading event groups...",
     "title": "Event Groups",
-    "noGroups": "No event groups yet."
+    "noGroups": "No event groups yet.",
+    "detailLoading": "Loading...",
+    "detailNotFound": "Group not found.",
+    "eventsHeading": "Events",
+    "ticketTypesHeading": "Ticket Types",
+    "noTicketTypes": "No ticket types configured.",
+    "concessionLabel": "Concession:",
+    "capacityLabel": "Capacity:",
+    "coversAll": "Covers all events",
+    "partialCoverage": "Partial coverage"
   },
   "errors": {
     "notFound": "Page not found",

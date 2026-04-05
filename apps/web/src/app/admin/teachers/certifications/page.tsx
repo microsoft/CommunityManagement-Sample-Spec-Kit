@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
+import { CERTIFICATION_MESSAGES as msg } from "./certification-messages";
 
 interface ExpiringCert {
   id: string;
@@ -28,23 +29,23 @@ export default function AdminExpiringCertsPage() {
       });
   }, []);
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <div className="p-6">{msg.loading}</div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Expiring Certifications</h1>
+      <h1 className="text-2xl font-bold mb-4">{msg.pageTitle}</h1>
 
       {certs.length === 0 ? (
-        <p className="text-gray-500">No certifications expiring soon.</p>
+        <p className="text-gray-500">{msg.noCertifications}</p>
       ) : (
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b bg-gray-50">
-              <th className="text-left p-2">Teacher</th>
-              <th className="text-left p-2">Certification</th>
-              <th className="text-left p-2">Issuing Body</th>
-              <th className="text-left p-2">Expiry Date</th>
-              <th className="text-left p-2">Status</th>
+              <th className="text-start p-2">{msg.thTeacher}</th>
+              <th className="text-start p-2">{msg.thCertification}</th>
+              <th className="text-start p-2">{msg.thIssuingBody}</th>
+              <th className="text-start p-2">{msg.thExpiryDate}</th>
+              <th className="text-start p-2">{msg.thStatus}</th>
             </tr>
           </thead>
           <tbody>
@@ -60,7 +61,7 @@ export default function AdminExpiringCertsPage() {
                   <td className="p-2">
                     {formatEventDate(c.expiry_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                     <span
-                      className={`ml-2 text-sm ${daysLeft <= 7 ? "text-red-600" : "text-yellow-600"}`}
+                      className={`ms-2 text-sm ${daysLeft <= 7 ? "text-red-600" : "text-yellow-600"}`}
                     >
                       ({daysLeft}d)
                     </span>

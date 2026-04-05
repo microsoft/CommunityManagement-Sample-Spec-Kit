@@ -103,7 +103,7 @@ export default function TeacherProfilePage() {
           <h1 className="text-2xl font-bold">{profile.display_name}</h1>
           {profile.city && <p className="text-gray-500">{profile.city}</p>}
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <span
             className={`text-sm px-3 py-1 rounded ${
               profile.badge_status === "verified"
@@ -154,7 +154,7 @@ export default function TeacherProfilePage() {
                   <p className="font-medium">{c.certification_name}</p>
                   <p className="text-sm text-gray-500">{c.issuing_body}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       c.status === "verified"

@@ -29,4 +29,5 @@ export const DIRECTORY_MESSAGES = {
   noMembersFound: "No members found",
   friends: "Friends",
   followsYou: "Follows you",
+  allRoles: "All roles",
 } as const;

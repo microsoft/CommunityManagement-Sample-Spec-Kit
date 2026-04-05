@@ -211,7 +211,8 @@
     "blockConfirm": "Block this user? This will remove any follow relationship.",
     "friends": "Amigos",
     "followsYou": "Te sigue",
-    "noMembersFound": "No se encontraron miembros"
+    "noMembersFound": "No se encontraron miembros",
+    "allRoles": "Todos los roles"
   },
   "auth": {
     "loginPageTitle": "Bienvenido a AcroYoga Community",
@@ -367,7 +368,20 @@
     "tableScope": "Scope",
     "tableGranted": "Granted",
     "tableActions": "Actions",
-    "errorLoadingRequests": "Error al cargar solicitudes"
+    "errorLoadingRequests": "Error al cargar solicitudes",
+    "panelTitle": "Panel de administración",
+    "navDashboard": "Tablero",
+    "navTeacherRequests": "Solicitudes de profesores",
+    "navConcessions": "Concesiones",
+    "navPermissions": "Permisos",
+    "navRequests": "Solicitudes",
+    "thTeacher": "Profesor",
+    "thCertification": "Certificación",
+    "thIssuingBody": "Entidad emisora",
+    "thExpiryDate": "Fecha de vencimiento",
+    "thStatus": "Estado",
+    "certPageTitle": "Certificaciones por vencer",
+    "certNone": "No hay certificaciones por vencer."
   },
   "bookings": {
     "signInRequired": "Inicia sesión para ver tus reservas.",
@@ -386,7 +400,16 @@
   "eventGroups": {
     "loading": "Loading event groups...",
     "title": "Event Groups",
-    "noGroups": "No event groups yet."
+    "noGroups": "No event groups yet.",
+    "detailLoading": "Cargando...",
+    "detailNotFound": "Grupo no encontrado.",
+    "eventsHeading": "Eventos",
+    "ticketTypesHeading": "Tipos de entradas",
+    "noTicketTypes": "No hay tipos de entradas configurados.",
+    "concessionLabel": "Concesión:",
+    "capacityLabel": "Capacidad:",
+    "coversAll": "Cubre todos los eventos",
+    "partialCoverage": "Cobertura parcial"
   },
   "errors": {
     "notFound": "Página no encontrada",

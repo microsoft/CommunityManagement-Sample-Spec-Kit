@@ -211,7 +211,8 @@
     "blockConfirm": "Block this user? This will remove any follow relationship.",
     "friends": "Friends",
     "followsYou": "Follows you",
-    "noMembersFound": "No members found"
+    "noMembersFound": "No members found",
+    "allRoles": "جميع الأدوار"
   },
   "auth": {
     "loginPageTitle": "مرحبًا بك في مجتمع أكرو يوغا",
@@ -367,7 +368,20 @@
     "tableScope": "Scope",
     "tableGranted": "Granted",
     "tableActions": "Actions",
-    "errorLoadingRequests": "Error loading requests"
+    "errorLoadingRequests": "Error loading requests",
+    "panelTitle": "لوحة الإدارة",
+    "navDashboard": "لوحة القيادة",
+    "navTeacherRequests": "طلبات المعلمين",
+    "navConcessions": "التنازلات",
+    "navPermissions": "الأذونات",
+    "navRequests": "الطلبات",
+    "thTeacher": "المعلم",
+    "thCertification": "الشهادة",
+    "thIssuingBody": "جهة الإصدار",
+    "thExpiryDate": "تاريخ الانتهاء",
+    "thStatus": "الحالة",
+    "certPageTitle": "الشهادات المنتهية",
+    "certNone": "لا توجد شهادات تنتهي قريبًا."
   },
   "bookings": {
     "signInRequired": "Please sign in to view your bookings.",
@@ -386,7 +400,16 @@
   "eventGroups": {
     "loading": "Loading event groups...",
     "title": "Event Groups",
-    "noGroups": "No event groups yet."
+    "noGroups": "No event groups yet.",
+    "detailLoading": "جاري التحميل...",
+    "detailNotFound": "المجموعة غير موجودة.",
+    "eventsHeading": "الفعاليات",
+    "ticketTypesHeading": "أنواع التذاكر",
+    "noTicketTypes": "لم يتم تكوين أنواع تذاكر.",
+    "concessionLabel": "التنازل:",
+    "capacityLabel": "السعة:",
+    "coversAll": "يغطي جميع الفعاليات",
+    "partialCoverage": "تغطية جزئية"
   },
   "errors": {
     "notFound": "Page not found",

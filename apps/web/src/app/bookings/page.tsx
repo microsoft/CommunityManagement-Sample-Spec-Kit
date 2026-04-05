@@ -95,7 +95,7 @@ export default function MyBookingsPage() {
                     {formatEventDate(b.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {b.pricing_tier}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="font-semibold text-gray-900">
                     {b.currency} {b.amount_paid}
                   </p>

@@ -108,8 +108,8 @@ export default function EventDetailPage() {
           {isFree ? msg.free : `${event.currency} ${event.cost.toFixed(2)}`}
         </span>
         {event.concessionCost != null && (
-          <span className="ml-2 text-sm text-muted-foreground">
-            (Concession: {event.currency} {event.concessionCost.toFixed(2)})
+          <span className="ms-2 text-sm text-muted-foreground">
+            {msg.concessionLabel(event.currency, event.concessionCost.toFixed(2))}
           </span>
         )}
       </div>

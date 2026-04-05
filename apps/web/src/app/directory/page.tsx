@@ -151,7 +151,7 @@ function MemberCard({
             )}
             <button
               onClick={() => onBlock?.(entry.userId)}
-              className="text-xs text-gray-400 hover:text-red-600 hover:underline ml-auto"
+              className="text-xs text-gray-400 hover:text-red-600 hover:underline ms-auto"
               aria-label={`${msg.block} ${entry.displayName ?? "member"}`}
             >
               {msg.block}
@@ -390,7 +390,7 @@ function DirectoryContent() {
           aria-label="Filter by AcroYoga role"
           className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
         >
-          <option value="">All roles</option>
+          <option value="">{msg.allRoles}</option>
           {ROLES.map((r) => (
             <option key={r} value={r} className="capitalize">
               {r.charAt(0).toUpperCase() + r.slice(1)}

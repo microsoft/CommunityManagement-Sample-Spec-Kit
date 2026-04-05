@@ -96,7 +96,7 @@ export default function AdminTeachersPage() {
                 <div className="mb-3">
                   <h3 className="text-sm font-medium mb-1">{msg.credentialsLabel}</h3>
                   {r.credentials.map((c, i) => (
-                    <div key={i} className="text-sm text-gray-600 ml-2">
+                    <div key={i} className="text-sm text-gray-600 ms-2">
                       • {c.certificationName} ({c.issuingBody})
                       {c.expiryDate && ` — expires ${c.expiryDate}`}
                     </div>
