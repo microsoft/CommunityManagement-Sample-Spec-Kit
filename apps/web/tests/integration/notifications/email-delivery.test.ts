@@ -114,4 +114,42 @@ describe("Email Delivery", () => {
     expect(callArgs.html).toContain("Event Cancelled");
     expect(callArgs.html).toContain("The Wednesday Jam has been cancelled");
   });
+
+  it("skips email when user does not exist in database", async () => {
+    const { sendEmail } = await import("@/lib/email/client");
+
+    // Use a non-existent user ID (not the seeded deleted-user sentinel)
+    const payload: SendNotificationPayload = {
+      type: JobType.SEND_NOTIFICATION,
+      userId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      notificationType: NotificationType.EVENT_RSVP,
+      title: "New RSVP",
+      body: "Someone RSVPed",
+    };
+
+    // Should not throw — gracefully skips email when user is not found
+    await deliverNotification(payload);
+
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("includes action URL when resourceType and resourceId are provided", async () => {
+    const { sendEmail } = await import("@/lib/email/client");
+
+    const payload: SendNotificationPayload = {
+      type: JobType.SEND_NOTIFICATION,
+      userId,
+      notificationType: NotificationType.EVENT_RSVP,
+      title: "New RSVP",
+      body: "Someone RSVPed to your event",
+      resourceType: "event",
+      resourceId: "abc-123",
+    };
+
+    await deliverNotification(payload);
+
+    expect(sendEmail).toHaveBeenCalled();
+    const callArgs = (sendEmail as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(callArgs.html).toContain("events/abc-123");
+  });
 });
