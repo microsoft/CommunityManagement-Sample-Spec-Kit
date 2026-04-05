@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { NOTIFICATION_MESSAGES as msg } from "@/components/notification-messages";
 
 interface NotificationItem {
   id: string;
@@ -13,15 +14,6 @@ interface NotificationItem {
   read: boolean;
   createdAt: string;
 }
-
-const NOTIFICATIONS_MESSAGES = {
-  title: "Notifications",
-  noNotifications: "No notifications yet",
-  markAllAsRead: "Mark all as read",
-  showUnread: "Unread",
-  showAll: "All",
-  loadMore: "Load more",
-} as const;
 
 function getResourceLink(resourceType: string | null, resourceId: string | null): string {
   if (!resourceType || !resourceId) return "#";
@@ -54,8 +46,8 @@ export default function NotificationsPage() {
         append ? [...prev, ...(data.notifications ?? [])] : (data.notifications ?? []),
       );
       setTotal(data.total ?? 0);
-    } catch {
-      // Silently fail
+    } catch (err) {
+      console.error("NotificationsPage: failed to fetch notifications", err);
     } finally {
       setLoading(false);
     }
@@ -71,23 +63,17 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
-    } catch {
-      // Silently fail
+    } catch (err) {
+      console.error("NotificationsPage: failed to mark notification as read", err);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      // Mark each unread notification as read
-      const unread = notifications.filter((n) => !n.read);
-      await Promise.all(
-        unread.map((n) =>
-          fetch(`/api/notifications/${n.id}/read`, { method: "POST" }),
-        ),
-      );
+      await fetch("/api/notifications/read-all", { method: "POST" });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch {
-      // Silently fail
+    } catch (err) {
+      console.error("NotificationsPage: failed to mark all as read", err);
     }
   };
 
@@ -107,12 +93,12 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{NOTIFICATIONS_MESSAGES.title}</h1>
+        <h1 className="text-2xl font-bold">{msg.pageTitle}</h1>
         <button
           onClick={handleMarkAllAsRead}
           className="text-sm text-primary hover:text-primary-hover"
         >
-          {NOTIFICATIONS_MESSAGES.markAllAsRead}
+          {msg.pageMarkAllAsRead}
         </button>
       </div>
 
@@ -126,7 +112,7 @@ export default function NotificationsPage() {
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
-          {NOTIFICATIONS_MESSAGES.showAll}
+          {msg.pageShowAll}
         </button>
         <button
           onClick={() => setFilter("unread")}
@@ -136,7 +122,7 @@ export default function NotificationsPage() {
               : "bg-muted text-muted-foreground hover:bg-muted/80"
           }`}
         >
-          {NOTIFICATIONS_MESSAGES.showUnread}
+          {msg.pageShowUnread}
         </button>
       </div>
 
@@ -144,7 +130,7 @@ export default function NotificationsPage() {
       <div className="space-y-1">
         {filteredNotifications.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            {NOTIFICATIONS_MESSAGES.noNotifications}
+            {msg.pageNoNotifications}
           </div>
         ) : (
           filteredNotifications.map((n) => (
@@ -193,7 +179,7 @@ export default function NotificationsPage() {
             disabled={loading}
             className="px-4 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-muted/80 disabled:opacity-50"
           >
-            {loading ? "…" : NOTIFICATIONS_MESSAGES.loadMore}
+            {loading ? "…" : msg.pageLoadMore}
           </button>
         </div>
       )}

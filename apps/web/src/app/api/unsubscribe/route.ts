@@ -2,17 +2,20 @@
 //
 // No authentication required — uses signed tokens from email links.
 // Verifies the token, updates notification preferences, returns confirmation HTML.
+// Constitution VIII: All user-facing strings from template-messages.ts.
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyUnsubscribeToken } from "@/lib/notifications/unsubscribe";
 import { updatePreference } from "@/lib/notifications/preferences";
+import { TEMPLATE_MESSAGES as tmsg } from "@/lib/notifications/template-messages";
 
-const CONFIRMATION_HTML = `<!DOCTYPE html>
+function buildConfirmationHtml(): string {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unsubscribed</title>
+  <title>${tmsg.unsubscribeConfirmTitle}</title>
   <style>
     body { margin: 0; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; text-align: center; }
     .card { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -23,19 +26,21 @@ const CONFIRMATION_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <h1>Unsubscribed</h1>
-    <p>You have been unsubscribed from these email notifications.</p>
-    <p>You can manage all notification preferences in your <a href="/settings/notifications">settings</a>.</p>
+    <h1>${tmsg.unsubscribeConfirmTitle}</h1>
+    <p>${tmsg.unsubscribeConfirmBody}</p>
+    <p>${tmsg.unsubscribeConfirmSettings} <a href="/settings/notifications">${tmsg.unsubscribeSettingsLink}</a>.</p>
   </div>
 </body>
 </html>`;
+}
 
-const ERROR_HTML = `<!DOCTYPE html>
+function buildErrorHtml(): string {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unsubscribe Error</title>
+  <title>${tmsg.unsubscribeErrorTitle}</title>
   <style>
     body { margin: 0; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; text-align: center; }
     .card { max-width: 400px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -46,18 +51,19 @@ const ERROR_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <h1>Invalid Link</h1>
-    <p>This unsubscribe link is invalid or has expired.</p>
-    <p>You can manage your notifications in your <a href="/settings/notifications">settings</a>.</p>
+    <h1>${tmsg.unsubscribeErrorTitle}</h1>
+    <p>${tmsg.unsubscribeErrorBody}</p>
+    <p>${tmsg.unsubscribeErrorSettings} <a href="/settings/notifications">${tmsg.unsubscribeSettingsLink}</a>.</p>
   </div>
 </body>
 </html>`;
+}
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
 
   if (!token) {
-    return new NextResponse(ERROR_HTML, {
+    return new NextResponse(buildErrorHtml(), {
       status: 400,
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
@@ -66,7 +72,7 @@ export async function GET(request: NextRequest) {
   const payload = verifyUnsubscribeToken(token);
 
   if (!payload) {
-    return new NextResponse(ERROR_HTML, {
+    return new NextResponse(buildErrorHtml(), {
       status: 400,
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
@@ -80,7 +86,7 @@ export async function GET(request: NextRequest) {
     false,
   );
 
-  return new NextResponse(CONFIRMATION_HTML, {
+  return new NextResponse(buildConfirmationHtml(), {
     status: 200,
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });

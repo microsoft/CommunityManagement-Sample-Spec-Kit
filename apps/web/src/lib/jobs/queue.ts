@@ -139,6 +139,89 @@ export class MemoryJobQueue implements JobQueue {
   }
 }
 
+// ─── pg-boss queue (production) ──────────────────────────
+
+/**
+ * Production job queue backed by pg-boss.
+ * Uses the same PostgreSQL database as the application (via DATABASE_URL).
+ * pg-boss manages its own schema tables (job, schedule, archive).
+ */
+export class PgBossJobQueue implements JobQueue {
+  private boss: import("pg-boss") | null = null;
+  private handlers = new Map<JobType, JobHandler>();
+  private connectionString: string;
+
+  constructor(connectionString: string) {
+    this.connectionString = connectionString;
+  }
+
+  async start(): Promise<void> {
+    const PgBoss = (await import("pg-boss")).default;
+    this.boss = new PgBoss({
+      connectionString: this.connectionString,
+      // Archive completed jobs after 7 days
+      archiveCompletedAfterSeconds: 7 * 24 * 60 * 60,
+      // Delete archived jobs after 30 days
+      deleteAfterDays: 30,
+    });
+
+    this.boss.on("error", (err) => {
+      console.error("pg-boss error:", err);
+    });
+
+    await this.boss.start();
+  }
+
+  async enqueue(type: JobType, payload: JobPayload, options?: EnqueueOptions): Promise<string> {
+    if (!this.boss) throw new Error("PgBossJobQueue not started");
+
+    const sendOptions: Record<string, unknown> = {};
+    if (options?.deduplicationKey) {
+      sendOptions.singletonKey = options.deduplicationKey;
+    }
+    if (options?.startAfterSeconds) {
+      sendOptions.startAfter = options.startAfterSeconds;
+    }
+    if (options?.retryLimit !== undefined) {
+      sendOptions.retryLimit = options.retryLimit;
+    }
+    if (options?.expireInSeconds !== undefined) {
+      sendOptions.expireInSeconds = options.expireInSeconds;
+    }
+
+    const id = await this.boss.send(type, payload as object, sendOptions);
+    return id ?? crypto.randomUUID();
+  }
+
+  registerHandler(type: JobType, handler: JobHandler): void {
+    this.handlers.set(type, handler);
+  }
+
+  async startProcessing(): Promise<void> {
+    if (!this.boss) throw new Error("PgBossJobQueue not started");
+
+    for (const [type, handler] of this.handlers.entries()) {
+      // Ensure the queue exists before subscribing
+      await this.boss.createQueue(type).catch(() => {
+        /* queue already exists — ignore */
+      });
+
+      await this.boss.work(type, async (jobs) => {
+        for (const job of jobs) {
+          await handler(job.data as JobPayload);
+        }
+      });
+    }
+  }
+
+  async stop(): Promise<void> {
+    if (this.boss) {
+      await this.boss.stop({ graceful: true, timeout: 30_000 });
+      this.boss = null;
+    }
+  }
+}
+
 // ─── Singleton ───────────────────────────────────────────
 
 let queueInstance: JobQueue | null = null;
@@ -146,11 +229,14 @@ let queueInstance: JobQueue | null = null;
 /** Get or create the job queue singleton */
 export function getQueue(): JobQueue {
   if (!queueInstance) {
-    // MemoryJobQueue is used in development and testing.
-    // In production, replace with PgBossJobQueue connecting to the
-    // same PostgreSQL database used by the application (via DATABASE_URL).
-    // pg-boss manages its own schema tables (job, schedule, archive).
-    queueInstance = new MemoryJobQueue();
+    const connectionString = process.env.DATABASE_URL;
+    if (connectionString && process.env.NODE_ENV === "production") {
+      // In production, use pg-boss with the same PostgreSQL database
+      queueInstance = new PgBossJobQueue(connectionString);
+    } else {
+      // In development/test, use the in-memory fallback
+      queueInstance = new MemoryJobQueue();
+    }
   }
   return queueInstance;
 }

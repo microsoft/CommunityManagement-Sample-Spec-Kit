@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { NOTIFICATION_MESSAGES as msg } from "./notification-messages";
 
 interface Preference {
   id: string;
@@ -9,29 +10,17 @@ interface Preference {
   enabled: boolean;
 }
 
-const PREF_MESSAGES = {
-  title: "Notification Preferences",
-  description: "Choose how you want to be notified about different activities.",
-  inApp: "In-App",
-  email: "Email",
-  saving: "Saving…",
-  events: "Events",
-  teachers: "Teachers & Reviews",
-  community: "Community",
-  payments: "Payments",
-} as const;
-
 const TYPE_LABELS: Record<string, string> = {
-  event_rsvp: "Someone RSVPs to your event",
-  waitlist_promotion: "You're promoted from a waitlist",
-  event_cancellation: "An event you RSVPed to is cancelled",
-  occurrence_cancellation: "A recurring event occurrence is cancelled",
-  review_posted: "Someone reviews your teaching",
-  review_reminder: "Reminder to review a past event",
-  cert_expiry_warning: "Your certification is expiring",
-  follow_new: "Someone follows you",
-  report_resolved: "Your report is resolved",
-  payment_received: "You receive a payment",
+  event_rsvp: msg.typeEventRsvp,
+  waitlist_promotion: msg.typeWaitlistPromotion,
+  event_cancellation: msg.typeEventCancellation,
+  occurrence_cancellation: msg.typeOccurrenceCancellation,
+  review_posted: msg.typeReviewPosted,
+  review_reminder: msg.typeReviewReminder,
+  cert_expiry_warning: msg.typeCertExpiryWarning,
+  follow_new: msg.typeFollowNew,
+  report_resolved: msg.typeReportResolved,
+  payment_received: msg.typePaymentReceived,
 };
 
 const CATEGORIES = {
@@ -40,6 +29,13 @@ const CATEGORIES = {
   community: ["follow_new", "report_resolved"],
   payments: ["payment_received"],
 } as const;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  events: msg.prefsCatEvents,
+  teachers: msg.prefsCatTeachers,
+  community: msg.prefsCatCommunity,
+  payments: msg.prefsCatPayments,
+};
 
 const CHANNELS = ["in_app", "email"] as const;
 
@@ -55,8 +51,8 @@ export default function NotificationPreferences() {
       if (!res.ok) return;
       const data = await res.json();
       setPreferences(data.preferences ?? []);
-    } catch {
-      // Silently fail
+    } catch (err) {
+      console.error("NotificationPreferences: failed to fetch preferences", err);
     } finally {
       setLoading(false);
     }
@@ -90,8 +86,8 @@ export default function NotificationPreferences() {
           ),
         );
       }
-    } catch {
-      // Silently fail
+    } catch (err) {
+      console.error("NotificationPreferences: failed to update preference", err);
     } finally {
       setSaving(null);
     }
@@ -110,24 +106,24 @@ export default function NotificationPreferences() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-2">{PREF_MESSAGES.title}</h2>
-      <p className="text-sm text-muted-foreground mb-6">{PREF_MESSAGES.description}</p>
+      <h2 className="text-xl font-semibold mb-2">{msg.prefsTitle}</h2>
+      <p className="text-sm text-muted-foreground mb-6">{msg.prefsDescription}</p>
 
       {(Object.entries(CATEGORIES) as [keyof typeof CATEGORIES, readonly string[]][]).map(
         ([category, types]) => (
           <div key={category} className="mb-8">
             <h3 className="text-lg font-medium mb-3 capitalize">
-              {PREF_MESSAGES[category]}
+              {CATEGORY_LABELS[category]}
             </h3>
 
             {/* Header row */}
             <div className="grid grid-cols-[1fr_80px_80px] gap-2 mb-2 px-3">
               <div />
               <div className="text-xs font-medium text-muted-foreground text-center">
-                {PREF_MESSAGES.inApp}
+                {msg.prefsInApp}
               </div>
               <div className="text-xs font-medium text-muted-foreground text-center">
-                {PREF_MESSAGES.email}
+                {msg.prefsEmail}
               </div>
             </div>
 

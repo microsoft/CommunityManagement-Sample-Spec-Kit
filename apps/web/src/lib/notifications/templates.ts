@@ -2,9 +2,11 @@
 //
 // i18n-ready template functions for each notification type.
 // Returns title + body + resource link for rendering in UI and email.
+// Constitution VIII: All user-facing strings from template-messages.ts.
 
 import { NotificationType } from "@acroyoga/shared/types/notifications";
 import type { NotificationResourceType } from "@acroyoga/shared/types/notifications";
+import { TEMPLATE_MESSAGES as tmsg } from "./template-messages";
 
 export interface NotificationTemplate {
   title: string;
@@ -14,44 +16,44 @@ export interface NotificationTemplate {
 
 const NOTIFICATION_MESSAGES = {
   [NotificationType.EVENT_RSVP]: {
-    title: "New RSVP",
-    body: "Someone has RSVPed to your event.",
+    title: tmsg.eventRsvpTitle,
+    body: tmsg.eventRsvpBody,
   },
   [NotificationType.WAITLIST_PROMOTION]: {
-    title: "You're in!",
-    body: "A spot opened up and you've been promoted from the waitlist.",
+    title: tmsg.waitlistPromotionTitle,
+    body: tmsg.waitlistPromotionBody,
   },
   [NotificationType.EVENT_CANCELLATION]: {
-    title: "Event cancelled",
-    body: "An event you RSVPed to has been cancelled.",
+    title: tmsg.eventCancellationTitle,
+    body: tmsg.eventCancellationBody,
   },
   [NotificationType.OCCURRENCE_CANCELLATION]: {
-    title: "Occurrence cancelled",
-    body: "A specific date of a recurring event you RSVPed to has been cancelled.",
+    title: tmsg.occurrenceCancellationTitle,
+    body: tmsg.occurrenceCancellationBody,
   },
   [NotificationType.REVIEW_POSTED]: {
-    title: "New review",
-    body: "Someone has posted a review of your teaching.",
+    title: tmsg.reviewPostedTitle,
+    body: tmsg.reviewPostedBody,
   },
   [NotificationType.REVIEW_REMINDER]: {
-    title: "Review reminder",
-    body: "You attended an event recently — consider leaving a review for the teacher.",
+    title: tmsg.reviewReminderTitle,
+    body: tmsg.reviewReminderBody,
   },
   [NotificationType.CERT_EXPIRY_WARNING]: {
-    title: "Certification expiring soon",
-    body: "One of your certifications will expire within 30 days.",
+    title: tmsg.certExpiryWarningTitle,
+    body: tmsg.certExpiryWarningBody,
   },
   [NotificationType.FOLLOW_NEW]: {
-    title: "New follower",
-    body: "Someone started following you.",
+    title: tmsg.followNewTitle,
+    body: tmsg.followNewBody,
   },
   [NotificationType.REPORT_RESOLVED]: {
-    title: "Report resolved",
-    body: "A report you submitted has been reviewed and resolved.",
+    title: tmsg.reportResolvedTitle,
+    body: tmsg.reportResolvedBody,
   },
   [NotificationType.PAYMENT_RECEIVED]: {
-    title: "Payment received",
-    body: "You have received a payment for one of your events.",
+    title: tmsg.paymentReceivedTitle,
+    body: tmsg.paymentReceivedBody,
   },
 } as const;
 
@@ -64,7 +66,7 @@ export function getNotificationTemplate(
 ): NotificationTemplate {
   const tmpl = NOTIFICATION_MESSAGES[type];
   if (!tmpl) {
-    return { title: "Notification", body: "You have a new notification." };
+    return { title: tmsg.defaultTitle, body: tmsg.defaultBody };
   }
   return { ...tmpl };
 }

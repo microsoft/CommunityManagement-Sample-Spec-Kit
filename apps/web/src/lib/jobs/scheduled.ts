@@ -32,14 +32,18 @@ export async function reviewReminderJob(): Promise<number> {
 
   let count = 0;
   for (const row of result.rows) {
-    await createNotification({
-      userId: row.user_id,
-      type: NotificationType.REVIEW_REMINDER,
-      body: `You attended "${row.event_title}" recently — consider leaving a review for the teacher.`,
-      resourceType: "event",
-      resourceId: row.event_id,
-    });
-    count++;
+    try {
+      await createNotification({
+        userId: row.user_id,
+        type: NotificationType.REVIEW_REMINDER,
+        body: `You attended "${row.event_title}" recently — consider leaving a review for the teacher.`,
+        resourceType: "event",
+        resourceId: row.event_id,
+      });
+      count++;
+    } catch (err) {
+      console.error(`reviewReminderJob: failed to notify user ${row.user_id} for event ${row.event_id}`, err);
+    }
   }
 
   return count;
@@ -66,14 +70,18 @@ export async function certExpiryJob(): Promise<number> {
 
   let count = 0;
   for (const row of result.rows) {
-    await createNotification({
-      userId: row.user_id,
-      type: NotificationType.CERT_EXPIRY_WARNING,
-      body: `Your certification "${row.cert_name}" will expire within 30 days.`,
-      resourceType: "certification",
-      resourceId: row.cert_id,
-    });
-    count++;
+    try {
+      await createNotification({
+        userId: row.user_id,
+        type: NotificationType.CERT_EXPIRY_WARNING,
+        body: `Your certification "${row.cert_name}" will expire within 30 days.`,
+        resourceType: "certification",
+        resourceId: row.cert_id,
+      });
+      count++;
+    } catch (err) {
+      console.error(`certExpiryJob: failed to notify user ${row.user_id} for cert ${row.cert_id}`, err);
+    }
   }
 
   return count;
