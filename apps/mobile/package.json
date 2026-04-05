@@ -51,9 +51,19 @@
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@acroyoga/.*)"
     ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/setup\\.ts$"
+    ],
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
+      "^@/(.*)$": "<rootDir>/$1",
+      "^react$": "<rootDir>/node_modules/react",
+      "^react/(.*)$": "<rootDir>/node_modules/react/$1",
+      "^react-native$": "<rootDir>/node_modules/react-native"
     },
+    "moduleDirectories": [
+      "<rootDir>/node_modules",
+      "node_modules"
+    ],
     "setupFilesAfterEnv": [
       "<rootDir>/__tests__/setup.ts"
     ]

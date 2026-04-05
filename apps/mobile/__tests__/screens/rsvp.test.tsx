@@ -12,7 +12,7 @@ import { Alert } from "react-native";
 // Mock the api-client
 const mockGet = jest.fn();
 const mockPost = jest.fn();
-jest.mock("../../../lib/api-client", () => ({
+jest.mock("../../lib/api-client", () => ({
   get: (...args: unknown[]) => mockGet(...args),
   post: (...args: unknown[]) => mockPost(...args),
 }));
@@ -29,7 +29,7 @@ jest.spyOn(Alert, "alert");
 
 // Dynamic import — Expo Router [id] segments trip up TypeScript static module resolution
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { default: EventDetailScreen } = require("../../../app/(tabs)/events/[id]") as {
+const { default: EventDetailScreen } = require("../../app/(tabs)/events/[id]") as {
   default: React.ComponentType;
 };
 
