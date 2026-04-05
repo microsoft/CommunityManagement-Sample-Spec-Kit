@@ -173,3 +173,15 @@ export const SOCIAL_PROVIDERS: ProviderButtonConfig[] = [
     iconName: "apple",
   },
 ];
+
+// Mobile authentication (Spec 016)
+export interface MobileTokenRequest {
+  grantType: "session_exchange" | "refresh_token";
+  refreshToken?: string;
+}
+
+export interface MobileTokenResponse {
+  token: string;
+  refreshToken: string;
+  expiresAt: string; // ISO 8601
+}
