@@ -377,10 +377,33 @@ export async function updateEvent(id: string, data: UpdateEventRequest): Promise
 /* ---------- Cancel event ---------- */
 
 export async function cancelEvent(id: string): Promise<EventDetail | null> {
+  // Get attendees before cancellation for notification dispatch
+  const attendees = await db().query<{ user_id: string }>(
+    `SELECT user_id FROM rsvps WHERE event_id = $1 AND status IN ('confirmed', 'pending_payment')`,
+    [id],
+  );
+
   await db().query(
     `UPDATE events SET status = 'cancelled', cancelled_at = now(), updated_at = now() WHERE id = $1`,
     [id],
   );
+
+  // Dispatch cancellation notifications to all attendees (Spec 015 T038)
+  try {
+    const { createNotification } = await import("@/lib/notifications/service");
+    const { NotificationType } = await import("@acroyoga/shared/types/notifications");
+    for (const row of attendees.rows) {
+      await createNotification({
+        userId: row.user_id,
+        type: NotificationType.EVENT_CANCELLATION,
+        resourceType: "event",
+        resourceId: id,
+      });
+    }
+  } catch {
+    // Notification failure should not block event cancellation
+  }
+
   return getEventById(id);
 }
 

@@ -28,6 +28,20 @@ export async function follow(
     [followerId, followeeId],
   );
 
+  // Notify followee about new follower (Spec 015 T039)
+  try {
+    const { createNotification } = await import("@/lib/notifications/service");
+    const { NotificationType } = await import("@acroyoga/shared/types/notifications");
+    await createNotification({
+      userId: followeeId,
+      type: NotificationType.FOLLOW_NEW,
+      resourceType: "profile",
+      resourceId: followerId,
+    });
+  } catch {
+    // Notification failure should not block follow
+  }
+
   // Check if now mutual
   const reverse = await db().query(
     `SELECT 1 FROM follows WHERE follower_id = $1 AND followee_id = $2`,

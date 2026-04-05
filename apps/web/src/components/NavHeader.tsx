@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { NAV_MESSAGES as msg } from "./nav-messages";
+import NotificationBell from "./NotificationBell";
 
 const navLinks = [
   { href: "/", label: msg.navHome },
@@ -53,12 +54,15 @@ export default function NavHeader() {
             {status === "loading" ? (
               <span className="text-sm text-muted-foreground">...</span>
             ) : session?.user ? (
-              <Link
-                href="/profile"
-                className="text-sm text-foreground hover:text-foreground font-medium"
-              >
-                {session.user.name ?? msg.myAccount}
-              </Link>
+              <>
+                <NotificationBell />
+                <Link
+                  href="/profile"
+                  className="text-sm text-foreground hover:text-foreground font-medium"
+                >
+                  {session.user.name ?? msg.myAccount}
+                </Link>
+              </>
             ) : (
               <Link
                 href="/api/auth/signin"
