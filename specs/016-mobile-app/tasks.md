@@ -91,13 +91,13 @@
 
 ### Tests for Phase 4
 
-- [x] T021 [P] [US1] Unit tests for shared `useEvents` hook — query key generation, pagination, filter params in `packages/shared/src/hooks/__tests__/useEvents.test.ts`
-- [x] T022 [P] [US1] Unit tests for Home screen rendering — event list, loading state, empty state in `apps/mobile/__tests__/screens/home.test.tsx`
-- [x] T023 [P] [US2] Unit tests for RSVP flow — role selection, submission, error handling in `apps/mobile/__tests__/screens/rsvp.test.tsx`
+- [ ] T021 [P] [US1] Unit tests for shared `useEvents` hook — query key generation, pagination, filter params in `packages/shared/src/hooks/__tests__/useEvents.test.ts`
+- [ ] T022 [P] [US1] Unit tests for Home screen rendering — event list, loading state, empty state in `apps/mobile/__tests__/screens/home.test.tsx`
+- [ ] T023 [P] [US2] Unit tests for RSVP flow — role selection, submission, error handling in `apps/mobile/__tests__/screens/rsvp.test.tsx`
 
 ### Implementation for Phase 4
 
-- [x] T024 [US1] Create shared `useEvents` hook in `packages/shared/src/hooks/useEvents.ts` — TanStack Query hook wrapping `GET /api/events` with filter params, pagination, and cache key
+- [ ] T024 [US1] Create shared `useEvents` hook in `packages/shared/src/hooks/useEvents.ts` — TanStack Query hook wrapping `GET /api/events` with filter params, pagination, and cache key
 - [x] T025 [US1] Create Home tab screen `apps/mobile/app/(tabs)/index.tsx` — FlatList of upcoming events using shared `EventCard` component (`.native.tsx`), pull-to-refresh, loading/empty states
 - [x] T026 [US1] Create Events list screen `apps/mobile/app/(tabs)/events/index.tsx` — searchable, filterable event list with category filter chips
 - [x] T027 [US1] Create Event detail screen `apps/mobile/app/(tabs)/events/[id].tsx` — full event details, map preview, attendee count, RSVP button
@@ -113,11 +113,11 @@
 
 ### Tests for Phase 5
 
-- [x] T029 [P] [US1] Unit tests for shared `useTeachers` hook in `packages/shared/src/hooks/__tests__/useTeachers.test.ts`
+- [ ] T029 [P] [US1] Unit tests for shared `useTeachers` hook in `packages/shared/src/hooks/__tests__/useTeachers.test.ts`
 
 ### Implementation for Phase 5
 
-- [x] T030 [US1] Create shared `useTeachers` hook in `packages/shared/src/hooks/useTeachers.ts`
+- [ ] T030 [US1] Create shared `useTeachers` hook in `packages/shared/src/hooks/useTeachers.ts`
 - [x] T031 [US1] Create Teachers list screen `apps/mobile/app/(tabs)/teachers/index.tsx` — FlatList with search, certification badges
 - [x] T032 [US1] Create Teacher detail screen `apps/mobile/app/(tabs)/teachers/[id].tsx` — profile, certifications, reviews, upcoming events
 - [x] T033 [US4] Create Bookings screen `apps/mobile/app/(tabs)/bookings/index.tsx` — list of user's RSVPs grouped by upcoming/past
@@ -141,8 +141,8 @@
 
 - [x] T038 [US5] Create offline module in `apps/mobile/lib/offline.ts` — TanStack Query persister using `react-native-mmkv`, cache size limit (50MB), LRU eviction strategy
 - [x] T039 [US5] Create connectivity module in `apps/mobile/lib/connectivity.ts` — `useOnlineStatus()` hook using `@react-native-community/netinfo`, online/offline event handling
-- [x] T040 [US5] Integrate offline persistence with TanStack Query in root layout — `PersistQueryClientProvider` with MMKV persister
-- [x] T041 [US5] Add `OfflineBanner` (shared-ui `.native.tsx`) to root layout — visible when offline, auto-hides when online
+- [ ] T040 [US5] Integrate offline persistence with TanStack Query in root layout — `PersistQueryClientProvider` with MMKV persister
+- [ ] T041 [US5] Add `OfflineBanner` (shared-ui `.native.tsx`) to root layout — visible when offline, auto-hides when online
 
 **Checkpoint**: Cached data available offline. Connectivity transitions handled gracefully.
 
@@ -173,12 +173,12 @@
 
 **Purpose**: Comprehensive testing, CI integration with EAS Build
 
-- [x] T047 [P] Verify all shared-ui components render correctly on iOS simulator — snapshot test each of the 17 components in `apps/mobile/__tests__/shared-ui/`
-- [x] T048 [P] Verify all shared-ui components render correctly on Android emulator
-- [x] T049 Create Detox E2E test for login → browse events → RSVP flow on iOS in `apps/mobile/e2e/`
-- [x] T050 [P] Create Detox E2E test for same flow on Android
-- [x] T051 Add mobile CI step to `.github/workflows/ci.yml` — install, typecheck, unit test (no device-dependent E2E in CI)
-- [x] T052 Configure EAS Build in CI — preview builds on PR, production builds on main merge
+- [ ] T047 [P] Verify all shared-ui components render correctly on iOS simulator — snapshot test each of the 20 components in `apps/mobile/__tests__/shared-ui/`
+- [ ] T048 [P] Verify all shared-ui components render correctly on Android emulator
+- [ ] T049 Create Detox E2E test for login → browse events → RSVP flow on iOS in `apps/mobile/e2e/`
+- [ ] T050 [P] Create Detox E2E test for same flow on Android
+- [ ] T051 Add mobile CI step to `.github/workflows/ci.yml` — install, typecheck, unit test (no device-dependent E2E in CI)
+- [ ] T052 Configure EAS Build in CI — preview builds on PR, production builds on main merge
 
 **Checkpoint**: All tests pass. CI builds mobile app.
 
@@ -200,10 +200,12 @@
 ## Phase 10: Polish & Documentation
 
 - [x] T059 Update `README.md` — add Spec 016 to specs table, add mobile workspace to project structure
-- [x] T060 Update deferred mobile tasks in Spec 008 (T051–T079) — change status to "addressed by Spec 016"
-- [x] T061 Close GitHub issues #370–#375 (deferred mobile tasks) with reference to Spec 016
+- [ ] T060 Update deferred mobile tasks in Spec 008 (T051–T079) — change status to "addressed by Spec 016"
+- [ ] T061 Close GitHub issues #370–#375 (deferred mobile tasks) with reference to Spec 016
 - [x] T062 Add mobile development section to `CONTRIBUTING.md` — Expo development workflow, simulator setup, EAS Build
 - [x] T063 Run full validation checklist for web workspace (ensure no regressions)
+- [ ] T064 Add `apps/mobile` reference to root `tsconfig.json` so `tsc -b` includes mobile type-checking
+- [ ] T065 Add `@acroyoga/mobile` to root `package.json` test script so `npm run test` runs mobile unit tests
 
 **Checkpoint**: Documentation updated. All deferred mobile tasks resolved. Web validation passes.
 
