@@ -104,7 +104,7 @@
 - [X] T017 [US3] Implement POST (create override), PUT (update), DELETE (remove) /api/events/[id]/occurrences/[date]/override with permission checks (`withPermission('editEvent', eventCity)`) in src/app/api/events/[id]/occurrences/[date]/override/route.ts
 - [X] T018 [US3] Implement series edit logic (update base event fields for all-future, RRULE change with stale override cleanup) and series cancel logic (set event status cancelled, refund paid RSVPs per Spec 001 creator-cancellation policy) in src/lib/recurrence/series.ts
 - [X] T019 [US3] Implement PATCH /api/events/[id]/series (edit all future) and DELETE /api/events/[id]/series (cancel series) endpoints with permission checks in src/app/api/events/[id]/series/route.ts
-- [X] T020 [US3] ~~DEFERRED~~ Notification dispatch for occurrence cancellation — event cancellation service exists; async notification queueing deferred to notifications sprint
+- [X] T020 [US3] ~~DEFERRED~~ Notification dispatch for occurrence cancellation — event cancellation service exists; async notification queueing addressed by Spec 015
 
 **Checkpoint**: Single occurrence overrides (cancel/modify) and series-wide edit/cancel fully functional with attendee notifications.
 

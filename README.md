@@ -94,7 +94,7 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 | 012 | [Managed Identity Deploy](specs/012-managed-identity-deploy/) | P2 | Implemented |
 | 013 | [Platform Improvements](specs/013-platform-improvements/) | P2 | Complete |
 | 014 | [Internationalisation](specs/014-internationalisation/) | P1 | Implemented |
-| 015 | [Background Jobs & Notifications](specs/015-background-jobs-notifications/) | P1 | Planned |
+| 015 | [Background Jobs & Notifications](specs/015-background-jobs-notifications/) | P1 | Implemented |
 | 016 | [Mobile App (Expo/React Native)](specs/016-mobile-app/) | P1 | Planned |
 
 > Specs 006 and 007 are internal infrastructure (security hardening, dev tooling, UI pages). Specs 011–012 cover Azure production deployment with Managed Identity and Entra External ID social login. Spec 013 added CONTRIBUTING.md, API reference docs, database/testing docs, Playwright E2E tests, and triaged all remaining tasks across specs 001–010. Specs 014–016 are the next wave of features — i18n (Constitution VIII), background jobs & notifications (Constitution X), and native mobile apps completing the cross-platform vision from Spec 008.

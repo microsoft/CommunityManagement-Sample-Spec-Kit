@@ -118,7 +118,13 @@ export async function deleteAccount(userId: string, confirmation: string): Promi
   // 19. Delete linked social accounts (Spec 011 — also handled by CASCADE, but explicit)
   await db().query(`DELETE FROM linked_accounts WHERE user_id = $1`, [userId]);
 
-  // 20. Anonymise user record (keep for aggregate FK integrity)
+  // 20. Delete notification records (Spec 015 — also handled by CASCADE, but explicit)
+  await db().query(`DELETE FROM notifications WHERE user_id = $1`, [userId]);
+
+  // 21. Delete notification preferences (Spec 015)
+  await db().query(`DELETE FROM notification_preferences WHERE user_id = $1`, [userId]);
+
+  // 22. Anonymise user record (keep for aggregate FK integrity)
   // Spec 011: clear social PII fields (provider_oid, avatar_url, provider) in addition to email/name
   await db().query(
     `UPDATE users SET
