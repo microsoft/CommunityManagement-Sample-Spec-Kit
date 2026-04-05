@@ -59,8 +59,14 @@ jobs:
       - name: Run shared-ui tests
         run: npm run test -w @acroyoga/shared-ui
 
+      - name: Run shared tests
+        run: npm run test -w @acroyoga/shared
+
       - name: Run web tests
         run: npm run test -w @acroyoga/web
+
+      - name: Run mobile unit tests (Spec 016)
+        run: npm run test -w @acroyoga/mobile
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

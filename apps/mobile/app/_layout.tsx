@@ -1,12 +1,19 @@
 /**
- * Root layout — auth gate, global providers
- * Spec: 016-mobile-app (T014)
+ * Root layout — auth gate, global providers, offline persistence
+ * Spec: 016-mobile-app (T014, T040, T041)
+ *
+ * Constitution VI: Performance — MMKV-backed offline cache
  */
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { StatusBar } from "expo-status-bar";
+import { OfflineBanner } from "@acroyoga/shared-ui/OfflineBanner/index.native";
 import { isAuthenticated } from "../lib/auth";
+import { mmkvPersister } from "../lib/offline";
+import { useOnlineStatus } from "../lib/connectivity";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,9 +25,15 @@ const queryClient = new QueryClient({
   },
 });
 
+const persistOptions = {
+  persister: mmkvPersister,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+};
+
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isConnected } = useOnlineStatus();
   const segments = useSegments();
   const router = useRouter();
 
@@ -48,9 +61,15 @@ export default function RootLayout() {
   if (!isReady) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
       <StatusBar style="auto" />
-      <Slot />
-    </QueryClientProvider>
+      <View style={{ flex: 1 }}>
+        <OfflineBanner visible={!isConnected} />
+        <Slot />
+      </View>
+    </PersistQueryClientProvider>
   );
 }

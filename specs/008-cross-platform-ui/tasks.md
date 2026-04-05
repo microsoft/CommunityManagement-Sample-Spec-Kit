@@ -161,50 +161,52 @@
 
 ### Mobile App Scaffolding
 
-- [-] T051 [US3] Scaffold Expo app in `apps/mobile/` — run `npx create-expo-app apps/mobile --template blank-typescript`; configure `apps/mobile/package.json` with dependencies: `@react-navigation/native`, `@react-navigation/native-stack`, `@react-navigation/bottom-tabs`, `@tanstack/react-query`, `react-native-mmkv`, `expo-secure-store`
-- [-] T052 [US3] Configure `apps/mobile/metro.config.js` — add `watchFolders` and `nodeModulesPaths` pointing to workspace root `packages/` for monorepo resolution
-- [-] T053 [US3] Configure `apps/mobile/tsconfig.json` — extend `../../tsconfig.base.json`, add path aliases for `@acroyoga/shared`, `@acroyoga/shared-ui`, `@acroyoga/tokens`
-- [-] T054 [P] [US3] Configure `apps/mobile/app.json` — set app name, bundle identifier (iOS), package name (Android), Expo SDK version, required permissions
-- [-] T055 [P] [US3] Create `apps/mobile/eas.json` — configure EAS Build profiles: development (simulator), preview (internal distribution), production (app store submission)
+*Addressed by Spec 016 (Mobile App) — see `specs/016-mobile-app/tasks.md`*
+
+- [~] T051 [US3] Addressed by Spec 016 T001 — Scaffold Expo app in `apps/mobile/`
+- [~] T052 [US3] Addressed by Spec 016 T002 — Configure `apps/mobile/metro.config.js`
+- [~] T053 [US3] Addressed by Spec 016 T003 — Configure `apps/mobile/tsconfig.json`
+- [~] T054 [P] [US3] Addressed by Spec 016 T004 — Configure `apps/mobile/app.json`
+- [~] T055 [P] [US3] Addressed by Spec 016 T005 — Configure `apps/mobile/eas.json`
 
 ### Shared Data Fetching Hooks
 
-- [-] T056 [US3] Create TanStack Query hooks in `packages/shared/hooks/` — `useEvents.ts` (list + filters), `useEventDetail.ts` (single event), `useRsvp.ts` (mutation + optimistic update), `useTeachers.ts` (list), `useBookings.ts` (user bookings), `useProfile.ts` (user profile)
-- [-] T057 [US3] Create `packages/shared/hooks/useOnlineStatus.ts` — online/offline status hook adapting to web (`navigator.onLine`) and mobile (`@react-native-community/netinfo`)
-- [-] T058 [US3] Write Vitest tests for shared hooks in `packages/shared/__tests__/hooks/` — verify query key structure, optimistic update logic, error handling
+- [~] T056 [US3] Addressed by Spec 016 T024, T030 — Shared hooks in `packages/shared/src/hooks/`
+- [~] T057 [US3] Addressed by Spec 016 T039 — Online status hook in `apps/mobile/lib/connectivity.ts`
+- [~] T058 [US3] Addressed by Spec 016 T021, T029 — Hook tests in `packages/shared/src/hooks/__tests__/`
 
 ### Mobile Authentication
 
-- [-] T059 [US3] Create `/api/auth/mobile-token` API route in `apps/web/src/app/api/auth/mobile-token/route.ts` — accepts credentials, validates via NextAuth, returns JWT (access + refresh tokens) with configurable expiry
-- [-] T060 [US3] Create `apps/mobile/lib/auth.ts` — JWT storage via `expo-secure-store`, login/logout functions, token refresh logic, `getAuthHeaders()` helper returning `{ Authorization: 'Bearer <jwt>' }`
-- [-] T061 [US3] Create `apps/mobile/lib/api-client.ts` — fetch wrapper that injects JWT from `auth.ts`, handles 401 responses with automatic token refresh, configurable base URL pointing to web API
-- [-] T062 [US3] Write integration test for `/api/auth/mobile-token` in `apps/web/tests/integration/auth/mobile-token.test.ts` — verify JWT issuance, invalid credentials rejection, token structure
+- [~] T059 [US3] Addressed by Spec 016 T011 — Mobile token API route
+- [~] T060 [US3] Addressed by Spec 016 T009 — Mobile auth module
+- [~] T061 [US3] Addressed by Spec 016 T010 — Mobile API client
+- [~] T062 [US3] Addressed by Spec 016 T008 — Mobile token integration test
 
 ### Mobile Offline Support
 
-- [-] T063 [US3] Create `apps/mobile/lib/offline.ts` — configure TanStack Query `persistQueryClient` with MMKV storage adapter, `gcTime: Infinity`, `staleTime: 5min`, `refetchOnReconnect: true`
-- [-] T064 [US3] Create `apps/mobile/lib/connectivity.ts` — NetInfo wrapper exposing `useConnectivity()` hook, triggers `onlineManager.setOnline()` for TanStack Query
+- [~] T063 [US3] Addressed by Spec 016 T038 — Offline persistence module
+- [~] T064 [US3] Addressed by Spec 016 T039 — Connectivity module
 
 ### Mobile Navigation
 
-- [-] T065 [US3] Create `apps/mobile/app/_layout.tsx` — root layout using Expo Router's file-based routing (which wraps React Navigation internally), TanStack Query `QueryClientProvider` with persistence, auth state check (redirect to login if no JWT)
-- [-] T066 [US3] Create navigation type definitions in `apps/mobile/types/navigation.ts` — `RootTabParamList`, `EventsStackParamList`, `TeachersStackParamList`, `ProfileStackParamList` per data-model.md
-- [-] T067 [US3] Create `apps/mobile/app/(tabs)/_layout.tsx` — bottom tab navigator with 5 tabs: Home, Events, Teachers, Bookings, Profile — using Expo Router's `<Tabs>` component (wraps `@react-navigation/bottom-tabs`) with design token colours for active/inactive states
-- [-] T068 [P] [US3] Create `apps/mobile/app/(tabs)/index.tsx` — Home tab screen showing featured events using `useEvents()` hook with `EventCard.native` component
-- [-] T069 [P] [US3] Create `apps/mobile/app/(tabs)/events.tsx` — Events list screen with `FlatList`, pull-to-refresh, `useEvents()` hook, `EventCard.native` component, filter/search support
-- [-] T070 [P] [US3] Create `apps/mobile/app/(tabs)/teachers.tsx` — Teachers list screen with `FlatList`, `useTeachers()` hook, `TeacherCard.native` component
-- [-] T071 [P] [US3] Create `apps/mobile/app/(tabs)/bookings.tsx` — Bookings list screen with `useBookings()` hook, booking status badges
-- [-] T072 [P] [US3] Create `apps/mobile/app/(tabs)/profile.tsx` — Profile screen with `useProfile()` hook, edit profile link, settings link, logout
-- [-] T073 [US3] Create `apps/mobile/app/events/[id].tsx` — Event detail screen with native stack push transition, RSVP button using `useRsvp()` mutation, `ScrollView` layout
-- [-] T074 [US3] Create `apps/mobile/app/login.tsx` — Login screen with email/password form using shared `Input` component, OAuth buttons, calls `auth.ts` login function
+- [~] T065 [US3] Addressed by Spec 016 T014 — Root layout with auth gate
+- [~] T066 [US3] Addressed by Spec 016 T016 — Navigation via Expo Router (file-based, no manual type defs needed)
+- [~] T067 [US3] Addressed by Spec 016 T016 — Tab layout with 5 tabs
+- [~] T068 [P] [US3] Addressed by Spec 016 T025 — Home tab screen
+- [~] T069 [P] [US3] Addressed by Spec 016 T026 — Events list screen
+- [~] T070 [P] [US3] Addressed by Spec 016 T031 — Teachers list screen
+- [~] T071 [P] [US3] Addressed by Spec 016 T033 — Bookings list screen
+- [~] T072 [P] [US3] Addressed by Spec 016 T034 — Profile screen
+- [~] T073 [US3] Addressed by Spec 016 T027 — Event detail screen
+- [~] T074 [US3] Addressed by Spec 016 T015 — Login screen
 
 ### Mobile Platform Specifics
 
-- [-] T075 [P] [US4] Verify Android hardware back button navigates correctly in Expo Router — test on emulator: event detail → back → events list (not app exit)
-- [-] T076 [P] [US4] Verify Android material motion transitions work via `@react-navigation/native-stack` animation configuration
-- [-] T077 [US3] Verify iOS native push animation transitions work on simulator — event card tap → event detail with smooth push animation
-- [-] T078 [US3] Run `npx expo start`, press `i` for iOS simulator, verify app loads with home screen and 5-tab navigation within 2 seconds
-- [-] T079 [US4] Run `npx expo start`, press `a` for Android emulator, verify app loads with home screen and 5-tab navigation within 2 seconds
+- [~] T075 [P] [US4] Addressed by Spec 016 T056 — Android back button verification
+- [~] T076 [P] [US4] Addressed by Spec 016 T057 — Android material transitions
+- [~] T077 [US3] Addressed by Spec 016 T053 — iOS push animation transitions
+- [~] T078 [US3] Addressed by Spec 016 Phase 9 — iOS simulator verification
+- [~] T079 [US4] Addressed by Spec 016 Phase 9 — Android emulator verification
 
 **Checkpoint**: Mobile app runs on iOS simulator and Android emulator with 5-tab navigation, JWT authentication, TanStack Query data fetching with MMKV offline cache, offline banner, and all P0 screens.
 
