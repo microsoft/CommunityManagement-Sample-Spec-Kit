@@ -18,7 +18,11 @@ const SOCIAL_LABELS: Record<string, string> = {
   threads: "@",
 };
 
-export function DirectoryCard({ member, onPress, style, ...rest }: WebDirectoryCardProps) {
+export function DirectoryCard({ member, onPress, labels, style, ...rest }: WebDirectoryCardProps) {
+  const unnamedLabel = labels?.unnamedMember ?? "Unnamed member";
+  const verifiedLabel = labels?.verifiedTeacher ?? "✓ Verified Teacher";
+  const friendsLabel = labels?.friends ?? "Friends";
+  const followsYouLabel = labels?.followsYou ?? "Follows you";
   const initials = (member.displayName ?? "?")[0]?.toUpperCase() ?? "?";
   const location = [member.homeCity, member.homeCountry].filter(Boolean).join(", ");
 
@@ -28,7 +32,7 @@ export function DirectoryCard({ member, onPress, style, ...rest }: WebDirectoryC
       tabIndex={0}
       onClick={() => onPress?.(member.userId)}
       onKeyDown={(e) => e.key === "Enter" && onPress?.(member.userId)}
-      aria-label={`Member card for ${member.displayName ?? "unnamed member"}`}
+      aria-label={`Member card for ${member.displayName ?? unnamedLabel}`}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -89,7 +93,7 @@ export function DirectoryCard({ member, onPress, style, ...rest }: WebDirectoryC
               whiteSpace: "nowrap",
             }}
           >
-            {member.displayName ?? "Unnamed member"}
+            {member.displayName ?? unnamedLabel}
           </h3>
           {location && (
             <p
@@ -132,7 +136,7 @@ export function DirectoryCard({ member, onPress, style, ...rest }: WebDirectoryC
                   color: "var(--color-semantic-success)",
                 }}
               >
-                ✓ Verified Teacher
+                {verifiedLabel}
               </span>
             )}
             {member.relationshipStatus !== "none" && (
@@ -148,9 +152,9 @@ export function DirectoryCard({ member, onPress, style, ...rest }: WebDirectoryC
                 }}
               >
                 {member.relationshipStatus === "friend"
-                  ? "Friends"
+                  ? friendsLabel
                   : member.relationshipStatus === "follows_me"
-                    ? "Follows you"
+                    ? followsYouLabel
                     : member.relationshipStatus}
               </span>
             )}

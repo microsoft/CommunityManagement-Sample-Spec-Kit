@@ -191,9 +191,56 @@ Every PR must pass these gates (enforced by CI):
 6. **Accessibility** — No new axe-core violations
 7. **API contract** — Any API change updates the central types file with tests
 8. **Constitution compliance** — Reviewer confirms no principle violations
-9. **i18n compliance** — No raw string literals in UI components
+9. **i18n compliance** — No raw string literals in UI components (exit code 1)
 10. **Permission smoke test** — New mutation endpoints include 403 test for unauthorized callers
 11. **Auth consistency** — Session-based auth only, no client-injectable headers
+
+## Internationalisation (i18n)
+
+The platform uses [next-intl](https://next-intl.dev/) for locale-aware rendering. All user-facing strings live in JSON translation files.
+
+### Adding a New String
+
+1. Add the key to `apps/web/messages/en.json` under the appropriate namespace (`common`, `events`, `auth`, etc.)
+2. Add the same key to all other locale files (`es.json`, `ar.json`)
+3. In your component, use the `useTranslations()` hook:
+   ```tsx
+   import { useTranslations } from "next-intl";
+   const t = useTranslations("events");
+   return <p>{t("noEventsMatch")}</p>;
+   ```
+4. For shared-ui components (cross-platform), pass translated strings via props:
+   ```tsx
+   <EventCard event={event} labels={{ free: t("free") }} />
+   ```
+5. For date/time formatting, use the shared helpers:
+   ```tsx
+   import { formatEventDate, formatCurrency } from "@acroyoga/shared/utils/format";
+   ```
+
+### Adding a New Locale
+
+1. Copy `apps/web/messages/en.json` to `apps/web/messages/<locale>.json`
+2. Translate all strings in the new file
+3. Add the locale to `packages/shared/src/types/i18n.ts` (the `Locale` union type and `SUPPORTED_LOCALES` array)
+4. Add the locale to `apps/web/src/i18n/routing.ts`
+5. The CI completeness check will verify all keys are present
+
+### Translation Key Naming
+
+- Use dot-separated namespaces: `events.badgeNew`, `common.loading`
+- Use camelCase for key names: `signInError`, not `sign-in-error`
+- Parameterised strings use ICU MessageFormat: `"{count} events found"`
+- Keep keys descriptive but concise
+
+### File Structure
+
+```
+apps/web/messages/
+├── en.json          # Default locale (English) — source of truth
+├── es.json          # Spanish (proof-of-concept)
+└── ar.json          # Arabic (RTL stub for structural testing)
+```
 
 ## Getting Help
 

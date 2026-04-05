@@ -96,7 +96,7 @@ function MemberCard({
             )}
             {entry.relationshipStatus !== "none" && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 capitalize">
-                {entry.relationshipStatus === "friend" ? "Friends" : entry.relationshipStatus === "follows_me" ? "Follows you" : entry.relationshipStatus}
+                {entry.relationshipStatus === "friend" ? msg.friends : entry.relationshipStatus === "follows_me" ? msg.followsYou : entry.relationshipStatus}
               </span>
             )}
           </div>
@@ -151,7 +151,7 @@ function MemberCard({
             )}
             <button
               onClick={() => onBlock?.(entry.userId)}
-              className="text-xs text-gray-400 hover:text-red-600 hover:underline ml-auto"
+              className="text-xs text-gray-400 hover:text-red-600 hover:underline ms-auto"
               aria-label={`${msg.block} ${entry.displayName ?? "member"}`}
             >
               {msg.block}
@@ -390,7 +390,7 @@ function DirectoryContent() {
           aria-label="Filter by AcroYoga role"
           className="border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
         >
-          <option value="">All roles</option>
+          <option value="">{msg.allRoles}</option>
           {ROLES.map((r) => (
             <option key={r} value={r} className="capitalize">
               {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -507,7 +507,7 @@ function DirectoryContent() {
         </div>
       ) : entries.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-500 text-lg font-medium">No members found</p>
+          <p className="text-gray-500 text-lg font-medium">{msg.noMembersFound}</p>
           <p className="text-gray-400 text-sm mt-2">
             Adjust your filters or{" "}
             <Link href="/settings/profile" className="text-indigo-600 hover:underline">

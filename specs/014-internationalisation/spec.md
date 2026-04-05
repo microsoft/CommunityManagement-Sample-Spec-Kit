@@ -2,7 +2,7 @@
 
 **Feature Branch**: `014-internationalisation`  
 **Created**: 2026-04-04  
-**Status**: Draft  
+**Status**: Implemented  
 **Input**: Constitution Principle VIII mandate, ~20 deferred i18n tasks across Specs 001/003/004/005, existing `translations.ts` module and `lint-i18n.sh` CI gate
 
 ## Summary

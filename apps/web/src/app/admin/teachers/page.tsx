@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 interface TeacherRequest {
@@ -19,6 +21,7 @@ interface TeacherRequest {
 }
 
 export default function AdminTeachersPage() {
+  const locale = useLocale();
   const [requests, setRequests] = useState<TeacherRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +72,7 @@ export default function AdminTeachersPage() {
                 <div>
                   <h2 className="font-semibold">{r.display_name}</h2>
                   <p className="text-sm text-gray-500">
-                    Applied {new Date(r.created_at).toLocaleDateString()}
+                    Applied {formatEventDate(r.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>
               </div>
@@ -93,7 +96,7 @@ export default function AdminTeachersPage() {
                 <div className="mb-3">
                   <h3 className="text-sm font-medium mb-1">{msg.credentialsLabel}</h3>
                   {r.credentials.map((c, i) => (
-                    <div key={i} className="text-sm text-gray-600 ml-2">
+                    <div key={i} className="text-sm text-gray-600 ms-2">
                       • {c.certificationName} ({c.issuingBody})
                       {c.expiryDate && ` — expires ${c.expiryDate}`}
                     </div>

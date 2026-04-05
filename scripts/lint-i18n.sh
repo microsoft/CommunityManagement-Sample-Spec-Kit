@@ -4,11 +4,11 @@
 # QG-9: CI lint pass that flags raw string literals in UI components
 #
 # Exit code:
-#   0 = no violations found (or only allowed patterns)
-#   1 = violations found
+#   0 = no violations found
+#   1 = violations found (BLOCKING — Spec 014)
 #
 # This script scans for JSX text content and hardcoded string props
-# that should use the translations module instead.
+# that should use the translations module or next-intl instead.
 
 set -euo pipefail
 
@@ -23,6 +23,7 @@ SCAN_DIRS=(
 # - aria-label, aria-*, data-*, role, className, htmlFor, id, name, type, key props
 # - Import/export statements
 # - Test files (.test.tsx, .stories.tsx)
+# - Message definition files (*-messages.ts)
 # - Console.log, console.error, etc.
 # - Comment lines
 # - Empty strings
@@ -35,29 +36,33 @@ for dir in "${SCAN_DIRS[@]}"; do
     continue
   fi
 
-  # Find TSX/JSX files (skip tests and stories)
+  # Find TSX/JSX files (skip tests, stories, and message definition files)
   while IFS= read -r -d '' file; do
     # Look for JSX text content: >Some text< (multi-word strings between tags)
-    # This catches: <h1>Welcome to the App</h1>, <p>Click here</p>, etc.
-    RAW_STRINGS=$(grep -nE '>[[:space:]]*[A-Z][a-z]+([[:space:]]+[a-z]+){2,}[[:space:]]*<' "$file" 2>/dev/null || true)
-    
+    # This catches: <h1>Welcome Home</h1>, <p>Click here to continue</p>, etc.
+    # Pattern: 2+ words starting with a capital letter between > and <
+    RAW_STRINGS=$(grep -nE '>[[:space:]]*[A-Z][a-z]+([[:space:]]+[a-z]+)+[[:space:]]*<' "$file" 2>/dev/null || true)
+
     if [ -n "$RAW_STRINGS" ]; then
       echo ""
-      echo "WARNING: Raw string literals in $file:"
+      echo "ERROR: Raw string literals in $file:"
       echo "$RAW_STRINGS" | head -5
       VIOLATIONS=$((VIOLATIONS + 1))
     fi
-  done < <(find "$dir" -name "*.tsx" -not -name "*.test.tsx" -not -name "*.stories.tsx" -print0)
+  done < <(find "$dir" -name "*.tsx" -not -name "*.test.tsx" -not -name "*.stories.tsx" -not -name "*-messages.ts" -print0)
 done
 
 echo ""
 if [ "$VIOLATIONS" -gt 0 ]; then
-  echo "⚠ i18n lint: found $VIOLATIONS file(s) with potential raw string literals"
-  echo "  These strings should be extracted to packages/shared/src/utils/translations.ts"
-  echo "  See Constitution VIII and QG-9 for details."
-  # Warning-level: exit 0 for now to avoid blocking existing code
-  # TODO: Switch to exit 1 once all strings are extracted to translations module
-  exit 0
+  echo "✗ i18n lint: found $VIOLATIONS file(s) with raw string literals"
+  echo "  These strings MUST be extracted to translation files (apps/web/messages/*.json)"
+  echo "  or message modules (*-messages.ts). See Constitution VIII and QG-9."
+  echo ""
+  echo "  How to fix:"
+  echo "  1. Add the string to apps/web/messages/en.json under the appropriate namespace"
+  echo "  2. Add translations to es.json and ar.json"
+  echo "  3. Use useTranslations() hook or pass translated strings via props"
+  exit 1
 else
   echo "✓ i18n lint: no raw string violations detected"
   exit 0

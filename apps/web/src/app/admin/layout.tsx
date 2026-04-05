@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ADMIN_MESSAGES as msg } from "./admin-messages";
 
 const adminLinks = [
-  { href: "/admin", label: "Dashboard", exact: true },
-  { href: "/admin/teachers", label: "Teacher Requests", exact: false },
-  { href: "/admin/concessions", label: "Concessions", exact: false },
-  { href: "/admin/permissions", label: "Permissions", exact: false },
-  { href: "/admin/requests", label: "Requests", exact: false },
+  { href: "/admin", label: msg.navDashboard, exact: true },
+  { href: "/admin/teachers", label: msg.navTeacherRequests, exact: false },
+  { href: "/admin/concessions", label: msg.navConcessions, exact: false },
+  { href: "/admin/permissions", label: msg.navPermissions, exact: false },
+  { href: "/admin/requests", label: msg.navRequests, exact: false },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -25,8 +26,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <span className="text-xl font-bold text-gray-900">Admin Panel</span>
-              <div className="hidden sm:ml-8 sm:flex sm:space-x-6">
+              <span className="text-xl font-bold text-gray-900">{msg.panelTitle}</span>
+              <div className="hidden sm:ms-8 sm:flex sm:space-x-6">
                 {adminLinks.map((link) => (
                   <Link
                     key={link.href}

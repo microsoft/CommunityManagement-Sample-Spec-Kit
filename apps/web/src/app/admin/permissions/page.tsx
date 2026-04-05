@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import type { PermissionGrant } from "@acroyoga/shared/types/permissions";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 export default function AdminPermissionsPage() {
+  const locale = useLocale();
   const [grants, setGrants] = useState<PermissionGrant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +65,7 @@ export default function AdminPermissionsPage() {
     return (
       <div role="alert" className="rounded-md bg-red-50 p-4">
         <div className="flex">
-          <div className="ml-3">
+          <div className="ms-3">
             <h3 className="text-sm font-medium text-red-800">{msg.errorLoadingPermissions}</h3>
             <p className="mt-2 text-sm text-red-700">{error}</p>
             <button
@@ -88,11 +91,11 @@ export default function AdminPermissionsPage() {
           <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Permission grants">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{msg.tableUser}</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{msg.tableRole}</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{msg.tableScope}</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{msg.tableGranted}</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{msg.tableActions}</th>
+                <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{msg.tableUser}</th>
+                <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{msg.tableRole}</th>
+                <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{msg.tableScope}</th>
+                <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{msg.tableGranted}</th>
+                <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{msg.tableActions}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -109,7 +112,7 @@ export default function AdminPermissionsPage() {
                     {grant.scopeValue ? ` / ${grant.scopeValue}` : ""}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(grant.grantedAt).toLocaleDateString()}
+                    {formatEventDate(grant.grantedAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button

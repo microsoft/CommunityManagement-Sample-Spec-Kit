@@ -4,6 +4,8 @@ import type { EventSummary, EventCategory } from "@acroyoga/shared/types/events"
 import Image from "next/image";
 import Link from "next/link";
 import { getCategoryColor } from "@/lib/category-colors";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { EVENT_MESSAGES as msg } from "./event-messages";
 
 interface EventCardProps {
@@ -34,9 +36,9 @@ const skillColors: Record<string, string> = {
 };
 
 export default function EventCard({ event }: EventCardProps) {
+  const locale = useLocale();
   const isFull = event.confirmedCount >= event.capacity;
   const isFree = event.cost === 0;
-  const startDate = new Date(event.startDatetime);
 
   return (
     <Link
@@ -49,7 +51,7 @@ export default function EventCard({ event }: EventCardProps) {
           <h3 className="text-lg font-semibold truncate">{event.title}</h3>
 
           <p className="text-sm text-muted-foreground mt-1">
-            {startDate.toLocaleDateString(undefined, {
+            {formatEventDate(event.startDatetime, locale, undefined, {
               weekday: "short",
               month: "short",
               day: "numeric",
@@ -69,7 +71,7 @@ export default function EventCard({ event }: EventCardProps) {
             alt=""
             width={64}
             height={64}
-            className="w-16 h-16 rounded-md object-cover ml-3 flex-shrink-0"
+            className="w-16 h-16 rounded-md object-cover ms-3 flex-shrink-0"
           />
         )}
       </div>

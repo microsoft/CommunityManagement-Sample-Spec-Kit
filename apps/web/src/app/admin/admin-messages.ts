@@ -4,6 +4,14 @@
  */
 
 export const ADMIN_MESSAGES = {
+  // Layout navigation
+  panelTitle: "Admin Panel",
+  navDashboard: "Dashboard",
+  navTeacherRequests: "Teacher Requests",
+  navConcessions: "Concessions",
+  navPermissions: "Permissions",
+  navRequests: "Requests",
+
   // Dashboard
   dashboardTitle: "Admin Dashboard",
   dashboardSubtitle: "Overview of pending actions and admin tools.",
@@ -35,4 +43,7 @@ export const ADMIN_MESSAGES = {
   tableScope: "Scope",
   tableGranted: "Granted",
   tableActions: "Actions",
+
+  // Requests page
+  errorLoadingRequests: "Error loading requests",
 } as const;

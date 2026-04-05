@@ -204,8 +204,8 @@
 
 - [X] T064 [P] ~~DEFERRED~~ Loading skeleton cards — Suspense patterns used; dedicated skeleton components deferred to UI polish sprint
 - [X] T065 [P] ~~DEFERRED~~ Error boundaries — global error handling in place; dedicated error.tsx files deferred to UI polish sprint
-- [X] T066 [P] ~~DEFERRED~~ i18n string extraction — ESLint i18n lint rule enforced; full extraction pass deferred to i18n sprint
-- [X] T067 [P] ~~DEFERRED~~ Intl formatting — `Intl.NumberFormat` and `Intl.DateTimeFormat` used where applicable; comprehensive audit deferred to i18n sprint
+- [X] T066 [P] ~~DEFERRED~~ i18n string extraction — addressed by Spec 014 (next-intl integration, en.json with 380+ strings, CI-blocking lint)
+- [X] T067 [P] ~~DEFERRED~~ Intl formatting — addressed by Spec 014 (formatEventDate/formatCurrency shared helpers replace all toLocaleDateString calls)
 - [X] T068 [P] ~~DEFERRED~~ Keyboard navigation and touch targets — jsx-a11y ESLint enforced; formal WCAG audit deferred to accessibility sprint
 - [X] T069 ~~DEFERRED~~ Image optimization and lazy loading — `next/image` used; WebP/AVIF verification deferred to performance sprint
 - [X] T070 ~~DEFERRED~~ Quickstart validation — `CONTRIBUTING.md` provides setup instructions; spec-specific quickstart validation deferred

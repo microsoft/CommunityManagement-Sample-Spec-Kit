@@ -173,7 +173,7 @@
 
 **Purpose**: i18n, permission coverage verification, quickstart validation
 
-- [X] T043 [P] ~~DEFERRED~~ i18n translation keys for recurrence — recurrence types defined in shared package; translation key extraction deferred to i18n sprint
+- [X] T043 [P] ~~DEFERRED~~ i18n translation keys for recurrence — addressed by Spec 014 (recurrence strings in en.json, locale-aware date formatting via formatEventDate)
 - [X] T044 [P] ~~DEFERRED~~ withPermission audit for mutation endpoints — `withPermission()` middleware applied to mutation routes; formal cross-spec audit deferred to security review sprint
 - [X] T045 ~~DEFERRED~~ Quickstart validation — `CONTRIBUTING.md` provides setup; spec-specific quickstart validation deferred
 

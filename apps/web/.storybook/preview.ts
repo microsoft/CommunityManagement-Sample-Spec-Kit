@@ -1,7 +1,10 @@
 import type { Preview } from "storybook/internal/types";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
+import { NextIntlClientProvider } from "next-intl";
+import React from "react";
 import "../../../packages/tokens/build/css/tokens.css";
 import "../../../packages/tokens/build/css/tokens-dark.css";
+import messages from "../messages/en.json";
 
 const preview: Preview = {
   decorators: [
@@ -13,6 +16,12 @@ const preview: Preview = {
       defaultTheme: "light",
       attributeName: "data-theme",
     }),
+    (Story) =>
+      React.createElement(
+        NextIntlClientProvider,
+        { locale: "en", messages },
+        React.createElement(Story),
+      ),
   ],
   parameters: {
     viewport: {

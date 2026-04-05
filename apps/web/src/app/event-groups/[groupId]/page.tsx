@@ -2,6 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
+import { EVENT_GROUP_MESSAGES as msg } from "../event-group-messages";
 
 interface GroupDetail {
   id: string;
@@ -25,6 +28,7 @@ interface TicketType {
 
 export default function EventGroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
+  const locale = useLocale();
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,19 +44,19 @@ export default function EventGroupDetailPage() {
     });
   }, [groupId]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (!group) return <div className="p-6">Group not found.</div>;
+  if (loading) return <div className="p-6">{msg.detailLoading}</div>;
+  if (!group) return <div className="p-6">{msg.detailNotFound}</div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold">{group.name}</h1>
       <p className="text-sm text-gray-500 capitalize mb-2">{group.type}</p>
       <p className="text-gray-600 mb-4">
-        {new Date(group.start_date).toLocaleDateString()} &ndash;{" "}
-        {new Date(group.end_date).toLocaleDateString()} &middot; {group.currency}
+        {formatEventDate(group.start_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &ndash;{" "}
+        {formatEventDate(group.end_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {group.currency}
       </p>
 
-      <h2 className="text-xl font-semibold mt-6 mb-3">Events ({group.members.length})</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-3">{msg.eventsHeading} ({group.members.length})</h2>
       <ul className="space-y-1 mb-6">
         {group.members.map((m) => (
           <li key={m.event_id} className="text-sm">
@@ -63,9 +67,9 @@ export default function EventGroupDetailPage() {
         ))}
       </ul>
 
-      <h2 className="text-xl font-semibold mb-3">Ticket Types</h2>
+      <h2 className="text-xl font-semibold mb-3">{msg.ticketTypesHeading}</h2>
       {tickets.length === 0 ? (
-        <p className="text-gray-500">No ticket types configured.</p>
+        <p className="text-gray-500">{msg.noTicketTypes}</p>
       ) : (
         <div className="space-y-3">
           {tickets.map((t) => (
@@ -74,14 +78,14 @@ export default function EventGroupDetailPage() {
               <p className="text-sm text-gray-600">
                 {group.currency} {t.cost}
                 {t.concession_cost && (
-                  <span className="ml-2 text-green-700">
-                    (Concession: {group.currency} {t.concession_cost})
+                  <span className="ms-2 text-green-700">
+                    ({msg.concessionLabel} {group.currency} {t.concession_cost})
                   </span>
                 )}
               </p>
               <p className="text-xs text-gray-400">
-                Capacity: {t.capacity} &middot;{" "}
-                {t.covers_all_events ? "Covers all events" : "Partial coverage"}
+                {msg.capacityLabel} {t.capacity} &middot;{" "}
+                {t.covers_all_events ? msg.coversAll : msg.partialCoverage}
               </p>
             </div>
           ))}

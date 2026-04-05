@@ -10,6 +10,8 @@
  */
 
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { AUTH_MESSAGES } from "./auth-messages";
 import type { LinkedAccount } from "@acroyoga/shared/types/auth";
 
@@ -21,6 +23,7 @@ interface LinkedAccountsListProps {
 export default function LinkedAccountsList({
   hasPrimaryIdentity,
 }: LinkedAccountsListProps) {
+  const locale = useLocale();
   const [accounts, setAccounts] = useState<LinkedAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -177,7 +180,7 @@ export default function LinkedAccountsList({
                     }}
                   >
                     {AUTH_MESSAGES.linkedAccountsLinkedAt}{" "}
-                    {new Date(account.linkedAt).toLocaleDateString()}
+                    {formatEventDate(account.linkedAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
 

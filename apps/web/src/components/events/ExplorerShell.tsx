@@ -31,7 +31,7 @@ const MapPanel = dynamic(() => import("./MapPanel"), {
       role="img"
       aria-label="Map loading"
     >
-      <span style={{ color: "var(--color-surface-muted-foreground)" }}>Loading map…</span>
+      <span style={{ color: "var(--color-surface-muted-foreground)" }}>{msg.loadingMap}</span>
     </div>
   ),
 });

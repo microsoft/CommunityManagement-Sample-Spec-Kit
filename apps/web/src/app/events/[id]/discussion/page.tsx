@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { DISCUSSION_MESSAGES as msg } from "./discussion-messages";
 
 interface MessageData {
@@ -17,6 +19,7 @@ interface MessageData {
 
 export default function EventDiscussionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: eventId } = use(params);
+  const locale = useLocale();
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -129,7 +132,7 @@ export default function EventDiscussionPage({ params }: { params: Promise<{ id: 
             <div className="flex justify-between items-baseline">
               <span className="text-sm font-medium">{m.authorName ?? msg.unknownAuthor}</span>
               <span className="text-xs text-gray-400">
-                {new Date(m.createdAt).toLocaleString()}
+                {formatEventDate(m.createdAt, locale)}
                 {m.editedAt && " (edited)"}
               </span>
             </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { NAV_MESSAGES as msg } from "./nav-messages";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import NotificationBell from "./NotificationBell";
 
 const navLinks = [
@@ -71,6 +72,8 @@ export default function NavHeader() {
                 {msg.signIn}
               </Link>
             )}
+
+            <LocaleSwitcher />
           </nav>
 
           {/* Mobile hamburger */}
@@ -128,6 +131,10 @@ export default function NavHeader() {
               </Link>
             )
           )}
+
+          <div className="px-3 py-2">
+            <LocaleSwitcher />
+          </div>
         </nav>
       )}
     </header>

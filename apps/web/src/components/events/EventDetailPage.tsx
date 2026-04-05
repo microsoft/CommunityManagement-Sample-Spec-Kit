@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import type { EventDetail } from "@acroyoga/shared/types/events";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { EVENT_MESSAGES as msg } from "./event-messages";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocale();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +72,7 @@ export default function EventDetailPage() {
       {/* Date & Time */}
       <div className="mt-4 text-foreground">
         <p>
-          {new Date(event.startDatetime).toLocaleString()} — {new Date(event.endDatetime).toLocaleString()}
+          {formatEventDate(event.startDatetime, locale)} — {formatEventDate(event.endDatetime, locale)}
         </p>
       </div>
 
@@ -105,8 +108,8 @@ export default function EventDetailPage() {
           {isFree ? msg.free : `${event.currency} ${event.cost.toFixed(2)}`}
         </span>
         {event.concessionCost != null && (
-          <span className="ml-2 text-sm text-muted-foreground">
-            (Concession: {event.currency} {event.concessionCost.toFixed(2)})
+          <span className="ms-2 text-sm text-muted-foreground">
+            {msg.concessionLabel(event.currency, event.concessionCost.toFixed(2))}
           </span>
         )}
       </div>

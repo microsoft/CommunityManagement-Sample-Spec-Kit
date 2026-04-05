@@ -2,6 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 
 interface Occurrence {
   eventId: string;
@@ -17,6 +19,7 @@ interface Occurrence {
 
 export default function OccurrencesPage() {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocale();
   const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,9 +49,9 @@ export default function OccurrencesPage() {
               <div>
                 <p className="font-semibold">{occ.title}</p>
                 <p className="text-sm text-gray-600">
-                  {new Date(occ.startDatetime).toLocaleDateString()} &mdash;{" "}
-                  {new Date(occ.startDatetime).toLocaleTimeString()} to{" "}
-                  {new Date(occ.endDatetime).toLocaleTimeString()}
+                  {formatEventDate(occ.startDatetime, locale, undefined, { month: "short", day: "numeric" })} &mdash;{" "}
+                  {formatEventDate(occ.startDatetime, locale, undefined, { hour: "numeric", minute: "2-digit" })} to{" "}
+                  {formatEventDate(occ.endDatetime, locale, undefined, { hour: "numeric", minute: "2-digit" })}
                 </p>
                 {occ.isModified && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
@@ -56,7 +59,7 @@ export default function OccurrencesPage() {
                   </span>
                 )}
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-sm">
                   {occ.rsvpCount} / {occ.capacity} RSVPs
                 </p>

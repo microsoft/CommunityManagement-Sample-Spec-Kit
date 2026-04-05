@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import createNextIntlPlugin from "next-intl/plugin";
 
 // Load env vars from monorepo root .env (Next.js only reads apps/web/.env*)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,6 +27,8 @@ const analyze = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -36,4 +39,4 @@ const nextConfig = {
   ],
 };
 
-export default analyze(nextConfig);
+export default withNextIntl(analyze(nextConfig));

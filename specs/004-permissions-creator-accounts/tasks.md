@@ -168,7 +168,7 @@
 **Purpose**: Improvements that affect multiple user stories
 
 - [X] T062 [P] Add rate limiting middleware for permission check endpoint in `src/lib/middleware/rate-limit.ts` — mitigates audit log flooding from brute-force permission probing (R-6)
-- [X] T063 [P] ~~DEFERRED~~ i18n extraction for admin panel UI strings — ESLint i18n lint rule enforced globally; dedicated extraction pass deferred to i18n sprint
+- [X] T063 [P] ~~DEFERRED~~ i18n extraction for admin panel UI strings — addressed by Spec 014 (admin strings in en.json, CI-blocking lint enforces extraction)
 - [X] T064 [P] ~~DEFERRED~~ Loading/error states for admin panel pages — Suspense patterns used in components; dedicated loading.tsx files deferred to UI polish sprint
 - [X] T065 [P] ~~DEFERRED~~ Keyboard navigation and ARIA labels — jsx-a11y ESLint plugin enforced globally; dedicated WCAG audit deferred to accessibility sprint
 - [X] T066 Implement GDPR data export support — permission_grants, permission_requests, and creator_payment_accounts included in `src/lib/gdpr/export.ts`

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import Link from "next/link";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { TEACHER_MESSAGES as msg } from "../teacher-messages";
 
 interface Certification {
@@ -37,6 +39,7 @@ interface TeacherDetail {
 
 export default function TeacherProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocale();
   const [profile, setProfile] = useState<TeacherDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +103,7 @@ export default function TeacherProfilePage() {
           <h1 className="text-2xl font-bold">{profile.display_name}</h1>
           {profile.city && <p className="text-gray-500">{profile.city}</p>}
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <span
             className={`text-sm px-3 py-1 rounded ${
               profile.badge_status === "verified"
@@ -151,7 +154,7 @@ export default function TeacherProfilePage() {
                   <p className="font-medium">{c.certification_name}</p>
                   <p className="text-sm text-gray-500">{c.issuing_body}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       c.status === "verified"
@@ -165,7 +168,7 @@ export default function TeacherProfilePage() {
                   </span>
                   {c.expiry_date && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Expires: {new Date(c.expiry_date).toLocaleDateString()}
+                      Expires: {formatEventDate(c.expiry_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                     </p>
                   )}
                 </div>
@@ -186,7 +189,7 @@ export default function TeacherProfilePage() {
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{r.reviewer_name}</span>
                   <span className="text-gray-400">
-                    {new Date(r.created_at).toLocaleDateString()}
+                    {formatEventDate(r.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">{r.event_title}</p>

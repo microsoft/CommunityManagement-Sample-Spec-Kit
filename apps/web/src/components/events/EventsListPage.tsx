@@ -52,7 +52,7 @@ export default function EventsListPage() {
           {error}
           <button
             onClick={() => window.location.reload()}
-            className="ml-2 underline"
+            className="ms-2 underline"
           >
             {msg.retry}
           </button>

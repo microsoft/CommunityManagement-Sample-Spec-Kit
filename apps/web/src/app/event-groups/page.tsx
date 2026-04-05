@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { EVENT_GROUP_MESSAGES as msg } from "./event-group-messages";
 
 interface EventGroup {
@@ -14,6 +16,7 @@ interface EventGroup {
 }
 
 export default function EventGroupsPage() {
+  const locale = useLocale();
   const [groups, setGroups] = useState<EventGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,8 +47,8 @@ export default function EventGroupsPage() {
               <h2 className="font-semibold text-lg">{group.name}</h2>
               <p className="text-sm text-gray-500 capitalize">{group.type}</p>
               <p className="text-sm text-gray-600 mt-1">
-                {new Date(group.start_date).toLocaleDateString()} &ndash;{" "}
-                {new Date(group.end_date).toLocaleDateString()}
+                {formatEventDate(group.start_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &ndash;{" "}
+                {formatEventDate(group.end_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
               </p>
               <p className="text-xs text-gray-400 mt-1">{group.currency}</p>
             </a>

@@ -26,4 +26,8 @@ export const DIRECTORY_MESSAGES = {
   block: "Block",
   unblock: "Unblock",
   blockConfirm: "Block this user? This will remove any follow relationship.",
+  noMembersFound: "No members found",
+  friends: "Friends",
+  followsYou: "Follows you",
+  allRoles: "All roles",
 } as const;
