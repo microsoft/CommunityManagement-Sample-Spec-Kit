@@ -3,11 +3,11 @@
 **Feature Branch**: `016-mobile-app`  
 **Created**: 2026-04-04  
 **Status**: Draft  
-**Input**: Spec 008 Phase 6 deferred mobile tasks (T051–T079), existing shared design token pipeline (CSS/TS/Swift/Kotlin), 17 cross-platform shared-ui components, Constitution Principle V (UX Consistency)
+**Input**: Spec 008 Phase 6 deferred mobile tasks (T051–T079), existing shared design token pipeline (CSS/TS/Swift/Kotlin), 20 cross-platform shared-ui components, Constitution Principle V (UX Consistency)
 
 ## Summary
 
-Build native iOS and Android mobile applications using Expo and React Native. The platform's monorepo already includes a shared design token pipeline that outputs Swift and Kotlin values, 17 cross-platform UI components with `.native.tsx` entry points, and shared TypeScript types. This spec delivers: (1) Expo app scaffolding in `apps/mobile/`, (2) 5-tab navigation (Home, Events, Teachers, Bookings, Profile), (3) JWT-based mobile authentication, (4) TanStack Query data fetching with MMKV offline persistence, (5) native navigation transitions, and (6) platform-specific optimizations for iOS and Android. This is the largest spec in the project — it completes the cross-platform vision established in Spec 008.
+Build native iOS and Android mobile applications using Expo and React Native. The platform's monorepo already includes a shared design token pipeline that outputs Swift and Kotlin values, 20 cross-platform UI components with `.native.tsx` entry points, and shared TypeScript types. This spec delivers: (1) Expo app scaffolding in `apps/mobile/`, (2) 5-tab navigation (Home, Events, Teachers, Bookings, Profile), (3) JWT-based mobile authentication, (4) TanStack Query data fetching with MMKV offline persistence, (5) native navigation transitions, and (6) platform-specific optimizations for iOS and Android. This is the largest spec in the project — it completes the cross-platform vision established in Spec 008.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -48,7 +48,7 @@ A community member taps the RSVP button on an event detail page. They select the
 
 ### User Story 3 - Mobile Authentication (Priority: P1)
 
-A community member opens the app for the first time and sees a login screen. They can sign in with their existing account (email/password or social login via Entra External ID). After authentication, a JWT is stored securely and used for all API requests. The session persists across app restarts.
+A community member opens the app for the first time and sees a login screen. They authenticate via the web login flow (which supports email/password and social login via Entra External ID), and the mobile app exchanges the resulting web session for a JWT. The JWT is stored securely and used for all API requests. The session persists across app restarts.
 
 **Why this priority**: Authentication is a prerequisite for all personalized features (RSVP, bookings, profile, notifications).
 
@@ -129,7 +129,7 @@ A community member receives push notifications for events they care about — ne
 ### Functional Requirements
 
 - **FR-001**: Mobile app MUST be built with Expo and React Native, hosted in `apps/mobile/`
-- **FR-002**: Mobile app MUST consume the existing REST API — no mobile-specific backend endpoints except JWT auth
+- **FR-002**: Mobile app MUST consume the existing REST API — no mobile-specific backend endpoints except JWT auth (`/api/auth/mobile-token`) and push token registration (`/api/notifications/devices`)
 - **FR-003**: Authentication MUST use JWT stored in platform-secure storage (Keychain/Keystore)
 - **FR-004**: All data fetching MUST use TanStack Query with MMKV offline persistence
 - **FR-005**: Navigation MUST use Expo Router with 5-tab bottom navigation
@@ -155,7 +155,7 @@ A community member receives push notifications for events they care about — ne
 - **SC-002**: Event list scrolls at 60fps on iPhone 12 / Pixel 6 equivalent
 - **SC-003**: Cold start to interactive < 3 seconds
 - **SC-004**: Offline mode displays cached events, teachers, and bookings
-- **SC-005**: All 17 shared-ui components render correctly on both platforms
+- **SC-005**: All 20 shared-ui components render correctly on both platforms
 - **SC-006**: 5-tab navigation with deep linking functional on both platforms
 
 ## Constitution Compliance
