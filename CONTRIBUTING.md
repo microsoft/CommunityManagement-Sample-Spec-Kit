@@ -242,6 +242,34 @@ apps/web/messages/
 └── ar.json          # Arabic (RTL stub for structural testing)
 ```
 
+## Mobile Development
+
+The mobile app is built with Expo/React Native and lives in `apps/mobile/`.
+
+### Prerequisites
+- Node.js >= 22
+- Expo CLI: `npm install -g expo-cli`
+- iOS Simulator (macOS) or Android Emulator
+
+### Getting Started
+```bash
+cd apps/mobile
+npx expo start
+```
+
+### Running Tests
+```bash
+cd apps/mobile
+npm test
+```
+
+### Building
+Preview builds use EAS Build:
+```bash
+npx eas build --profile preview --platform ios
+npx eas build --profile preview --platform android
+```
+
 ## Getting Help
 
 - Read the [constitution](specs/constitution.md) for architectural principles
