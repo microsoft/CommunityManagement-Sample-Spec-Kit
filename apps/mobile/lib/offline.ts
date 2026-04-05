@@ -5,6 +5,7 @@
  * Constitution VI: Performance — MMKV for fast reads (< 10ms)
  * Cache size limit: 50MB with LRU eviction
  */
+import type { PersistedClient, Persister } from "@tanstack/react-query-persist-client";
 import { MMKV } from "react-native-mmkv";
 
 const CACHE_KEY_PREFIX = "tq_cache_";
@@ -82,8 +83,8 @@ function byteLength(str: string): number {
 /**
  * TanStack Query persister compatible interface
  */
-export const mmkvPersister = {
-  persistClient(client: unknown): void {
+export const mmkvPersister: Persister = {
+  persistClient(client: PersistedClient): void {
     const data = JSON.stringify(client);
     const key = "client_state";
     const size = byteLength(data);
@@ -109,7 +110,7 @@ export const mmkvPersister = {
     saveMetadata(metadata);
   },
 
-  restoreClient(): unknown {
+  restoreClient(): PersistedClient | undefined {
     const data = storage.getString(CACHE_KEY_PREFIX + "client_state");
     if (!data) return undefined;
 

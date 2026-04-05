@@ -27,7 +27,11 @@ jest.mock("expo-router", () => ({
 // Spy on Alert
 jest.spyOn(Alert, "alert");
 
-import EventDetailScreen from "../../../app/(tabs)/events/[id]";
+// Dynamic import — Expo Router [id] segments trip up TypeScript static module resolution
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { default: EventDetailScreen } = require("../../../app/(tabs)/events/[id]") as {
+  default: React.ComponentType;
+};
 
 function renderWithClient(ui: React.ReactElement) {
   const queryClient = new QueryClient({

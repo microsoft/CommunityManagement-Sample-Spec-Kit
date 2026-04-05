@@ -63,9 +63,9 @@ describe("HomeScreen", () => {
 
   it("shows loading indicator while fetching events", () => {
     mockGet.mockReturnValue(new Promise(() => {})); // never resolves
-    renderWithClient(<HomeScreen />);
-
-    expect(screen.getByTestId("activity-indicator") || screen.UNSAFE_queryByType("ActivityIndicator")).toBeTruthy();
+    const { toJSON } = renderWithClient(<HomeScreen />);
+    const tree = JSON.stringify(toJSON());
+    expect(tree).toContain("ActivityIndicator");
   });
 
   it("renders event list when data is available", async () => {
