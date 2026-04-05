@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { SETTINGS_MESSAGES as msg } from "../settings-messages";
 
@@ -12,6 +13,7 @@ interface ExportEntry {
 }
 
 export default function AccountSettingsPage() {
+  const locale = useLocale();
   const [exports, setExports] = useState<ExportEntry[]>([]);
   const [exporting, setExporting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -84,7 +86,7 @@ export default function AccountSettingsPage() {
                     {exp.status}
                   </span>
                   <span className="text-xs text-gray-400 ml-2">
-                    {formatEventDate(exp.createdAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                    {formatEventDate(exp.createdAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
                 {exp.status === "completed" && (

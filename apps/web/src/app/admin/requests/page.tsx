@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import type { PermissionRequest } from "@acroyoga/shared/types/requests";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 export default function AdminRequestsPage() {
+  const locale = useLocale();
   const [requests, setRequests] = useState<PermissionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export default function AdminRequestsPage() {
                   </p>
                   {req.message && <p className="mt-2 text-sm text-gray-600 italic">&ldquo;{req.message}&rdquo;</p>}
                   <p className="mt-1 text-xs text-gray-400">
-                    Submitted {formatEventDate(req.createdAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                    Submitted {formatEventDate(req.createdAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>
                 <div className="flex space-x-2" role="group" aria-label="Review actions">

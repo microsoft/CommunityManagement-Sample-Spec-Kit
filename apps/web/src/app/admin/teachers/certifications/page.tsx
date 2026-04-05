@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 
 interface ExpiringCert {
@@ -14,6 +15,7 @@ interface ExpiringCert {
 }
 
 export default function AdminExpiringCertsPage() {
+  const locale = useLocale();
   const [certs, setCerts] = useState<ExpiringCert[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +58,7 @@ export default function AdminExpiringCertsPage() {
                   <td className="p-2">{c.certification_name}</td>
                   <td className="p-2">{c.issuing_body}</td>
                   <td className="p-2">
-                    {formatEventDate(c.expiry_date, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                    {formatEventDate(c.expiry_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                     <span
                       className={`ml-2 text-sm ${daysLeft <= 7 ? "text-red-600" : "text-yellow-600"}`}
                     >

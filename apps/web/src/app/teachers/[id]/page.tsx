@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { TEACHER_MESSAGES as msg } from "../teacher-messages";
@@ -38,6 +39,7 @@ interface TeacherDetail {
 
 export default function TeacherProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocale();
   const [profile, setProfile] = useState<TeacherDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +168,7 @@ export default function TeacherProfilePage() {
                   </span>
                   {c.expiry_date && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Expires: {formatEventDate(c.expiry_date, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                      Expires: {formatEventDate(c.expiry_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                     </p>
                   )}
                 </div>
@@ -187,7 +189,7 @@ export default function TeacherProfilePage() {
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{r.reviewer_name}</span>
                   <span className="text-gray-400">
-                    {formatEventDate(r.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                    {formatEventDate(r.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">{r.event_title}</p>

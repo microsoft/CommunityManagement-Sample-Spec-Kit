@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
@@ -13,6 +14,7 @@ interface ConcessionStatus {
 }
 
 export default function AdminConcessionsPage() {
+  const locale = useLocale();
   const [pending, setPending] = useState<ConcessionStatus[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function AdminConcessionsPage() {
               <p className="text-sm text-gray-500">User: {c.user_id}</p>
               <p className="mt-1">{c.evidence}</p>
               <p className="text-xs text-gray-400 mt-1">
-                Applied: {formatEventDate(c.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                Applied: {formatEventDate(c.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
               </p>
               <div className="mt-3 space-x-2">
                 <button

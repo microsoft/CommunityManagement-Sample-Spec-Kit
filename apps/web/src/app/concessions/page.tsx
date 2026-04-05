@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { CONCESSION_MESSAGES as msg } from "./concession-messages";
 
@@ -14,6 +15,7 @@ interface ConcessionStatus {
 }
 
 export default function ConcessionPage() {
+  const locale = useLocale();
   const [concession, setConcession] = useState<ConcessionStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [evidence, setEvidence] = useState("");
@@ -53,16 +55,16 @@ export default function ConcessionPage() {
           <p className="font-semibold capitalize">{msg.status} {concession.status}</p>
           <p className="text-sm text-gray-600 mt-1">{msg.evidence} {concession.evidence}</p>
           <p className="text-xs text-gray-400 mt-1">
-            {msg.applied} {formatEventDate(concession.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+            {msg.applied} {formatEventDate(concession.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
           </p>
           {concession.approved_at && (
             <p className="text-xs text-green-600">
-              Approved: {formatEventDate(concession.approved_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+              Approved: {formatEventDate(concession.approved_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
           )}
           {concession.rejected_at && (
             <p className="text-xs text-red-600">
-              Rejected: {formatEventDate(concession.rejected_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+              Rejected: {formatEventDate(concession.rejected_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
           )}
         </div>

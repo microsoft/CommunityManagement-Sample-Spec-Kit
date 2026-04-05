@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import type { EventDetail } from "@acroyoga/shared/types/events";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { EVENT_MESSAGES as msg } from "./event-messages";
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocale();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function EventDetailPage() {
       {/* Date & Time */}
       <div className="mt-4 text-foreground">
         <p>
-          {formatEventDate(event.startDatetime)} — {formatEventDate(event.endDatetime)}
+          {formatEventDate(event.startDatetime, locale)} — {formatEventDate(event.endDatetime, locale)}
         </p>
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { BOOKING_MESSAGES as msg } from "./booking-messages";
@@ -20,6 +21,7 @@ interface Booking {
 
 export default function MyBookingsPage() {
   const { status: authStatus } = useSession();
+  const locale = useLocale();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export default function MyBookingsPage() {
                   <h2 className="font-semibold text-gray-900">{b.group_name}</h2>
                   <p className="text-sm text-gray-600">{b.ticket_type_name}</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {formatEventDate(b.created_at, "en", undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {b.pricing_tier}
+                    {formatEventDate(b.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {b.pricing_tier}
                   </p>
                 </div>
                 <div className="text-right">

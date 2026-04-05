@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import type { PermissionGrant } from "@acroyoga/shared/types/permissions";
 import { formatEventDate } from "@acroyoga/shared/utils/format";
 import { ADMIN_MESSAGES as msg } from "../admin-messages";
 
 export default function AdminPermissionsPage() {
+  const locale = useLocale();
   const [grants, setGrants] = useState<PermissionGrant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export default function AdminPermissionsPage() {
                     {grant.scopeValue ? ` / ${grant.scopeValue}` : ""}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatEventDate(grant.grantedAt, "en", undefined, { year: "numeric", month: "short", day: "numeric" })}
+                    {formatEventDate(grant.grantedAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
