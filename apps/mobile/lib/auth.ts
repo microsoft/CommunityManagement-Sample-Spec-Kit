@@ -11,6 +11,9 @@ const TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "auth_refresh_token";
 const TOKEN_EXPIRY_KEY = "auth_token_expiry";
 
+/** Buffer before actual expiry to avoid race conditions during token refresh */
+const TOKEN_EXPIRY_BUFFER_MS = 60_000;
+
 export interface AuthTokens {
   token: string;
   refreshToken: string;
@@ -48,9 +51,7 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function isTokenExpired(): Promise<boolean> {
   const expiry = await SecureStore.getItemAsync(TOKEN_EXPIRY_KEY);
   if (!expiry) return true;
-  // Consider expired 60 seconds before actual expiry to avoid race conditions
-  const bufferMs = 60_000;
-  return new Date(expiry).getTime() - bufferMs < Date.now();
+  return new Date(expiry).getTime() - TOKEN_EXPIRY_BUFFER_MS < Date.now();
 }
 
 /**
