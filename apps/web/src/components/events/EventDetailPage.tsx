@@ -157,13 +157,6 @@ export default function EventDetailPage() {
         >
           {msg.addToCalendar}
         </a>
-        <button
-          onClick={() => navigator.clipboard.writeText(window.location.href)}
-          className="px-4 py-2 border border-border rounded-md hover:bg-muted text-sm"
-          aria-label="Copy event link"
-        >
-          {msg.share}
-        </button>
       </div>
 
       {/* Refund policy */}
