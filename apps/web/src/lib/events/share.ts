@@ -1,7 +1,9 @@
 import { getEventById } from "@/lib/events/service";
+import type { ShareMetaResponse } from "@acroyoga/shared/types/seo";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
+/** @deprecated Use ShareMetaResponse from @acroyoga/shared/types/seo */
 export interface ShareMeta {
   url: string;
   title: string;
@@ -9,7 +11,10 @@ export interface ShareMeta {
   ogTags: Record<string, string>;
 }
 
-export async function getShareMeta(eventId: string): Promise<ShareMeta | null> {
+export async function getShareMeta(
+  eventId: string,
+  locale = "en",
+): Promise<ShareMetaResponse | null> {
   const event = await getEventById(eventId);
   if (!event) return null;
 
@@ -32,5 +37,7 @@ export async function getShareMeta(eventId: string): Promise<ShareMeta | null> {
       "twitter:title": event.title,
       "twitter:description": description,
     },
+    updatedAt: event.updatedAt,
+    locale,
   };
 }
