@@ -37,6 +37,18 @@ const nextConfig = {
     "@acroyoga/shared-ui",
     "@acroyoga/tokens",
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.blob.core.windows.net",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+    ],
+  },
 };
 
 export default withNextIntl(analyze(nextConfig));

@@ -168,10 +168,10 @@ export async function searchTeachers(options: {
   const total = parseInt(countResult.rows[0].count, 10);
 
   const offset = (page - 1) * limit;
-  const result = await db().query<TeacherProfile>(
+  const result = await db().query<TeacherProfile & { user_name: string }>(
     `SELECT tp.id, tp.user_id, tp.bio, tp.specialties, tp.badge_status,
             tp.aggregate_rating, tp.review_count, tp.is_deleted, tp.deleted_at,
-            tp.created_at, tp.updated_at
+            tp.created_at, tp.updated_at, u.name as user_name
      FROM teacher_profiles tp
      JOIN users u ON u.id = tp.user_id
      WHERE ${where}

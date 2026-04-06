@@ -1,110 +1,35 @@
-"use client";
-
 import Image from "next/image";
-import { useState, useEffect, use } from "react";
+import { notFound } from "next/navigation";
+import { getProfile } from "@/lib/profiles/service";
+import { getServerSession } from "@/lib/auth/session";
 import { PROFILE_MESSAGES as msg } from "../profile-messages";
+import ProfileActions from "./ProfileActions";
 
-interface ProfileData {
-  userId: string;
-  displayName: string | null;
-  bio: string | null;
-  homeCityName: string | null;
-  defaultRole: string | null;
-  avatarUrl: string | null;
-  socialLinks: Array<{ platform: string; url: string; visibility: string }>;
-  relationship: string;
+interface Props {
+  params: Promise<{ userId: string }>;
 }
 
-export default function UserProfilePage({ params }: { params: Promise<{ userId: string }> }) {
-  const { userId } = use(params);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+export default async function UserProfilePage({ params }: Props) {
+  const { userId } = await params;
+  const session = await getServerSession();
+  const viewerId = session?.userId ?? null;
 
-  useEffect(() => {
-    fetch(`/api/profiles/${userId}`)
-      .then((r) => {
-        if (r.status === 404) {
-          setNotFound(true);
-          setLoading(false);
-          return null;
-        }
-        return r.json();
-      })
-      .then((data) => {
-        if (data) setProfile(data);
-        setLoading(false);
-      });
-  }, [userId]);
-
-  async function handleFollow() {
-    const res = await fetch("/api/follows", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ followeeId: userId }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setProfile((p) =>
-        p ? { ...p, relationship: data.becameFriends ? "friend" : "following" } : p,
-      );
-    }
-  }
-
-  async function handleUnfollow() {
-    await fetch(`/api/follows/${userId}`, { method: "DELETE" });
-    setProfile((p) => (p ? { ...p, relationship: "none" } : p));
-  }
-
-  async function handleBlock() {
-    await fetch("/api/blocks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ blockedId: userId }),
-    });
-    setNotFound(true);
-  }
-
-  async function handleMute() {
-    await fetch("/api/mutes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mutedId: userId }),
-    });
-  }
-
-  async function handleReport() {
-    const reason = prompt("Reason: harassment, spam, inappropriate, other");
-    if (!reason) return;
-    await fetch("/api/reports", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reportedUserId: userId, reason }),
-    });
-    alert("Report submitted.");
-  }
-
-  if (loading) {
-    return <div className="p-6 max-w-2xl mx-auto animate-pulse"><div className="h-8 bg-gray-200 rounded w-48 mb-4" /></div>;
-  }
-
-  if (notFound || !profile) {
-    return <div className="p-6 max-w-2xl mx-auto"><h1 className="text-2xl">{msg.userNotFound}</h1></div>;
-  }
-
-  const roleLabel: Record<string, string> = {
-    none: msg.follow,
-    following: msg.following,
-    follower: msg.followBack,
-    friend: msg.friends,
-    self: "",
-  };
+  const profile = await getProfile(userId, viewerId);
+  if (!profile) notFound();
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <div className="flex items-start gap-4">
         {profile.avatarUrl && (
-          <Image src={profile.avatarUrl} alt="" width={80} height={80} className="w-20 h-20 rounded-full object-cover" />
+          <Image
+            src={profile.avatarUrl}
+            alt=""
+            width={80}
+            height={80}
+            className="w-20 h-20 rounded-full object-cover"
+            priority
+            sizes="80px"
+          />
         )}
         <div>
           <h1 className="text-2xl font-bold">{profile.displayName ?? msg.anonymous}</h1>
@@ -122,7 +47,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
       {profile.socialLinks.length > 0 && (
         <div className="mt-4 space-y-1">
           <h2 className="text-sm font-medium text-gray-500">{msg.links}</h2>
-          {profile.socialLinks.map((link) => (
+          {profile.socialLinks.map((link: { platform: string; url: string }) => (
             <a
               key={link.platform}
               href={link.url}
@@ -136,22 +61,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
         </div>
       )}
 
-      {profile.relationship !== "self" && (
-        <div className="mt-6 flex gap-2">
-          {profile.relationship === "none" || profile.relationship === "follower" ? (
-            <button onClick={handleFollow} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              {roleLabel[profile.relationship]}
-            </button>
-          ) : (
-            <button onClick={handleUnfollow} className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
-              {roleLabel[profile.relationship]}
-            </button>
-          )}
-          <button onClick={handleBlock} className="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">{msg.block}</button>
-          <button onClick={handleMute} className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded hover:bg-yellow-200">{msg.mute}</button>
-          <button onClick={handleReport} className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">{msg.report}</button>
-        </div>
-      )}
+      <ProfileActions userId={userId} initialRelationship={profile.relationship} />
     </div>
   );
 }

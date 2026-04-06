@@ -132,9 +132,9 @@
 
 **Independent Test**: Run `curl -s http://localhost:3000/teachers | grep -i "teacher\|Certified"` — teacher names appear in raw HTML response (not a loading spinner placeholder). Run the same for `/profile/[any-user-id]` — profile name appears in HTML. Verify `loading.tsx` skeleton still shows during navigation (Next.js streaming).
 
-- [ ] T032 [US5] Convert `apps/web/src/app/teachers/page.tsx` from `"use client"` + `useEffect` to an `async` Server Component: remove `useState`/`useEffect`/`fetch`, call `searchTeachersCached(searchParams)` directly, add `export const revalidate = 60`, keep filter UI as a separate `"use client"` child component using URL `searchParams` via `<Link>`/`router.push`
-- [ ] T033 [P] [US5] Convert `apps/web/src/app/profile/[userId]/page.tsx` from `"use client"` + `useEffect` to an `async` Server Component: remove `useState`/`useEffect`/`fetch`, call profile service function directly using the `userId` route param, keep any interactive client sections (follow/social actions) as `"use client"` child components
-- [ ] T034 [US5] Wrap the teacher list rendering section in `apps/web/src/app/teachers/page.tsx` in a `<Suspense>` boundary with `TeacherCardSkeleton` as fallback to enable streaming skeleton display during `searchParams`-triggered re-renders
+- [x] T032 [US5] Convert `apps/web/src/app/teachers/page.tsx` from `"use client"` + `useEffect` to an `async` Server Component: remove `useState`/`useEffect`/`fetch`, call `searchTeachersCached(searchParams)` directly, add `export const revalidate = 60`, keep filter UI as a separate `"use client"` child component using URL `searchParams` via `<Link>`/`router.push`
+- [x] T033 [P] [US5] Convert `apps/web/src/app/profile/[userId]/page.tsx` from `"use client"` + `useEffect` to an `async` Server Component: remove `useState`/`useEffect`/`fetch`, call profile service function directly using the `userId` route param, keep any interactive client sections (follow/social actions) as `"use client"` child components
+- [x] T034 [US5] Wrap the teacher list rendering section in `apps/web/src/app/teachers/page.tsx` in a `<Suspense>` boundary with `TeacherCardSkeleton` as fallback to enable streaming skeleton display during `searchParams`-triggered re-renders
 
 **Checkpoint**: Teacher page and profile page return populated HTML in `curl` output. Client-side waterfall eliminated. `loading.tsx` skeleton still visible during initial and navigated loads. Teacher filters work via URL `searchParams`.
 
@@ -146,10 +146,10 @@
 
 **Independent Test**: Run `curl -I "http://localhost:3000/_next/image?url=https%3A%2F%2Fpicsum.photos%2F200%2F200&w=400&q=75"` — response is `200 OK` with `Content-Type: image/webp`. Confirm no "hostname is not configured" errors in the browser console on any page with external images.
 
-- [ ] T035 [US6] Add `images.remotePatterns` to `apps/web/next.config.ts` for `*.blob.core.windows.net` (Azure Blob Storage — teacher photos, avatars) and `picsum.photos` (dev seed placeholder images) — see DDL in `data-model.md §6`
-- [ ] T036 [P] [US6] Add `priority` prop to the first `<Image>` in the events grid (above-fold EventCard image) and add explicit `sizes` attribute matching the grid breakpoints in `apps/web/src/components/events/EventCard.tsx`
-- [ ] T037 [P] [US6] Audit teacher card `<Image>` usage and add `sizes` attribute matching teacher grid layout; add `priority` to the first teacher card image in `apps/web/src/app/teachers/page.tsx` (or the TeacherCard component)
-- [ ] T038 [P] [US6] Add `priority` to the profile hero avatar `<Image>` (above fold) and verify explicit `sizes` attribute prevents oversized download in `apps/web/src/app/profile/[userId]/page.tsx`
+- [x] T035 [US6] Add `images.remotePatterns` to `apps/web/next.config.ts` for `*.blob.core.windows.net` (Azure Blob Storage — teacher photos, avatars) and `picsum.photos` (dev seed placeholder images) — see DDL in `data-model.md §6`
+- [x] T036 [P] [US6] Add `priority` prop to the first `<Image>` in the events grid (above-fold EventCard image) and add explicit `sizes` attribute matching the grid breakpoints in `apps/web/src/components/events/EventCard.tsx`
+- [x] T037 [P] [US6] Audit teacher card `<Image>` usage and add `sizes` attribute matching teacher grid layout; add `priority` to the first teacher card image in `apps/web/src/app/teachers/page.tsx` (or the TeacherCard component)
+- [x] T038 [P] [US6] Add `priority` to the profile hero avatar `<Image>` (above fold) and verify explicit `sizes` attribute prevents oversized download in `apps/web/src/app/profile/[userId]/page.tsx`
 
 **Checkpoint**: No `remotePatterns` errors in browser console. WebP images served for external URLs. First event card, first teacher card, and profile avatar load with `priority` (not lazy). `sizes` attributes present on all list-page images.
 
@@ -161,8 +161,8 @@
 
 **Independent Test**: Run `ANALYZE=true npm run build` in `apps/web/` — HTML bundle report opens (or saves to `.next/analyze/`). Confirm initial JS bar total ≤ 200 KB. Confirm `react-leaflet` / `leaflet` chunk appears only in the dynamic `MapPanel` chunk. Run `node scripts/assert-bundle-size.mjs 200` — exits with code 0.
 
-- [ ] T039 [US7] Create bundle size assertion script that reads `.next/build-manifest.json`, sums sizes of all initial-load JS chunks, and exits with a non-zero code if total compressed size exceeds the threshold argument (default 200 KB) — in `apps/web/scripts/assert-bundle-size.mjs` (≤ 30 lines, no new dependencies)
-- [ ] T040 [P] [US7] Add `ANALYZE=true npm run build` step and `node scripts/assert-bundle-size.mjs 200` assertion step to the CI pipeline in `.github/workflows/ci.yml` (add after the existing build step, before deploy)
+- [x] T039 [US7] Create bundle size assertion script that reads `.next/build-manifest.json`, sums sizes of all initial-load JS chunks, and exits with a non-zero code if total compressed size exceeds the threshold argument (default 200 KB) — in `apps/web/scripts/assert-bundle-size.mjs` (≤ 30 lines, no new dependencies)
+- [x] T040 [P] [US7] Add `ANALYZE=true npm run build` step and `node scripts/assert-bundle-size.mjs 200` assertion step to the CI pipeline in `.github/workflows/ci.yml` (add after the existing build step, before deploy)
 
 **Checkpoint**: CI fails if initial JS bundle exceeds 200 KB. `react-leaflet` confirmed not in initial bundle. Bundle analyser report generated on CI.
 
@@ -172,9 +172,9 @@
 
 **Purpose**: Accessibility audit, quickstart validation, and regression guard for the dynamic import of `react-leaflet`. These tasks span multiple user stories and should run after all previous phases are complete.
 
-- [ ] T041 [P] Audit all new `loading.tsx` and skeleton components for WCAG 2.1 AA compliance: confirm `aria-busy="true"`, `aria-label` (via `t("common.loading")`), minimum 44 × 44 px touch targets on any interactive elements, and correct focus management in `apps/web/src/app/events/loading.tsx`, `apps/web/src/app/teachers/loading.tsx`, `apps/web/src/app/directory/loading.tsx`, `apps/web/src/app/profile/[userId]/loading.tsx`
-- [ ] T042 [P] Audit all new `error.tsx` files for WCAG 2.1 AA compliance: confirm `role="alert"` on error container, "Try again" button is keyboard-focusable and has accessible label, colour contrast meets AA (4.5:1) in `apps/web/src/app/error.tsx`, `apps/web/src/app/events/error.tsx`, `apps/web/src/app/teachers/error.tsx`, `apps/web/src/app/directory/error.tsx`, `apps/web/src/app/profile/[userId]/error.tsx`
-- [ ] T043 [P] Run the full quickstart.md validation checklist: verify indexes via `pg_indexes` query, run `npx vitest run --workspace=apps/web --testPathPattern="018"` (all 6 test files pass), run `ANALYZE=true npm run build` and confirm bundle ≤ 200 KB and `react-leaflet` not in initial chunk, test skeleton at each route on Slow 3G, test error boundary reset flow on teachers page
+- [x] T041 [P] Audit all new `loading.tsx` and skeleton components for WCAG 2.1 AA compliance: confirm `aria-busy="true"`, `aria-label` (via `t("common.loading")`), minimum 44 × 44 px touch targets on any interactive elements, and correct focus management in `apps/web/src/app/events/loading.tsx`, `apps/web/src/app/teachers/loading.tsx`, `apps/web/src/app/directory/loading.tsx`, `apps/web/src/app/profile/[userId]/loading.tsx`
+- [x] T042 [P] Audit all new `error.tsx` files for WCAG 2.1 AA compliance: confirm `role="alert"` on error container, "Try again" button is keyboard-focusable and has accessible label, colour contrast meets AA (4.5:1) in `apps/web/src/app/error.tsx`, `apps/web/src/app/events/error.tsx`, `apps/web/src/app/teachers/error.tsx`, `apps/web/src/app/directory/error.tsx`, `apps/web/src/app/profile/[userId]/error.tsx`
+- [x] T043 [P] Run the full quickstart.md validation checklist: verify indexes via `pg_indexes` query, run `npx vitest run --workspace=apps/web --testPathPattern="018"` (all 6 test files pass), run `ANALYZE=true npm run build` and confirm bundle ≤ 200 KB and `react-leaflet` not in initial chunk, test skeleton at each route on Slow 3G, test error boundary reset flow on teachers page
 
 **Checkpoint**: All WCAG requirements met. Quickstart validation passes end-to-end. react-leaflet dynamic import regression confirmed absent. All 6 spec-018 test files green.
 
