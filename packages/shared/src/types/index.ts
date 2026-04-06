@@ -15,3 +15,4 @@ export * from "./venues";
 export * from "./explorer";
 export * from "./i18n";
 export * from "./notifications";
+export * from "./seo";
