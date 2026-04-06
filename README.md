@@ -102,19 +102,16 @@ Each feature is developed from a full spec (user scenarios, data model, API cont
 
 ## Roadmap
 
-The platform is **feature-complete for web**. All P0 and P1 features are implemented across 13 specs (001–013). The next wave of work is captured in three new specs:
+All P0 and P1 features are implemented across 16 specs (001–016). The next wave of work is captured in two new specs:
 
 | Priority | Spec | Scope | Tasks |
 |----------|------|-------|-------|
-| **Next** | [014 — Internationalisation](specs/014-internationalisation/) | `next-intl` integration, string extraction (~200+ strings), `Intl.DateTimeFormat` migration, RTL support, locale switcher, CI enforcement | 44 tasks, 6 phases |
-| **Next** | [015 — Background Jobs & Notifications](specs/015-background-jobs-notifications/) | `pg-boss` job queue, in-app notifications, email delivery (Azure Communication Services), notification preferences, scheduled jobs (review reminders, cert-expiry) | 45 tasks, 7 phases |
-| **Future** | [016 — Mobile App](specs/016-mobile-app/) | Expo/React Native, 5-tab navigation, JWT auth, TanStack Query + MMKV offline, push notifications. Completes Spec 008's deferred mobile phases | 63 tasks, 10 phases |
+| **Next** | [017 — SEO & Social Sharing](specs/017-seo-social-sharing/) | `generateMetadata()` for all public pages, `next/og` branded sharing images, Schema.org JSON-LD (Event + Person), dynamic sitemap, canonical URLs, social share panel with UTM tracking | 49 tasks, 9 phases |
+| **Next** | [018 — Performance Optimization](specs/018-performance-optimization/) | Database indexes, server-side query caching, skeleton loading states (closes Spec 001 T064), error boundaries (closes Spec 001 T065), SSR conversion, image optimization, bundle size CI gate | 43 tasks, 10 phases |
 
 Additional deferred work (lower priority, not yet specced):
 - **UI Component Extraction** — 21 presentational component wrappers (Spec 001 deferred tasks)
-- **Performance Optimization** — Image optimization, lazy loading, skeleton loaders
 - **WCAG Manual Audit** — Keyboard navigation and screen reader testing beyond axe-core automation
-- **SEO & Social Sharing** — OG metadata generation, event sharing cards
 - **Geolocation & Heatmap** — "Near Me" button and event density heatmap (Spec 010 deferred)
 
 ## Documentation
