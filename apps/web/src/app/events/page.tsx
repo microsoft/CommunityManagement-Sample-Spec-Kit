@@ -4,6 +4,8 @@ import ExplorerPage from "@/components/events/ExplorerPage";
 import { BASE_URL } from "@/lib/config";
 import { buildAlternateLanguages } from "@/lib/seo/canonical";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Events Explorer",
   description: "Explore community events by calendar, map, and location.",

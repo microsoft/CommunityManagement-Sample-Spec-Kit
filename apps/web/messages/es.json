@@ -416,6 +416,12 @@
     "unauthorized": "Acceso no autorizado",
     "forbidden": "No tienes permiso para acceder a este recurso.",
     "serverError": "Se produjo un error interno del servidor.",
-    "timeout": "La solicitud ha expirado. Inténtalo de nuevo."
+    "timeout": "La solicitud ha expirado. Inténtalo de nuevo.",
+    "generic": "Algo salió mal.",
+    "tryAgain": "Reintentar",
+    "events": "No se pudieron cargar los eventos. Inténtalo de nuevo.",
+    "teachers": "No se pudieron cargar los profesores. Inténtalo de nuevo.",
+    "directory": "No se pudieron cargar los miembros. Inténtalo de nuevo.",
+    "profile": "No se pudo cargar este perfil. Inténtalo de nuevo."
   }
 }

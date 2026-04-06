@@ -416,6 +416,12 @@
     "unauthorized": "Unauthorized access",
     "forbidden": "You do not have permission to access this resource.",
     "serverError": "An internal server error occurred.",
-    "timeout": "The request timed out. Please try again."
+    "timeout": "The request timed out. Please try again.",
+    "generic": "حدث خطأ ما.",
+    "tryAgain": "حاول مرة أخرى",
+    "events": "تعذر تحميل الأحداث. يرجى المحاولة مرة أخرى.",
+    "teachers": "تعذر تحميل المعلمين. يرجى المحاولة مرة أخرى.",
+    "directory": "تعذر تحميل الأعضاء. يرجى المحاولة مرة أخرى.",
+    "profile": "تعذر تحميل هذا الملف الشخصي. يرجى المحاولة مرة أخرى."
   }
 }

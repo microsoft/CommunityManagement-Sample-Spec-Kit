@@ -1,4 +1,5 @@
 import { db } from "@/lib/db/client";
+import { cache } from "react";
 import { filterSocialLinks } from "@/lib/profiles/visibility";
 import type {
   DirectoryEntry,
@@ -104,6 +105,11 @@ function rowToEntry(row: DirectoryRow): DirectoryEntry {
  * Returns paginated entries with relationship info, social links, and teacher badge.
  * Uses a single SQL query with JOINs + json_agg() to avoid N+1.
  */
+/**
+ * Within-request deduplication for directory search (authenticated data, no persistent cache).
+ */
+export const searchDirectoryCached = cache(searchDirectory);
+
 export async function searchDirectory(
   viewerId: string,
   params: DirectoryQueryParams,

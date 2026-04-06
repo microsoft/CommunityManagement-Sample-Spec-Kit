@@ -21,7 +21,7 @@
 
 **Purpose**: Create the SQL migration file that is the single prerequisite for the database index integration test (US1). All other phases are independent of this and of each other.
 
-- [ ] T001 Create SQL migration file with 5 composite indexes (`CONCURRENTLY IF NOT EXISTS` for idempotency) — copy DDL verbatim from `specs/018-performance-optimization/data-model.md §1` — in `apps/web/src/db/migrations/018-001-performance-indexes.sql`
+- [x] T001 Create SQL migration file with 5 composite indexes (`CONCURRENTLY IF NOT EXISTS` for idempotency) — copy DDL verbatim from `specs/018-performance-optimization/data-model.md §1` — in `apps/web/src/db/migrations/018-001-performance-indexes.sql`
 
 ---
 
@@ -31,9 +31,9 @@
 
 **⚠️ CRITICAL**: US3 skeleton components and US4 error boundary components both depend on i18n keys. Complete this phase first.
 
-- [ ] T002 Add i18n keys (`common.loading`, `errors.generic`, `errors.tryAgain`, `errors.notFound`, `errors.events`, `errors.teachers`, `errors.directory`, `errors.profile`) to `apps/web/messages/en.json` — values from `data-model.md §4`
-- [ ] T003 [P] Add the same key structure with Spanish-translated values to `apps/web/messages/es.json`
-- [ ] T004 [P] Add the same key structure with Arabic-translated values to `apps/web/messages/ar.json`
+- [x] T002 Add i18n keys (`common.loading`, `errors.generic`, `errors.tryAgain`, `errors.notFound`, `errors.events`, `errors.teachers`, `errors.directory`, `errors.profile`) to `apps/web/messages/en.json` — values from `data-model.md §4`
+- [x] T003 [P] Add the same key structure with Spanish-translated values to `apps/web/messages/es.json`
+- [x] T004 [P] Add the same key structure with Arabic-translated values to `apps/web/messages/ar.json`
 
 **Checkpoint**: i18n keys available in all three locales. Skeleton and error boundary components can now reference `common.loading` and `errors.*` keys.
 
@@ -45,7 +45,7 @@
 
 **Independent Test**: Run `npm run db:migrate --workspace=apps/web`. Query `pg_indexes` for the five named indexes — exactly 5 rows returned. Run `npx vitest run --workspace=apps/web --testPathPattern="018"` — test passes.
 
-- [ ] T005 [US1] Write PGlite integration test that runs `018-001-performance-indexes.sql` via `createTestDb()` and asserts all 5 index names are present in `pg_indexes` — in `apps/web/src/db/migrations/__tests__/018-performance-indexes.test.ts`
+- [x] T005 [US1] Write PGlite integration test that runs `018-001-performance-indexes.sql` via `createTestDb()` and asserts all 5 index names are present in `pg_indexes` — in `apps/web/src/db/migrations/__tests__/018-performance-indexes.test.ts`
 
 **Checkpoint**: Migration applies cleanly. Integration test passes with all 5 indexes confirmed present.
 
@@ -57,12 +57,12 @@
 
 **Independent Test**: Cold-request `/events` — response arrives from `listEventsCached()`. Second request within 60 s arrives from cache (verify via server log or cache hit header). Call `createEvent()` — next `listEventsCached()` call fetches fresh data. Directory page makes two calls to `searchDirectory()` in the same request — only one DB query executes.
 
-- [ ] T006 [US2] Wrap `listEvents()` with `unstable_cache` exported as `listEventsCached()` (cache key `["events-list"]`, tags `["events"]`, revalidate `60`) in `apps/web/src/lib/events/service.ts`
-- [ ] T007 [US2] Add `revalidateTag("events")` calls in `createEvent()`, `cancelEvent()`, `updateEvent()`, and `deleteEvent()` write-path functions in `apps/web/src/lib/events/service.ts`
-- [ ] T008 [P] [US2] Wrap `searchTeachers()` with `unstable_cache` exported as `searchTeachersCached()` (cache key `["teachers-list"]`, tags `["teachers"]`, revalidate `60`) in `apps/web/src/lib/teachers/profiles.ts`
-- [ ] T009 [P] [US2] Add `revalidateTag("teachers")` calls in `updateTeacherProfile()` and `deleteTeacherProfile()` write-path functions in `apps/web/src/lib/teachers/profiles.ts`
-- [ ] T010 [US2] Wrap `searchDirectory()` with React `cache()` for within-request deduplication (no persistent cross-request caching — authenticated data) in `apps/web/src/lib/directory/service.ts`
-- [ ] T011 [US2] Add `export const revalidate = 60` to the public events route segment in `apps/web/src/app/events/page.tsx`
+- [x] T006 [US2] Wrap `listEvents()` with `unstable_cache` exported as `listEventsCached()` (cache key `["events-list"]`, tags `["events"]`, revalidate `60`) in `apps/web/src/lib/events/service.ts`
+- [x] T007 [US2] Add `revalidateTag("events")` calls in `createEvent()`, `cancelEvent()`, `updateEvent()`, and `deleteEvent()` write-path functions in `apps/web/src/lib/events/service.ts`
+- [x] T008 [P] [US2] Wrap `searchTeachers()` with `unstable_cache` exported as `searchTeachersCached()` (cache key `["teachers-list"]`, tags `["teachers"]`, revalidate `60`) in `apps/web/src/lib/teachers/profiles.ts`
+- [x] T009 [P] [US2] Add `revalidateTag("teachers")` calls in `updateTeacherProfile()` and `deleteTeacherProfile()` write-path functions in `apps/web/src/lib/teachers/profiles.ts`
+- [x] T010 [US2] Wrap `searchDirectory()` with React `cache()` for within-request deduplication (no persistent cross-request caching — authenticated data) in `apps/web/src/lib/directory/service.ts`
+- [x] T011 [US2] Add `export const revalidate = 60` to the public events route segment in `apps/web/src/app/events/page.tsx`
 
 **Checkpoint**: `listEventsCached` and `searchTeachersCached` use the Next.js data cache. Write paths invalidate tags. Directory deduplication active within a request. Route-level `revalidate` set for events.
 
@@ -76,25 +76,25 @@
 
 ### Skeleton Components
 
-- [ ] T012 [P] [US3] Create `EventCardSkeleton` component: rectangular title block + two text lines + date/category row using `Skeleton` from `packages/shared-ui`; container has `aria-busy="true"` and `aria-label` bound to `t("common.loading")` — in `apps/web/src/components/skeletons/EventCardSkeleton.tsx`
-- [ ] T013 [P] [US3] Create `TeacherCardSkeleton` component: circular avatar + name text line + two bio text lines + badge chip using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/TeacherCardSkeleton.tsx`
-- [ ] T014 [P] [US3] Create `DirectoryCardSkeleton` component: circular avatar + display name line + home city line + social link stubs using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/DirectoryCardSkeleton.tsx`
-- [ ] T015 [P] [US3] Create `ProfileSkeleton` component: large circular avatar + name line + three bio text lines + social links row using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/ProfileSkeleton.tsx`
+- [x] T012 [P] [US3] Create `EventCardSkeleton` component: rectangular title block + two text lines + date/category row using `Skeleton` from `packages/shared-ui`; container has `aria-busy="true"` and `aria-label` bound to `t("common.loading")` — in `apps/web/src/components/skeletons/EventCardSkeleton.tsx`
+- [x] T013 [P] [US3] Create `TeacherCardSkeleton` component: circular avatar + name text line + two bio text lines + badge chip using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/TeacherCardSkeleton.tsx`
+- [x] T014 [P] [US3] Create `DirectoryCardSkeleton` component: circular avatar + display name line + home city line + social link stubs using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/DirectoryCardSkeleton.tsx`
+- [x] T015 [P] [US3] Create `ProfileSkeleton` component: large circular avatar + name line + three bio text lines + social links row using `Skeleton` from `packages/shared-ui`; `aria-busy="true"`, `aria-label` from `t("common.loading")` — in `apps/web/src/components/skeletons/ProfileSkeleton.tsx`
 
 ### Route Loading Files
 
-- [ ] T016 [US3] Create global route loading fallback rendering a centred `common.loading` translated string (or minimal spinner) in `apps/web/src/app/loading.tsx`
-- [ ] T017 [US3] Create events route loading file rendering a 12-card grid of `EventCardSkeleton` (matching the existing `ExplorerPage` grid layout) in `apps/web/src/app/events/loading.tsx`
-- [ ] T018 [P] [US3] Create teachers route loading file rendering an 8-card grid of `TeacherCardSkeleton` in `apps/web/src/app/teachers/loading.tsx`
-- [ ] T019 [P] [US3] Create directory route loading file rendering a 10-card grid of `DirectoryCardSkeleton` in `apps/web/src/app/directory/loading.tsx`
-- [ ] T020 [P] [US3] Create profile route loading file rendering a single `ProfileSkeleton` (full-width) in `apps/web/src/app/profile/[userId]/loading.tsx`
+- [x] T016 [US3] Create global route loading fallback rendering a centred `common.loading` translated string (or minimal spinner) in `apps/web/src/app/loading.tsx`
+- [x] T017 [US3] Create events route loading file rendering a 12-card grid of `EventCardSkeleton` (matching the existing `ExplorerPage` grid layout) in `apps/web/src/app/events/loading.tsx`
+- [x] T018 [P] [US3] Create teachers route loading file rendering an 8-card grid of `TeacherCardSkeleton` in `apps/web/src/app/teachers/loading.tsx`
+- [x] T019 [P] [US3] Create directory route loading file rendering a 10-card grid of `DirectoryCardSkeleton` in `apps/web/src/app/directory/loading.tsx`
+- [x] T020 [P] [US3] Create profile route loading file rendering a single `ProfileSkeleton` (full-width) in `apps/web/src/app/profile/[userId]/loading.tsx`
 
 ### Tests
 
-- [ ] T021 [P] [US3] Write RTL snapshot test for `EventCardSkeleton` asserting render, `aria-busy="true"`, and no visible text content — in `apps/web/src/components/skeletons/__tests__/EventCardSkeleton.test.tsx`
-- [ ] T022 [P] [US3] Write RTL snapshot test for `TeacherCardSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/TeacherCardSkeleton.test.tsx`
-- [ ] T023 [P] [US3] Write RTL snapshot test for `DirectoryCardSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/DirectoryCardSkeleton.test.tsx`
-- [ ] T024 [P] [US3] Write RTL snapshot test for `ProfileSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/ProfileSkeleton.test.tsx`
+- [x] T021 [P] [US3] Write RTL snapshot test for `EventCardSkeleton` asserting render, `aria-busy="true"`, and no visible text content — in `apps/web/src/components/skeletons/__tests__/EventCardSkeleton.test.tsx`
+- [x] T022 [P] [US3] Write RTL snapshot test for `TeacherCardSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/TeacherCardSkeleton.test.tsx`
+- [x] T023 [P] [US3] Write RTL snapshot test for `DirectoryCardSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/DirectoryCardSkeleton.test.tsx`
+- [x] T024 [P] [US3] Write RTL snapshot test for `ProfileSkeleton` asserting render and accessibility attributes — in `apps/web/src/components/skeletons/__tests__/ProfileSkeleton.test.tsx`
 
 **Checkpoint**: All four skeleton components render with correct aria attributes. All five `loading.tsx` files exist. RTL tests pass.
 
@@ -108,19 +108,19 @@
 
 ### Error Boundary Component
 
-- [ ] T025 [US4] Create reusable `ErrorBoundary` client component accepting `{ children: ReactNode; fallback?: ReactNode }` props; falls back to `EmptyState` with `t("errors.generic")` message; uses `role="alert"` on the fallback container — in `apps/web/src/components/ErrorBoundary.tsx`
+- [x] T025 [US4] Create reusable `ErrorBoundary` client component accepting `{ children: ReactNode; fallback?: ReactNode }` props; falls back to `EmptyState` with `t("errors.generic")` message; uses `role="alert"` on the fallback container — in `apps/web/src/components/ErrorBoundary.tsx`
 
 ### Route Error Files
 
-- [ ] T026 [US4] Create global route error boundary (`"use client"`) receiving `{ error: Error; reset: () => void }` props; renders `EmptyState` with `t("errors.generic")`, `role="alert"`, and a `t("errors.tryAgain")` reset button — in `apps/web/src/app/error.tsx`
-- [ ] T027 [US4] Create events route error file (`"use client"`) rendering `EmptyState` with `t("errors.events")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/events/error.tsx`
-- [ ] T028 [P] [US4] Create teachers route error file (`"use client"`) rendering `EmptyState` with `t("errors.teachers")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/teachers/error.tsx`
-- [ ] T029 [P] [US4] Create directory route error file (`"use client"`) rendering `EmptyState` with `t("errors.directory")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/directory/error.tsx`
-- [ ] T030 [P] [US4] Create profile route error file (`"use client"`) rendering `EmptyState` with `t("errors.profile")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/profile/[userId]/error.tsx`
+- [x] T026 [US4] Create global route error boundary (`"use client"`) receiving `{ error: Error; reset: () => void }` props; renders `EmptyState` with `t("errors.generic")`, `role="alert"`, and a `t("errors.tryAgain")` reset button — in `apps/web/src/app/error.tsx`
+- [x] T027 [US4] Create events route error file (`"use client"`) rendering `EmptyState` with `t("errors.events")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/events/error.tsx`
+- [x] T028 [P] [US4] Create teachers route error file (`"use client"`) rendering `EmptyState` with `t("errors.teachers")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/teachers/error.tsx`
+- [x] T029 [P] [US4] Create directory route error file (`"use client"`) rendering `EmptyState` with `t("errors.directory")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/directory/error.tsx`
+- [x] T030 [P] [US4] Create profile route error file (`"use client"`) rendering `EmptyState` with `t("errors.profile")` message and `t("errors.tryAgain")` reset button — in `apps/web/src/app/profile/[userId]/error.tsx`
 
 ### Tests
 
-- [ ] T031 [US4] Write RTL test for `ErrorBoundary` component: mount with a child that throws, assert fallback renders with `role="alert"` and translated `errors.generic` text — in `apps/web/src/components/__tests__/ErrorBoundary.test.tsx`
+- [x] T031 [US4] Write RTL test for `ErrorBoundary` component: mount with a child that throws, assert fallback renders with `role="alert"` and translated `errors.generic` text — in `apps/web/src/components/__tests__/ErrorBoundary.test.tsx`
 
 **Checkpoint**: All route error files exist. `ErrorBoundary` wrapper renders correctly. Triggering an error on any list page shows the contextual translated message and working "Try again" button. No raw stack traces visible.
 
