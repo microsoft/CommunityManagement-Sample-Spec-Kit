@@ -14,17 +14,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../../lib/api-client";
-
-const MSG = {
-  loading: "Loading teacher...",
-  error: "Failed to load teacher",
-  retry: "Tap to retry",
-  certifications: "Certifications",
-  about: "About",
-  reviews: "Reviews",
-  noReviews: "No reviews yet",
-  noBio: "No bio available",
-} as const;
+import { TEACHER_DETAIL_MESSAGES as MSG } from "../../../lib/messages";
 
 interface TeacherDetail {
   id: string;
@@ -81,7 +71,7 @@ export default function TeacherDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         {teacher.avatarUrl ? (
-          <Image source={{ uri: teacher.avatarUrl }} style={styles.avatar} />
+          <Image source={{ uri: teacher.avatarUrl }} style={styles.avatar} accessibilityLabel={`${teacher.displayName} avatar`} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Text style={styles.avatarInitial}>

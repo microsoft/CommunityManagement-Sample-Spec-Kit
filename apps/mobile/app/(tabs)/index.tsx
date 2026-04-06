@@ -17,14 +17,7 @@ import {
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../lib/api-client";
-
-const MSG = {
-  title: "Upcoming Events",
-  empty: "No upcoming events",
-  emptySubtext: "Check back later for new events in your area.",
-  error: "Failed to load events",
-  retry: "Tap to retry",
-} as const;
+import { HOME_MESSAGES as MSG } from "../../lib/messages";
 
 interface EventListItem {
   id: string;

@@ -17,14 +17,7 @@ import {
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../../lib/api-client";
-
-const MSG = {
-  search: "Search teachers...",
-  empty: "No teachers found",
-  error: "Failed to load teachers",
-  retry: "Tap to retry",
-  certified: "Certified",
-} as const;
+import { TEACHERS_LIST_MESSAGES as MSG } from "../../../lib/messages";
 
 interface TeacherListItem {
   id: string;
@@ -71,7 +64,7 @@ export default function TeachersListScreen() {
         accessibilityLabel={item.displayName}
       >
         {item.avatarUrl ? (
-          <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+          <Image source={{ uri: item.avatarUrl }} style={styles.avatar} accessibilityLabel={`${item.displayName} avatar`} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Text style={styles.avatarInitial}>

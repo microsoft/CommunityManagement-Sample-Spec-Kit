@@ -16,18 +16,7 @@ import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { get } from "../../../lib/api-client";
 import { signOut } from "../../../lib/auth";
-
-const MSG = {
-  loading: "Loading profile...",
-  error: "Failed to load profile",
-  retry: "Tap to retry",
-  editProfile: "Edit Profile",
-  notificationSettings: "Notification Settings",
-  signOut: "Sign Out",
-  signOutConfirm: "Are you sure you want to sign out?",
-  cancel: "Cancel",
-  member: "Member",
-} as const;
+import { PROFILE_MESSAGES as MSG } from "../../../lib/messages";
 
 interface UserProfile {
   id: string;
@@ -93,7 +82,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         {profile.avatarUrl ? (
-          <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+          <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} accessibilityLabel={`${profile.displayName} avatar`} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Text style={styles.avatarInitial}>

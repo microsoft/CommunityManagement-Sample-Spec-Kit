@@ -50,11 +50,14 @@ export async function registerForPushNotifications(): Promise<string | null> {
   const tokenData = await Notifications.getExpoPushTokenAsync();
   const token = tokenData.data;
 
-  // Register token with server
-  await post("/api/notifications/devices", {
+  // Register token with server — log failure but don't block the user
+  const result = await post("/api/notifications/devices", {
     expoPushToken: token,
     platform: Platform.OS,
   });
+  if (result.error) {
+    console.warn("Failed to register push token with server:", result.error);
+  }
 
   return token;
 }

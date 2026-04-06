@@ -16,18 +16,7 @@ import {
 import { useRouter } from "expo-router";
 import { signIn } from "../../lib/auth";
 import { configureApiClient } from "../../lib/api-client";
-
-const MSG = {
-  title: "AcroYoga Community",
-  subtitle: "Sign in to continue",
-  emailLabel: "Email",
-  emailPlaceholder: "your@email.com",
-  passwordLabel: "Password",
-  passwordPlaceholder: "Enter your password",
-  signIn: "Sign In",
-  signingIn: "Signing in...",
-  error: "Sign in failed. Please check your credentials.",
-} as const;
+import { LOGIN_MESSAGES as MSG } from "../../lib/messages";
 
 export default function LoginScreen() {
   const router = useRouter();

@@ -66,7 +66,15 @@ export const POST = requireAuth(async (req: NextRequest, ctx: AuthContext) => {
         refreshTokenStore.delete(incomingRefreshToken);
       }
       return NextResponse.json(
-        { error: "Invalid or expired refresh token" },
+        { error: "Invalid or expired refresh token", code: "INVALID_REFRESH_TOKEN" },
+        { status: 401 },
+      );
+    }
+
+    // Verify token belongs to the requesting user (Constitution XI: Resource Ownership)
+    if (stored.userId !== ctx.userId) {
+      return NextResponse.json(
+        { error: "Invalid or expired refresh token", code: "INVALID_REFRESH_TOKEN" },
         { status: 401 },
       );
     }

@@ -16,26 +16,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "../../../lib/api-client";
-
-const MSG = {
-  loading: "Loading event...",
-  error: "Failed to load event",
-  retry: "Tap to retry",
-  rsvp: "RSVP",
-  rsvpFull: "Join Waitlist",
-  rsvpSuccess: "You're in!",
-  rsvpWaitlisted: "Added to waitlist",
-  rsvpError: "RSVP failed",
-  selectRole: "Select your role",
-  cancel: "Cancel",
-  confirm: "Confirm",
-  spots: "spots left",
-  full: "Event Full",
-  attendees: "attendees",
-  about: "About",
-  when: "When",
-  where: "Where",
-} as const;
+import { EVENT_DETAIL_MESSAGES as MSG } from "../../../lib/messages";
 
 const ROLES = [
   { key: "base", label: "Base" },

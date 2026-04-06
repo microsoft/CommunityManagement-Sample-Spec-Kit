@@ -75,7 +75,11 @@ function byteLength(str: string): number {
     const code = str.charCodeAt(i);
     if (code <= 0x7f) bytes += 1;
     else if (code <= 0x7ff) bytes += 2;
-    else bytes += 3;
+    else if (code >= 0xd800 && code <= 0xdbff) {
+      // High surrogate — pair encodes a 4-byte UTF-8 code point
+      bytes += 4;
+      i++; // Skip low surrogate
+    } else bytes += 3;
   }
   return bytes;
 }

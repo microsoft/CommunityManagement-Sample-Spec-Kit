@@ -45,9 +45,14 @@ export function useOnlineStatus(): ConnectivityState {
  * Check connectivity once (non-hook, for use outside components)
  */
 export async function checkConnectivity(): Promise<ConnectivityState> {
-  const netState = await NetInfo.fetch();
-  return {
-    isConnected: netState.isConnected ?? false,
-    isInternetReachable: netState.isInternetReachable ?? null,
-  };
+  try {
+    const netState = await NetInfo.fetch();
+    return {
+      isConnected: netState.isConnected ?? false,
+      isInternetReachable: netState.isInternetReachable ?? null,
+    };
+  } catch {
+    // If NetInfo fails, assume connected to avoid blocking the user
+    return { isConnected: true, isInternetReachable: null };
+  }
 }

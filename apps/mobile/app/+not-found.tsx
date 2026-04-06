@@ -4,12 +4,7 @@
  */
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-
-const MSG = {
-  title: "Page Not Found",
-  description: "The page you're looking for doesn't exist.",
-  goHome: "Go to Home",
-} as const;
+import { NOT_FOUND_MESSAGES as MSG } from "../lib/messages";
 
 export default function NotFoundScreen() {
   const router = useRouter();

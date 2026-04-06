@@ -83,10 +83,11 @@ async function parseResponse<T>(response: Response): Promise<ApiResponse<T>> {
       };
     }
     return { data: body as T, error: null, status: response.status };
-  } catch {
+  } catch (err: unknown) {
+    const detail = err instanceof Error ? err.message : "Unknown parse error";
     return {
       data: null,
-      error: `Request failed with status ${response.status}`,
+      error: `Response parse error (status ${response.status}): ${detail}`,
       status: response.status,
     };
   }

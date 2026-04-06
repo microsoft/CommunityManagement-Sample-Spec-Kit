@@ -16,25 +16,7 @@ import {
 } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, put } from "../../../../lib/api-client";
-
-const MSG = {
-  title: "Notification Settings",
-  loading: "Loading preferences...",
-  error: "Failed to load preferences",
-  retry: "Tap to retry",
-  saved: "Preferences saved",
-  pushNotifications: "Push Notifications",
-  pushDescription: "Receive push notifications on your device",
-  categories: "Notification Categories",
-  eventReminders: "Event Reminders",
-  eventRemindersDesc: "Get reminded before events you've RSVP'd to",
-  rsvpUpdates: "RSVP Updates",
-  rsvpUpdatesDesc: "New RSVPs to your events",
-  waitlistUpdates: "Waitlist Updates",
-  waitlistUpdatesDesc: "When you're promoted from the waitlist",
-  eventChanges: "Event Changes",
-  eventChangesDesc: "Cancellations and schedule changes",
-} as const;
+import { NOTIFICATION_SETTINGS_MESSAGES as MSG } from "../../../../lib/messages";
 
 interface NotificationPreferences {
   pushEnabled: boolean;

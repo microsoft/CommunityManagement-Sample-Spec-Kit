@@ -17,15 +17,7 @@ import {
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../../lib/api-client";
-
-const MSG = {
-  search: "Search events...",
-  empty: "No events found",
-  emptyFiltered: "No events match your filters",
-  error: "Failed to load events",
-  retry: "Tap to retry",
-  allCategories: "All",
-} as const;
+import { EVENTS_LIST_MESSAGES as MSG } from "../../../lib/messages";
 
 const CATEGORIES = ["All", "Workshop", "Jam", "Festival", "Retreat", "Class"] as const;
 

@@ -15,18 +15,7 @@ import {
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../../../lib/api-client";
-
-const MSG = {
-  upcoming: "Upcoming",
-  past: "Past",
-  empty: "No bookings yet",
-  emptySubtext: "RSVP to events to see your bookings here.",
-  error: "Failed to load bookings",
-  retry: "Tap to retry",
-  cancelled: "Cancelled",
-  waitlisted: "Waitlisted",
-  confirmed: "Confirmed",
-} as const;
+import { BOOKINGS_MESSAGES as MSG } from "../../../lib/messages";
 
 interface Booking {
   id: string;
