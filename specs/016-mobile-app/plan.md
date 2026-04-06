@@ -27,7 +27,7 @@ Scaffold an Expo React Native app in `apps/mobile/` consuming the existing REST 
 | II. Test-First Development | ✅ PASS | Jest unit tests for hooks, API client, auth. Detox E2E for critical flows. |
 | III. Privacy & Data Protection | ✅ PASS | JWT in SecureStore (Keychain/Keystore). MMKV cache contains public data only. EXIF stripping via existing server-side pipeline. |
 | IV. Server-Side Authority | ✅ PASS | Mobile is a thin client. All business rules enforced by API. No client-side validation beyond UX. |
-| V. UX Consistency | ✅ PASS | Shared design tokens (Swift/Kotlin/TS outputs). 17 shared-ui components with `.native.tsx` entry points. |
+| V. UX Consistency | ✅ PASS | Shared design tokens (Swift/Kotlin/TS outputs). 20 shared-ui components with `.native.tsx` entry points. |
 | VI. Performance Budget | ✅ PASS | FlatList with windowSize. Lazy screen loading. MMKV for fast cache reads. Hermes JS engine for fast startup. |
 | VII. Simplicity | ✅ PASS | Expo managed workflow — no ejection, no native code. Shared packages reduce code duplication. |
 | VIII. Internationalisation | ✅ PASS | Import translations from `@acroyoga/shared`. Use React Native's `Intl` polyfill (Hermes) for formatting. |

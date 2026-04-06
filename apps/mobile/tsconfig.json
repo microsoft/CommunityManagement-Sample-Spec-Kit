@@ -1,0 +1,17 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@acroyoga/shared": ["../../packages/shared/src/index.ts"],
+      "@acroyoga/shared/*": ["../../packages/shared/src/*"],
+      "@acroyoga/shared-ui": ["../../packages/shared-ui/src/index.ts"],
+      "@acroyoga/shared-ui/*": ["../../packages/shared-ui/src/*"],
+      "@acroyoga/tokens": ["../../packages/tokens/src/index.ts"],
+      "@acroyoga/tokens/*": ["../../packages/tokens/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}

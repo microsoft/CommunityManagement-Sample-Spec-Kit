@@ -32,11 +32,11 @@
 
 *Maps to Spec 008 T051–T055*
 
-- [ ] T001 [US4] Scaffold Expo app in `apps/mobile/` using `npx create-expo-app`. Configure `package.json` with workspace name `@acroyoga/mobile` and dependencies on `@acroyoga/shared`, `@acroyoga/shared-ui`, `@acroyoga/tokens`
-- [ ] T002 [P] [US4] Configure `apps/mobile/metro.config.js` for monorepo — resolve `packages/shared`, `packages/shared-ui`, `packages/tokens` via `watchFolders` and `nodeModulesPaths`
-- [ ] T003 [P] [US4] Configure `apps/mobile/tsconfig.json` extending `../../tsconfig.base.json` with React Native path aliases and JSX settings
-- [ ] T004 [P] [US4] Configure `apps/mobile/app.json` — app name, slug, scheme (deep links), iOS bundleIdentifier, Android package, icons, splash screen
-- [ ] T005 [P] [US4] Configure `apps/mobile/eas.json` — development, preview, and production build profiles for iOS and Android
+- [x] T001 [US4] Scaffold Expo app in `apps/mobile/` using `npx create-expo-app`. Configure `package.json` with workspace name `@acroyoga/mobile` and dependencies on `@acroyoga/shared`, `@acroyoga/shared-ui`, `@acroyoga/tokens`
+- [x] T002 [P] [US4] Configure `apps/mobile/metro.config.js` for monorepo — resolve `packages/shared`, `packages/shared-ui`, `packages/tokens` via `watchFolders` and `nodeModulesPaths`
+- [x] T003 [P] [US4] Configure `apps/mobile/tsconfig.json` extending `../../tsconfig.base.json` with React Native path aliases and JSX settings
+- [x] T004 [P] [US4] Configure `apps/mobile/app.json` — app name, slug, scheme (deep links), iOS bundleIdentifier, Android package, icons, splash screen
+- [x] T005 [P] [US4] Configure `apps/mobile/eas.json` — development, preview, and production build profiles for iOS and Android
 
 **Checkpoint**: Expo app scaffolded, Metro resolves monorepo packages, TypeScript compiles, `npx expo start` launches without errors.
 
@@ -48,16 +48,16 @@
 
 ### Tests for Phase 2
 
-- [ ] T006 [P] [US3] Unit tests for auth module — JWT storage, retrieval, refresh, expiry check in `apps/mobile/__tests__/auth.test.ts`
-- [ ] T007 [P] [US3] Unit tests for API client — auth header injection, 401 handling, token refresh retry in `apps/mobile/__tests__/api-client.test.ts`
-- [ ] T008 [P] [US3] Integration test for mobile-token endpoint — session validation, JWT issuance, 401 for unauthenticated in `apps/web/tests/integration/auth/mobile-token.test.ts`
+- [x] T006 [P] [US3] Unit tests for auth module — JWT storage, retrieval, refresh, expiry check in `apps/mobile/__tests__/auth.test.ts`
+- [x] T007 [P] [US3] Unit tests for API client — auth header injection, 401 handling, token refresh retry in `apps/mobile/__tests__/api-client.test.ts`
+- [x] T008 [P] [US3] Integration test for mobile-token endpoint — session validation, JWT issuance, 401 for unauthenticated in `apps/web/tests/integration/auth/mobile-token.test.ts`
 
 ### Implementation for Phase 2
 
-- [ ] T009 [US3] Create JWT auth module in `apps/mobile/lib/auth.ts` — `signIn()`, `signOut()`, `getToken()`, `refreshToken()`, `isAuthenticated()` using `expo-secure-store` for JWT storage
-- [ ] T010 [US3] Create typed API client in `apps/mobile/lib/api-client.ts` — base URL configuration, automatic JWT header injection, 401 interception with token refresh, typed request/response using `@acroyoga/shared` types
-- [ ] T011 [US3] Create `POST /api/auth/mobile-token` API route in `apps/web/src/app/api/auth/mobile-token/route.ts` — validates existing session, issues JWT with user claims, supports refresh tokens. Protected by `requireAuth()`
-- [ ] T012 [US3] Add `MobileTokenResponse` type to `packages/shared/src/types/auth.ts` — `{ token: string, refreshToken: string, expiresAt: string }`
+- [x] T009 [US3] Create JWT auth module in `apps/mobile/lib/auth.ts` — `signIn()`, `signOut()`, `getToken()`, `refreshToken()`, `isAuthenticated()` using `expo-secure-store` for JWT storage
+- [x] T010 [US3] Create typed API client in `apps/mobile/lib/api-client.ts` — base URL configuration, automatic JWT header injection, 401 interception with token refresh, typed request/response using `@acroyoga/shared` types
+- [x] T011 [US3] Create `POST /api/auth/mobile-token` API route in `apps/web/src/app/api/auth/mobile-token/route.ts` — validates existing session, issues JWT with user claims, supports refresh tokens. Protected by `requireAuth()`
+- [x] T012 [US3] Add `MobileTokenResponse` type to `packages/shared/src/types/auth.ts` — `{ token: string, refreshToken: string, expiresAt: string }`
 
 **Checkpoint**: Authentication functional — user can sign in, JWT stored securely, API client sends authenticated requests.
 
@@ -69,17 +69,17 @@
 
 ### Tests for Phase 3
 
-- [ ] T013 [P] [US4] Unit tests for navigation configuration — tab routes, stack screens, auth gate redirect in `apps/mobile/__tests__/navigation.test.ts`
+- [x] T013 [P] [US4] Unit tests for navigation configuration — tab routes, stack screens, auth gate redirect in `apps/mobile/__tests__/navigation.test.ts`
 
 ### Implementation for Phase 3
 
-- [ ] T014 [US4] Create root layout `apps/mobile/app/_layout.tsx` — auth gate (redirect to login if not authenticated), global providers (TanStack Query, theme)
-- [ ] T015 [US4] Create auth group layout `apps/mobile/app/(auth)/_layout.tsx` and login screen `apps/mobile/app/(auth)/login.tsx`
-- [ ] T016 [US4] Create tab layout `apps/mobile/app/(tabs)/_layout.tsx` — 5 tabs (Home, Events, Teachers, Bookings, Profile) with icons from `@expo/vector-icons`, platform-specific tab bar styling
-- [ ] T017 [P] [US4] Create Events tab stack `apps/mobile/app/(tabs)/events/_layout.tsx` — stack navigator with native transitions (push on iOS, material on Android)
-- [ ] T018 [P] [US4] Create Teachers tab stack `apps/mobile/app/(tabs)/teachers/_layout.tsx`
-- [ ] T019 [P] [US4] Create Profile tab stack with settings nesting `apps/mobile/app/(tabs)/profile/`
-- [ ] T020 [US4] Create not-found screen `apps/mobile/app/+not-found.tsx`
+- [x] T014 [US4] Create root layout `apps/mobile/app/_layout.tsx` — auth gate (redirect to login if not authenticated), global providers (TanStack Query, theme)
+- [x] T015 [US4] Create auth group layout `apps/mobile/app/(auth)/_layout.tsx` and login screen `apps/mobile/app/(auth)/login.tsx`
+- [x] T016 [US4] Create tab layout `apps/mobile/app/(tabs)/_layout.tsx` — 5 tabs (Home, Events, Teachers, Bookings, Profile) with icons from `@expo/vector-icons`, platform-specific tab bar styling
+- [x] T017 [P] [US4] Create Events tab stack `apps/mobile/app/(tabs)/events/_layout.tsx` — stack navigator with native transitions (push on iOS, material on Android)
+- [x] T018 [P] [US4] Create Teachers tab stack `apps/mobile/app/(tabs)/teachers/_layout.tsx`
+- [x] T019 [P] [US4] Create Profile tab stack with settings nesting `apps/mobile/app/(tabs)/profile/`
+- [x] T020 [US4] Create not-found screen `apps/mobile/app/+not-found.tsx`
 
 **Checkpoint**: 5-tab navigation functional. Auth gate redirects unauthenticated users. Platform-appropriate transitions.
 
@@ -91,17 +91,17 @@
 
 ### Tests for Phase 4
 
-- [ ] T021 [P] [US1] Unit tests for shared `useEvents` hook — query key generation, pagination, filter params in `packages/shared/src/hooks/__tests__/useEvents.test.ts`
-- [ ] T022 [P] [US1] Unit tests for Home screen rendering — event list, loading state, empty state in `apps/mobile/__tests__/screens/home.test.tsx`
-- [ ] T023 [P] [US2] Unit tests for RSVP flow — role selection, submission, error handling in `apps/mobile/__tests__/screens/rsvp.test.tsx`
+- [x] T021 [P] [US1] Unit tests for shared `useEvents` hook — query key generation, pagination, filter params in `packages/shared/src/hooks/__tests__/useEvents.test.ts`
+- [x] T022 [P] [US1] Unit tests for Home screen rendering — event list, loading state, empty state in `apps/mobile/__tests__/screens/home.test.tsx`
+- [x] T023 [P] [US2] Unit tests for RSVP flow — role selection, submission, error handling in `apps/mobile/__tests__/screens/rsvp.test.tsx`
 
 ### Implementation for Phase 4
 
-- [ ] T024 [US1] Create shared `useEvents` hook in `packages/shared/src/hooks/useEvents.ts` — TanStack Query hook wrapping `GET /api/events` with filter params, pagination, and cache key
-- [ ] T025 [US1] Create Home tab screen `apps/mobile/app/(tabs)/index.tsx` — FlatList of upcoming events using shared `EventCard` component (`.native.tsx`), pull-to-refresh, loading/empty states
-- [ ] T026 [US1] Create Events list screen `apps/mobile/app/(tabs)/events/index.tsx` — searchable, filterable event list with category filter chips
-- [ ] T027 [US1] Create Event detail screen `apps/mobile/app/(tabs)/events/[id].tsx` — full event details, map preview, attendee count, RSVP button
-- [ ] T028 [US2] Create RSVP action in Event detail — role selection bottom sheet, API submission, success/error feedback, navigate to bookings on success
+- [x] T024 [US1] Create shared `useEvents` hook in `packages/shared/src/hooks/useEvents.ts` — TanStack Query hook wrapping `GET /api/events` with filter params, pagination, and cache key
+- [x] T025 [US1] Create Home tab screen `apps/mobile/app/(tabs)/index.tsx` — FlatList of upcoming events using shared `EventCard` component (`.native.tsx`), pull-to-refresh, loading/empty states
+- [x] T026 [US1] Create Events list screen `apps/mobile/app/(tabs)/events/index.tsx` — searchable, filterable event list with category filter chips
+- [x] T027 [US1] Create Event detail screen `apps/mobile/app/(tabs)/events/[id].tsx` — full event details, map preview, attendee count, RSVP button
+- [x] T028 [US2] Create RSVP action in Event detail — role selection bottom sheet, API submission, success/error feedback, navigate to bookings on success
 
 **Checkpoint**: Event browsing and RSVP functional. Shared-ui EventCard renders on native.
 
@@ -113,16 +113,16 @@
 
 ### Tests for Phase 5
 
-- [ ] T029 [P] [US1] Unit tests for shared `useTeachers` hook in `packages/shared/src/hooks/__tests__/useTeachers.test.ts`
+- [x] T029 [P] [US1] Unit tests for shared `useTeachers` hook in `packages/shared/src/hooks/__tests__/useTeachers.test.ts`
 
 ### Implementation for Phase 5
 
-- [ ] T030 [US1] Create shared `useTeachers` hook in `packages/shared/src/hooks/useTeachers.ts`
-- [ ] T031 [US1] Create Teachers list screen `apps/mobile/app/(tabs)/teachers/index.tsx` — FlatList with search, certification badges
-- [ ] T032 [US1] Create Teacher detail screen `apps/mobile/app/(tabs)/teachers/[id].tsx` — profile, certifications, reviews, upcoming events
-- [ ] T033 [US4] Create Bookings screen `apps/mobile/app/(tabs)/bookings/index.tsx` — list of user's RSVPs grouped by upcoming/past
-- [ ] T034 [US4] Create Profile screen `apps/mobile/app/(tabs)/profile/index.tsx` — user info, social links, edit profile action
-- [ ] T035 [P] [US4] Create Notification settings screen `apps/mobile/app/(tabs)/profile/settings/notifications.tsx` — reuse preference types from Spec 015
+- [x] T030 [US1] Create shared `useTeachers` hook in `packages/shared/src/hooks/useTeachers.ts`
+- [x] T031 [US1] Create Teachers list screen `apps/mobile/app/(tabs)/teachers/index.tsx` — FlatList with search, certification badges
+- [x] T032 [US1] Create Teacher detail screen `apps/mobile/app/(tabs)/teachers/[id].tsx` — profile, certifications, reviews, upcoming events
+- [x] T033 [US4] Create Bookings screen `apps/mobile/app/(tabs)/bookings/index.tsx` — list of user's RSVPs grouped by upcoming/past
+- [x] T034 [US4] Create Profile screen `apps/mobile/app/(tabs)/profile/index.tsx` — user info, social links, edit profile action
+- [x] T035 [P] [US4] Create Notification settings screen `apps/mobile/app/(tabs)/profile/settings/notifications.tsx` — reuse preference types from Spec 015
 
 **Checkpoint**: All 5 tabs have content. Core mobile experience is complete.
 
@@ -134,15 +134,15 @@
 
 ### Tests for Phase 6
 
-- [ ] T036 [P] [US5] Unit tests for offline module — MMKV serialization, cache size management, LRU eviction in `apps/mobile/__tests__/offline.test.ts`
-- [ ] T037 [P] [US5] Unit tests for connectivity hook — online/offline state transitions, event listeners in `apps/mobile/__tests__/connectivity.test.ts`
+- [x] T036 [P] [US5] Unit tests for offline module — MMKV serialization, cache size management, LRU eviction in `apps/mobile/__tests__/offline.test.ts`
+- [x] T037 [P] [US5] Unit tests for connectivity hook — online/offline state transitions, event listeners in `apps/mobile/__tests__/connectivity.test.ts`
 
 ### Implementation for Phase 6
 
-- [ ] T038 [US5] Create offline module in `apps/mobile/lib/offline.ts` — TanStack Query persister using `react-native-mmkv`, cache size limit (50MB), LRU eviction strategy
-- [ ] T039 [US5] Create connectivity module in `apps/mobile/lib/connectivity.ts` — `useOnlineStatus()` hook using `@react-native-community/netinfo`, online/offline event handling
-- [ ] T040 [US5] Integrate offline persistence with TanStack Query in root layout — `PersistQueryClientProvider` with MMKV persister
-- [ ] T041 [US5] Add `OfflineBanner` (shared-ui `.native.tsx`) to root layout — visible when offline, auto-hides when online
+- [x] T038 [US5] Create offline module in `apps/mobile/lib/offline.ts` — TanStack Query persister using `react-native-mmkv`, cache size limit (50MB), LRU eviction strategy
+- [x] T039 [US5] Create connectivity module in `apps/mobile/lib/connectivity.ts` — `useOnlineStatus()` hook using `@react-native-community/netinfo`, online/offline event handling
+- [x] T040 [US5] Integrate offline persistence with TanStack Query in root layout — `PersistQueryClientProvider` with MMKV persister
+- [x] T041 [US5] Add `OfflineBanner` (shared-ui `.native.tsx`) to root layout — visible when offline, auto-hides when online
 
 **Checkpoint**: Cached data available offline. Connectivity transitions handled gracefully.
 
@@ -156,14 +156,14 @@
 
 ### Tests for Phase 7
 
-- [ ] T042 [P] [US6] Unit tests for push notification setup — permission request, token registration, notification tap handler in `apps/mobile/__tests__/push.test.ts`
+- [x] T042 [P] [US6] Unit tests for push notification setup — permission request, token registration, notification tap handler in `apps/mobile/__tests__/push.test.ts`
 
 ### Implementation for Phase 7
 
-- [ ] T043 [US6] Configure `expo-notifications` in `apps/mobile/app.json` — iOS APNs, Android FCM credentials
-- [ ] T044 [US6] Create push notification module in `apps/mobile/lib/push.ts` — request permission, register device token with server, handle foreground/background notifications
-- [ ] T045 [US6] Create `POST /api/notifications/devices` API route in `apps/web/src/app/api/notifications/devices/route.ts` — register device token for push delivery
-- [ ] T046 [US6] Implement notification tap deep linking — parse notification data, navigate to relevant screen using Expo Router
+- [x] T043 [US6] Configure `expo-notifications` in `apps/mobile/app.json` — iOS APNs, Android FCM credentials
+- [x] T044 [US6] Create push notification module in `apps/mobile/lib/push.ts` — request permission, register device token with server, handle foreground/background notifications
+- [x] T045 [US6] Create `POST /api/notifications/devices` API route in `apps/web/src/app/api/notifications/devices/route.ts` — register device token for push delivery
+- [x] T046 [US6] Implement notification tap deep linking — parse notification data, navigate to relevant screen using Expo Router
 
 **Checkpoint**: Push notifications delivered to device. Tapping navigates to relevant content.
 
@@ -173,11 +173,11 @@
 
 **Purpose**: Comprehensive testing, CI integration with EAS Build
 
-- [ ] T047 [P] Verify all shared-ui components render correctly on iOS simulator — snapshot test each of the 17 components in `apps/mobile/__tests__/shared-ui/`
+- [ ] T047 [P] Verify all shared-ui components render correctly on iOS simulator — snapshot test each of the 20 components in `apps/mobile/__tests__/shared-ui/`
 - [ ] T048 [P] Verify all shared-ui components render correctly on Android emulator
 - [ ] T049 Create Detox E2E test for login → browse events → RSVP flow on iOS in `apps/mobile/e2e/`
 - [ ] T050 [P] Create Detox E2E test for same flow on Android
-- [ ] T051 Add mobile CI step to `.github/workflows/ci.yml` — install, typecheck, unit test (no device-dependent E2E in CI)
+- [x] T051 Add mobile CI step to `.github/workflows/ci.yml` — install, typecheck, unit test (no device-dependent E2E in CI)
 - [ ] T052 Configure EAS Build in CI — preview builds on PR, production builds on main merge
 
 **Checkpoint**: All tests pass. CI builds mobile app.
@@ -188,22 +188,24 @@
 
 **Purpose**: iOS and Android specific polish
 
-- [ ] T053 [US4] iOS: Verify native back swipe gesture works correctly in all stack navigators
-- [ ] T054 [P] [US4] iOS: Add haptic feedback to RSVP confirmation and tab switches
-- [ ] T055 [P] [US4] iOS: Support Dynamic Type (system font size) for accessibility
-- [ ] T056 [US4] Android: Verify hardware back button navigation in all screens
-- [ ] T057 [P] [US4] Android: Configure material transitions (shared element transitions for event detail)
-- [ ] T058 [P] [US4] Android: Configure edge-to-edge display with proper status bar handling
+- [x] T053 [US4] iOS: Verify native back swipe gesture works correctly in all stack navigators
+- [x] T054 [P] [US4] iOS: Add haptic feedback to RSVP confirmation and tab switches
+- [x] T055 [P] [US4] iOS: Support Dynamic Type (system font size) for accessibility
+- [x] T056 [US4] Android: Verify hardware back button navigation in all screens
+- [x] T057 [P] [US4] Android: Configure material transitions (shared element transitions for event detail)
+- [x] T058 [P] [US4] Android: Configure edge-to-edge display with proper status bar handling
 
 ---
 
 ## Phase 10: Polish & Documentation
 
-- [ ] T059 Update `README.md` — add Spec 016 to specs table, add mobile workspace to project structure
-- [ ] T060 Update deferred mobile tasks in Spec 008 (T051–T079) — change status to "addressed by Spec 016"
+- [x] T059 Update `README.md` — add Spec 016 to specs table, add mobile workspace to project structure
+- [x] T060 Update deferred mobile tasks in Spec 008 (T051–T079) — change status to "addressed by Spec 016"
 - [ ] T061 Close GitHub issues #370–#375 (deferred mobile tasks) with reference to Spec 016
-- [ ] T062 Add mobile development section to `CONTRIBUTING.md` — Expo development workflow, simulator setup, EAS Build
-- [ ] T063 Run full validation checklist for web workspace (ensure no regressions)
+- [x] T062 Add mobile development section to `CONTRIBUTING.md` — Expo development workflow, simulator setup, EAS Build
+- [x] T063 Run full validation checklist for web workspace (ensure no regressions)
+- [x] T064 Add `apps/mobile` reference to root `tsconfig.json` so `tsc -b` includes mobile type-checking
+- [x] T065 Add `@acroyoga/mobile` to root `package.json` test script so `npm run test` runs mobile unit tests
 
 **Checkpoint**: Documentation updated. All deferred mobile tasks resolved. Web validation passes.
 

@@ -2,5 +2,6 @@
 export * from "./types";
 export * from "./api";
 export * from "./utils";
+export * from "./hooks";
 // Schemas: import from "@acroyoga/shared/schemas/<domain>" to avoid name collisions
 
