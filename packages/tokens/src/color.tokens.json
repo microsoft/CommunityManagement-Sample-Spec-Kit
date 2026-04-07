@@ -17,8 +17,8 @@
       }
     },
     "semantic": {
-      "success": { "$value": "#10B981", "$type": "color" },
-      "warning": { "$value": "#F59E0B", "$type": "color" },
+      "success": { "$value": "#047857", "$type": "color" },
+      "warning": { "$value": "#B45309", "$type": "color" },
       "error": { "$value": "#EF4444", "$type": "color" },
       "info": { "$value": "#3B82F6", "$type": "color" }
     },
@@ -36,7 +36,7 @@
       "workshop": { "$value": "#10B981", "$type": "color", "$description": "Workshop — Emerald" },
       "class": { "$value": "#3B82F6", "$type": "color", "$description": "Class — Blue" },
       "festival": { "$value": "#EC4899", "$type": "color", "$description": "Festival — Pink" },
-      "social": { "$value": "#F59E0B", "$type": "color", "$description": "Social — Amber" },
+      "social": { "$value": "#B45309", "$type": "color", "$description": "Social — Amber" },
       "retreat": { "$value": "#8B5CF6", "$type": "color", "$description": "Retreat — Purple" },
       "training": { "$value": "#14B8A6", "$type": "color", "$description": "Teacher Training — Teal" }
     },
@@ -55,7 +55,7 @@
         "workshop": { "$value": "#34D399", "$type": "color" },
         "class": { "$value": "#60A5FA", "$type": "color" },
         "festival": { "$value": "#F472B6", "$type": "color" },
-        "social": { "$value": "#FBBF24", "$type": "color" },
+        "social": { "$value": "#FCD34D", "$type": "color" },
         "retreat": { "$value": "#A78BFA", "$type": "color" },
         "training": { "$value": "#2DD4BF", "$type": "color" }
       }

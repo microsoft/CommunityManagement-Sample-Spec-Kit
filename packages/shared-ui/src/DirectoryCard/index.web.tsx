@@ -31,7 +31,12 @@ export function DirectoryCard({ member, onPress, labels, style, ...rest }: WebDi
       role="article"
       tabIndex={0}
       onClick={() => onPress?.(member.userId)}
-      onKeyDown={(e) => e.key === "Enter" && onPress?.(member.userId)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPress?.(member.userId);
+        }
+      }}
       aria-label={`Member card for ${member.displayName ?? unnamedLabel}`}
       style={{
         display: "flex",

@@ -14,6 +14,7 @@ export function Input({
   state = "default",
   errorMessage,
   disabled = false,
+  required = false,
   type = "text",
   name,
   id,
@@ -40,6 +41,11 @@ export function Input({
         }}
       >
         {label}
+        {required && (
+          <span aria-hidden="true" style={{ color: "var(--color-semantic-error, #ef4444)", marginLeft: "2px" }}>
+            *
+          </span>
+        )}
       </label>
       <input
         id={inputId}
@@ -48,6 +54,8 @@ export function Input({
         value={value}
         placeholder={placeholder}
         disabled={disabled}
+        required={required}
+        aria-required={required || undefined}
         onChange={handleChange}
         aria-invalid={state === "error"}
         aria-describedby={state === "error" && errorMessage ? `${inputId}-error` : undefined}

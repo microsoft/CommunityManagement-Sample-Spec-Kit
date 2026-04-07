@@ -82,3 +82,7 @@ export type { ModalProps } from "./Modal/Modal";
 
 export { Toast } from "./Toast/index.web";
 export type { ToastProps, ToastVariant } from "./Toast/Toast";
+
+export { SkipLink } from "./SkipLink/index.web";
+export type { SkipLinkProps } from "./SkipLink/SkipLink";
+

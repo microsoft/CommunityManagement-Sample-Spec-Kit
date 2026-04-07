@@ -16,6 +16,7 @@ export interface SelectProps {
   state?: SelectState;
   errorMessage?: string;
   disabled?: boolean;
+  required?: boolean;
   onValueChange?: (value: string) => void;
 }
 

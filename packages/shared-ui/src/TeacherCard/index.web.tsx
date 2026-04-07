@@ -14,7 +14,12 @@ export function TeacherCard({ teacher, onPress, style, ...rest }: WebTeacherCard
       role="article"
       tabIndex={0}
       onClick={() => onPress?.(teacher.id)}
-      onKeyDown={(e) => e.key === "Enter" && onPress?.(teacher.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPress?.(teacher.id);
+        }
+      }}
       style={{
         display: "flex",
         flexDirection: "column",

@@ -36,7 +36,12 @@ export function Skeleton({ lines, ...props }: WebSkeletonProps) {
         {Array.from({ length: lines }, (_, i) => (
           <SkeletonLine key={i} {...props} width={i === lines - 1 ? "75%" : "100%"} />
         ))}
-        <style>{`@keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+        <style>{`
+          @keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+          @media (prefers-reduced-motion: reduce) {
+            [style*="shared-ui-pulse"] { animation: none !important; opacity: 0.6; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -44,7 +49,12 @@ export function Skeleton({ lines, ...props }: WebSkeletonProps) {
   return (
     <>
       <SkeletonLine {...props} />
-      <style>{`@keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+      <style>{`
+        @keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @media (prefers-reduced-motion: reduce) {
+          [style*="shared-ui-pulse"] { animation: none !important; opacity: 0.6; }
+        }
+      `}</style>
     </>
   );
 }

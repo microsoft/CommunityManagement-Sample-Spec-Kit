@@ -33,7 +33,12 @@ export function LoadingSpinner({ size = "md", label = "Loading…", className, s
         ...style,
       }}
     >
-      <style>{`@keyframes shared-ui-spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes shared-ui-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+          [aria-label][role="status"] { animation: none !important; opacity: 0.7; }
+        }
+      `}</style>
     </span>
   );
 }

@@ -28,14 +28,14 @@
 
 **Purpose**: Install dev dependencies, update design tokens, and establish global accessibility foundation styles that all subsequent phases depend on.
 
-- [ ] T001 Install `vitest-axe` as devDependency in `packages/shared-ui/package.json`
+- [x] T001 Install `vitest-axe` as devDependency in `packages/shared-ui/package.json`
 - [ ] T002 Install `@axe-core/playwright` as devDependency in `apps/web/package.json`
-- [ ] T003 [P] Fix colour contrast tokens: update `color.semantic.warning` from `#F59E0B` to `#B45309`, `color.semantic.success` from `#10B981` to `#047857`, `color.category.social` from `#F59E0B` to `#B45309`, and `color.dark.category.social` from `#FBBF24` to `#FCD34D` in `packages/tokens/src/color.tokens.json`
-- [ ] T004 [P] Add new accessibility tokens: `global.focus-ring-width` (2px), `global.focus-ring-offset` (2px), `global.min-touch-target` (44px) in `packages/tokens/src/global.tokens.json`
-- [ ] T005 Rebuild design tokens by running `npm run tokens:build` to propagate token changes
-- [ ] T006 [P] Add global `focus-visible` outline styles using `focus-ring-width` and `focus-ring-offset` tokens in `apps/web/src/app/globals.css`
-- [ ] T007 [P] Add global `@media (prefers-reduced-motion: reduce)` rule to disable non-essential animations in `apps/web/src/app/globals.css`
-- [ ] T008 [P] Add `.skip-link` CSS styles (sr-only default, visible on `:focus`) in `apps/web/src/app/globals.css`
+- [x] T003 [P] Fix colour contrast tokens: update `color.semantic.warning` from `#F59E0B` to `#B45309`, `color.semantic.success` from `#10B981` to `#047857`, `color.category.social` from `#F59E0B` to `#B45309`, and `color.dark.category.social` from `#FBBF24` to `#FCD34D` in `packages/tokens/src/color.tokens.json`
+- [x] T004 [P] Add new accessibility tokens: `global.focus-ring-width` (2px), `global.focus-ring-offset` (2px), `global.min-touch-target` (44px) in `packages/tokens/src/global.tokens.json`
+- [x] T005 Rebuild design tokens by running `npm run tokens:build` to propagate token changes
+- [x] T006 [P] Add global `focus-visible` outline styles using `focus-ring-width` and `focus-ring-offset` tokens in `apps/web/src/app/globals.css`
+- [x] T007 [P] Add global `@media (prefers-reduced-motion: reduce)` rule to disable non-essential animations in `apps/web/src/app/globals.css`
+- [x] T008 [P] Add `.skip-link` CSS styles (sr-only default, visible on `:focus`) in `apps/web/src/app/globals.css`
 - [ ] T009 Create axe-core shared configuration with WCAG 2.1 AA ruleset and Leaflet waiver in `apps/web/src/test/a11y/axe-config.ts`
 - [ ] T010 [P] Create shared vitest-axe test helper with `toHaveNoViolations` extension in `packages/shared-ui/src/__tests__/a11y-helpers.ts`
 - [ ] T011 [P] Add `test:a11y` npm script to root `package.json` and workspace `package.json` files for shared-ui and web
@@ -50,14 +50,14 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T012 Create `SkipLink` shared interface with `targetId` and `label` props in `packages/shared-ui/src/SkipLink/SkipLink.tsx`
-- [ ] T013 Implement `SkipLink` web version as visually-hidden `<a>` with `:focus` visibility in `packages/shared-ui/src/SkipLink/index.web.tsx`
-- [ ] T014 [P] Implement `SkipLink` native version as no-op component in `packages/shared-ui/src/SkipLink/index.native.tsx`
-- [ ] T015 Write SkipLink unit test verifying visibility on focus and target navigation in `packages/shared-ui/src/SkipLink/SkipLink.test.tsx`
+- [x] T012 Create `SkipLink` shared interface with `targetId` and `label` props in `packages/shared-ui/src/SkipLink/SkipLink.tsx`
+- [x] T013 Implement `SkipLink` web version as visually-hidden `<a>` with `:focus` visibility in `packages/shared-ui/src/SkipLink/index.web.tsx`
+- [x] T014 [P] Implement `SkipLink` native version as no-op component in `packages/shared-ui/src/SkipLink/index.native.tsx`
+- [x] T015 Write SkipLink unit test verifying visibility on focus and target navigation in `packages/shared-ui/src/SkipLink/SkipLink.test.tsx`
 - [ ] T016 Write SkipLink axe-core accessibility test in `packages/shared-ui/src/SkipLink/SkipLink.a11y.test.tsx`
-- [ ] T017 Export SkipLink from shared-ui barrel file in `packages/shared-ui/src/index.ts`
-- [ ] T018 Create `useRovingTabIndex` hook implementing the ARIA APG roving tabindex pattern (ArrowUp/Down/Left/Right, Home/End, tabIndex management) in `apps/web/src/hooks/useRovingTabIndex.ts`
-- [ ] T019 Write unit tests for `useRovingTabIndex` covering arrow key navigation, Home/End, expand/collapse, and tabIndex state in `apps/web/src/hooks/__tests__/useRovingTabIndex.test.ts`
+- [x] T017 Export SkipLink from shared-ui barrel file in `packages/shared-ui/src/index.ts`
+- [x] T018 Create `useRovingTabIndex` hook implementing the ARIA APG roving tabindex pattern (ArrowUp/Down/Left/Right, Home/End, tabIndex management) in `apps/web/src/hooks/useRovingTabIndex.ts`
+- [x] T019 Write unit tests for `useRovingTabIndex` covering arrow key navigation, Home/End, expand/collapse, and tabIndex state in `apps/web/src/hooks/__tests__/useRovingTabIndex.test.ts`
 
 **Checkpoint**: SkipLink component and roving tabindex hook ready. User story implementation can now begin in parallel.
 
@@ -71,11 +71,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Add SkipLink as first child of `<body>` and wrap `{children}` in `<main id="main-content" tabIndex={-1}>` in `apps/web/src/app/layout.tsx`
+- [x] T020 [US1] Add SkipLink as first child of `<body>` and wrap `{children}` in `<div id="main-content" tabIndex={-1}>` in `apps/web/src/app/layout.tsx`
 - [ ] T021 [P] [US1] Add `focus-visible` outline using token-based CSS to Button component in `packages/shared-ui/src/Button/index.web.tsx`
-- [ ] T022 [P] [US1] Fix EventCard semantics: change role to `link` (or wrap in `<a>`), add Space key handler alongside Enter, add `focus-visible` outline in `packages/shared-ui/src/EventCard/index.web.tsx`
-- [ ] T023 [P] [US1] Fix TeacherCard semantics: same pattern as EventCard — role, Space key, focus-visible in `packages/shared-ui/src/TeacherCard/index.web.tsx`
-- [ ] T024 [P] [US1] Fix DirectoryCard semantics: same pattern as EventCard — role, Space key, focus-visible in `packages/shared-ui/src/DirectoryCard/index.web.tsx`
+- [x] T022 [P] [US1] Fix EventCard semantics: add Space key handler alongside Enter in `packages/shared-ui/src/EventCard/index.web.tsx`
+- [x] T023 [P] [US1] Fix TeacherCard semantics: add Space key handler alongside Enter in `packages/shared-ui/src/TeacherCard/index.web.tsx`
+- [x] T024 [P] [US1] Fix DirectoryCard semantics: add Space key handler alongside Enter in `packages/shared-ui/src/DirectoryCard/index.web.tsx`
 - [ ] T025 [US1] Integrate `useRovingTabIndex` into LocationTree: implement ArrowUp/Down/Left/Right, Home/End, add `aria-level` on treeitems, add `role="group"` with `aria-label` on child containers in `packages/shared-ui/src/LocationTree/index.web.tsx`
 - [ ] T026 [US1] Add arrow-key navigation to CalendarPanel: Left/Right for prev/next day, Up/Down for prev/next week, Home/End for first/last day of week, PageUp/PageDown for prev/next month in `apps/web/src/components/events/CalendarPanel.tsx`
 - [ ] T027 [P] [US1] Ensure event filter pills and toggle buttons are activatable via Enter and Space when focused in `apps/web/src/components/events/EventFilters.tsx`
@@ -110,7 +110,7 @@
 - [ ] T043 [US2] Verify landmark structure (banner, navigation, main, contentinfo) is present on all pages via layout.tsx and NavHeader — fix any missing landmarks in `apps/web/src/app/layout.tsx`
 - [ ] T044 [P] [US2] Add meaningful `aria-label` to all icon-only buttons (close, notification bell, social icons) in `packages/shared-ui/src/SocialIcons/index.web.tsx` and `apps/web/src/components/NotificationBell.tsx`
 - [ ] T045 [P] [US2] Ensure star ratings and verification badges announce as meaningful text (e.g., "4.5 out of 5 stars", "Verified teacher") in `packages/shared-ui/src/TeacherCard/index.web.tsx` and teacher profile page
-- [ ] T046 [US2] Add `aria-atomic="true"` to Toast live region in `packages/shared-ui/src/Toast/index.web.tsx`
+- [x] T046 [US2] Add `aria-atomic="true"` to Toast live region in `packages/shared-ui/src/Toast/index.web.tsx`
 - [ ] T047 [US2] Add `aria-live="polite"` live region announcing updated result count when filters change in `apps/web/src/components/events/ExplorerShell.tsx`
 - [ ] T048 [US2] Ensure RSVP confirmation message uses `aria-live="assertive"` to auto-announce in `apps/web/src/components/events/EventDetailPage.tsx`
 - [ ] T049 [P] [US2] Ensure all decorative images use `aria-hidden="true"` or empty `alt=""` and all informational images have descriptive `alt` text across all shared-ui components
@@ -127,10 +127,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T050 [US3] Add `aria-modal="true"` attribute to the `<dialog>` element in `packages/shared-ui/src/Modal/index.web.tsx`
-- [ ] T051 [US3] Capture `document.activeElement` as trigger reference before calling `showModal()` in `packages/shared-ui/src/Modal/index.web.tsx`
-- [ ] T052 [US3] Move focus to first focusable child inside modal on open via `useEffect` in `packages/shared-ui/src/Modal/index.web.tsx`
-- [ ] T053 [US3] Restore focus to captured trigger element on modal close in `packages/shared-ui/src/Modal/index.web.tsx`
+- [x] T050 [US3] Add `aria-modal="true"` attribute to the `<dialog>` element in `packages/shared-ui/src/Modal/index.web.tsx`
+- [x] T051 [US3] Capture `document.activeElement` as trigger reference before calling `showModal()` in `packages/shared-ui/src/Modal/index.web.tsx`
+- [x] T052 [US3] Move focus to first focusable child inside modal on open via `useEffect` in `packages/shared-ui/src/Modal/index.web.tsx`
+- [x] T053 [US3] Restore focus to captured trigger element on modal close in `packages/shared-ui/src/Modal/index.web.tsx`
 - [ ] T054 [US3] Write Modal accessibility test verifying: focus moves into modal on open, Tab cycles within modal only, Escape closes modal, focus restores to trigger, `aria-modal="true"` present in `packages/shared-ui/src/Modal/Modal.a11y.test.tsx`
 - [ ] T055 [US3] Verify SharePanel modal (event detail page) correctly traps focus and restores on close in `apps/web/src/components/events/SharePanel.tsx`
 
@@ -146,9 +146,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T056 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all Input fields in `packages/shared-ui/src/Input/index.web.tsx`
-- [ ] T057 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all TextArea fields in `packages/shared-ui/src/TextArea/index.web.tsx`
-- [ ] T058 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all Select fields in `packages/shared-ui/src/Select/index.web.tsx`
+- [x] T056 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all Input fields in `packages/shared-ui/src/Input/index.web.tsx`
+- [x] T057 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all TextArea fields in `packages/shared-ui/src/TextArea/index.web.tsx`
+- [x] T058 [P] [US4] Verify/add programmatic `<label>` associations and `aria-required` on all Select fields in `packages/shared-ui/src/Select/index.web.tsx`
 - [ ] T059 [US4] Ensure validation error messages use `aria-describedby` to associate errors with their fields, and errors are announced via `aria-live` in `packages/shared-ui/src/Input/index.web.tsx`, `TextArea/index.web.tsx`, `Select/index.web.tsx`
 - [ ] T060 [US4] Add format guidance (e.g., `aria-describedby` pointing to help text) for fields expecting specific formats (URLs, dates) across form components
 - [ ] T061 [US4] Fix notification preferences table: ensure each checkbox announces both row header (notification type) and column header (channel) via `<th scope="row">`, `<th scope="col">`, and proper `<td>` associations in `apps/web/src/components/NotificationPreferences.tsx` (or `apps/web/src/app/settings/notifications/page.tsx`)
@@ -192,8 +192,8 @@
 
 > Note: The global `@media (prefers-reduced-motion: reduce)` rule was added in Phase 1 (T007). This phase handles component-specific overrides.
 
-- [ ] T072 [P] [US6] Replace Skeleton pulse animation with static 60% opacity when reduced-motion is active in `packages/shared-ui/src/Skeleton/index.web.tsx`
-- [ ] T073 [P] [US6] Replace LoadingSpinner continuous spin with opacity pulse at low frequency when reduced-motion is active in `packages/shared-ui/src/LoadingSpinner/index.web.tsx`
+- [x] T072 [P] [US6] Replace Skeleton pulse animation with static 60% opacity when reduced-motion is active in `packages/shared-ui/src/Skeleton/index.web.tsx`
+- [x] T073 [P] [US6] Replace LoadingSpinner continuous spin with opacity pulse at low frequency when reduced-motion is active in `packages/shared-ui/src/LoadingSpinner/index.web.tsx`
 - [ ] T074 [P] [US6] Remove or simplify Toast slide-in animation to instant appearance when reduced-motion is active in `packages/shared-ui/src/Toast/index.web.tsx`
 - [ ] T075 [P] [US6] Replace card hover scale/transform effects with simple opacity/colour change when reduced-motion is active in `packages/shared-ui/src/EventCard/index.web.tsx`, `TeacherCard/index.web.tsx`, `DirectoryCard/index.web.tsx`
 - [ ] T076 [P] [US6] Write axe-core a11y test for Skeleton component in `packages/shared-ui/src/Skeleton/Skeleton.a11y.test.tsx`

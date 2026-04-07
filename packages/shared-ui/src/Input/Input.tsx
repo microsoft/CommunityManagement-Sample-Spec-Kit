@@ -9,6 +9,7 @@ export interface InputProps {
   state?: InputState;
   errorMessage?: string;
   disabled?: boolean;
+  required?: boolean;
   type?: string;
   onChangeText?: (text: string) => void;
 }

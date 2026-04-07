@@ -14,6 +14,7 @@ export function TextArea({
   state = "default",
   errorMessage,
   disabled = false,
+  required = false,
   rows = 3,
   maxLength,
   name,
@@ -41,6 +42,11 @@ export function TextArea({
         }}
       >
         {label}
+        {required && (
+          <span aria-hidden="true" style={{ color: "var(--color-semantic-error, #ef4444)", marginLeft: "2px" }}>
+            *
+          </span>
+        )}
       </label>
       <textarea
         id={textareaId}
@@ -48,6 +54,8 @@ export function TextArea({
         value={value}
         placeholder={placeholder}
         disabled={disabled}
+        required={required}
+        aria-required={required || undefined}
         rows={rows}
         maxLength={maxLength}
         onChange={handleChange}

@@ -18,5 +18,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest-axe": "^0.1.0"
   }
 }

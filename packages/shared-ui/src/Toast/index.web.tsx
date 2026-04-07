@@ -33,6 +33,7 @@ export function Toast({ message, variant = "info", visible, onDismiss }: ToastPr
     <div
       role="status"
       aria-live="polite"
+      aria-atomic="true"
       style={{
         position: "fixed",
         bottom: "var(--spacing-6, 24px)",

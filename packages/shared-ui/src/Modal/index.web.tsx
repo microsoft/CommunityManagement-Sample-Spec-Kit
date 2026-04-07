@@ -5,12 +5,20 @@ import type { WebModalProps } from "./Modal.js";
 
 export function Modal({ open, title, children, onClose, className, style }: WebModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<Element | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (open && !dialog.open) {
+      // Capture the element that triggered the modal so we can restore focus on close
+      triggerRef.current = document.activeElement;
       dialog.showModal();
+      // Move focus to the first focusable element inside the dialog
+      const focusable = dialog.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -19,7 +27,14 @@ export function Modal({ open, title, children, onClose, className, style }: WebM
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    const handleClose = () => onClose();
+    const handleClose = () => {
+      onClose();
+      // Restore focus to the element that opened the modal
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus();
+      }
+      triggerRef.current = null;
+    };
     dialog.addEventListener("close", handleClose);
     return () => dialog.removeEventListener("close", handleClose);
   }, [onClose]);
@@ -29,6 +44,7 @@ export function Modal({ open, title, children, onClose, className, style }: WebM
       ref={dialogRef}
       className={className}
       aria-labelledby="modal-title"
+      aria-modal="true"
       style={{
         border: "none",
         borderRadius: "var(--radius-lg, 12px)",

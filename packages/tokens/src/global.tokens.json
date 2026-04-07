@@ -5,6 +5,21 @@
       "$type": "shadow",
       "$description": "Focus ring for interactive elements"
     },
+    "focus-ring-width": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "Width of focus-visible outline (WCAG 2.4.11)"
+    },
+    "focus-ring-offset": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "Offset of focus-visible outline from element boundary"
+    },
+    "min-touch-target": {
+      "$value": "44px",
+      "$type": "dimension",
+      "$description": "Minimum touch target size per WCAG 2.5.5"
+    },
     "transition-fast": {
       "$value": "150ms",
       "$type": "dimension",
