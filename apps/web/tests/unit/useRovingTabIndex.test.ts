@@ -85,6 +85,8 @@ describe("useRovingTabIndex", () => {
     const { result } = renderHook(() => useRovingTabIndex({ count: 0 }));
     act(() => result.current.onKeyDown(makeKeyEvent("ArrowDown")));
     expect(result.current.focusedIndex).toBe(0);
+    // getTabIndex returns -1 for all indices when count is 0
+    expect(result.current.getTabIndex(0)).toBe(-1);
   });
 
   it("setFocusedIndex updates focus", () => {

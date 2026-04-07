@@ -1,6 +1,14 @@
 import React from "react";
 import type { WebSkeletonProps, SkeletonVariant } from "./Skeleton.js";
 
+const SKELETON_STYLE = `
+  @keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .shared-ui-skeleton { animation: shared-ui-pulse 1.5s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .shared-ui-skeleton { animation: none !important; opacity: 0.6; }
+  }
+`;
+
 const variantStyles: Record<SkeletonVariant, React.CSSProperties> = {
   text: { borderRadius: "var(--radius-sm, 4px)", height: "1em", width: "100%" },
   circular: { borderRadius: "50%" },
@@ -14,12 +22,11 @@ function SkeletonLine({ variant = "text", width, height, className, style }: Web
 
   return (
     <span
-      className={className}
+      className={`shared-ui-skeleton${className ? ` ${className}` : ""}`}
       aria-hidden="true"
       style={{
         display: "block",
         backgroundColor: "var(--color-neutral-200)",
-        animation: "shared-ui-pulse 1.5s ease-in-out infinite",
         ...v,
         width: resolvedWidth,
         height: resolvedHeight,
@@ -36,12 +43,7 @@ export function Skeleton({ lines, ...props }: WebSkeletonProps) {
         {Array.from({ length: lines }, (_, i) => (
           <SkeletonLine key={i} {...props} width={i === lines - 1 ? "75%" : "100%"} />
         ))}
-        <style>{`
-          @keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-          @media (prefers-reduced-motion: reduce) {
-            [style*="shared-ui-pulse"] { animation: none !important; opacity: 0.6; }
-          }
-        `}</style>
+        <style>{SKELETON_STYLE}</style>
       </div>
     );
   }
@@ -49,12 +51,7 @@ export function Skeleton({ lines, ...props }: WebSkeletonProps) {
   return (
     <>
       <SkeletonLine {...props} />
-      <style>{`
-        @keyframes shared-ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @media (prefers-reduced-motion: reduce) {
-          [style*="shared-ui-pulse"] { animation: none !important; opacity: 0.6; }
-        }
-      `}</style>
+      <style>{SKELETON_STYLE}</style>
     </>
   );
 }

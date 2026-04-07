@@ -4,7 +4,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { getLocaleDirection } from "@acroyoga/shared/types/i18n";
 import type { Locale } from "@acroyoga/shared/types/i18n";
 import Providers from "@/components/Providers";
-import { SkipLink } from "@acroyoga/shared-ui/SkipLink";
+import { SkipLink } from "@acroyoga/shared-ui";
 
 export const metadata = {
   title: "AcroYoga Community",

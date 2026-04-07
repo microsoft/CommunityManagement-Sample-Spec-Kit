@@ -37,8 +37,8 @@ export function useRovingTabIndex({
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   const getTabIndex = useCallback(
-    (index: number): 0 | -1 => (index === focusedIndex ? 0 : -1),
-    [focusedIndex],
+    (index: number): 0 | -1 => (count > 0 && index === focusedIndex ? 0 : -1),
+    [count, focusedIndex],
   );
 
   const onKeyDown = useCallback(

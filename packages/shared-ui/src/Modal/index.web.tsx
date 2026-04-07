@@ -16,7 +16,7 @@ export function Modal({ open, title, children, onClose, className, style }: WebM
       dialog.showModal();
       // Move focus to the first focusable element inside the dialog
       const focusable = dialog.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        'button:not([disabled]):not([aria-hidden="true"]), [href]:not([aria-hidden="true"]), input:not([disabled]):not([aria-hidden="true"]), select:not([disabled]):not([aria-hidden="true"]), textarea:not([disabled]):not([aria-hidden="true"]), [tabindex]:not([tabindex="-1"]):not([disabled]):not([aria-hidden="true"])',
       );
       focusable?.focus();
     } else if (!open && dialog.open) {

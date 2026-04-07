@@ -1,6 +1,14 @@
 import React from "react";
 import type { WebLoadingSpinnerProps, SpinnerSize } from "./LoadingSpinner.js";
 
+const SPINNER_STYLE = `
+  @keyframes shared-ui-spin { to { transform: rotate(360deg); } }
+  .shared-ui-spinner { animation: shared-ui-spin 0.6s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .shared-ui-spinner { animation: none !important; opacity: 0.7; }
+  }
+`;
+
 const sizeMap: Record<SpinnerSize, string> = {
   sm: "16px",
   md: "24px",
@@ -19,7 +27,7 @@ export function LoadingSpinner({ size = "md", label = "Loading…", className, s
 
   return (
     <span
-      className={className}
+      className={`shared-ui-spinner${className ? ` ${className}` : ""}`}
       role="status"
       aria-label={label}
       style={{
@@ -29,16 +37,10 @@ export function LoadingSpinner({ size = "md", label = "Loading…", className, s
         border: `${bw} solid var(--color-neutral-200)`,
         borderTopColor: "var(--color-brand-primary, #6366f1)",
         borderRadius: "50%",
-        animation: "shared-ui-spin 0.6s linear infinite",
         ...style,
       }}
     >
-      <style>{`
-        @keyframes shared-ui-spin { to { transform: rotate(360deg); } }
-        @media (prefers-reduced-motion: reduce) {
-          [aria-label][role="status"] { animation: none !important; opacity: 0.7; }
-        }
-      `}</style>
+      <style>{SPINNER_STYLE}</style>
     </span>
   );
 }
