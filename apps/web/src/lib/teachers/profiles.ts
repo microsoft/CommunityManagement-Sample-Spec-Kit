@@ -1,5 +1,7 @@
 import { db } from "@/lib/db/client";
 import { escapeIlike } from "@/lib/db/utils";
+import { unstable_cache } from "next/cache";
+import { safeRevalidateTag } from "@/lib/cache-utils";
 import type {
   TeacherProfile,
   TeacherProfileDetail,
@@ -97,6 +99,7 @@ export async function updateTeacherProfile(
                is_deleted, deleted_at, created_at, updated_at`,
     values,
   );
+  safeRevalidateTag("teachers");
   return result.rows[0] ?? null;
 }
 
@@ -166,10 +169,10 @@ export async function searchTeachers(options: {
   const total = parseInt(countResult.rows[0].count, 10);
 
   const offset = (page - 1) * limit;
-  const result = await db().query<TeacherProfile>(
+  const result = await db().query<TeacherProfile & { user_name: string }>(
     `SELECT tp.id, tp.user_id, tp.bio, tp.specialties, tp.badge_status,
             tp.aggregate_rating, tp.review_count, tp.is_deleted, tp.deleted_at,
-            tp.created_at, tp.updated_at
+            tp.created_at, tp.updated_at, u.name as user_name
      FROM teacher_profiles tp
      JOIN users u ON u.id = tp.user_id
      WHERE ${where}
@@ -180,6 +183,16 @@ export async function searchTeachers(options: {
 
   return { teachers: result.rows, total };
 }
+
+/**
+ * Cached wrapper around searchTeachers with 60s TTL.
+ * Invalidated by revalidateTag("teachers") on writes.
+ */
+export const searchTeachersCached = unstable_cache(
+  (options: Parameters<typeof searchTeachers>[0]) => searchTeachers(options),
+  ["teachers-list"],
+  { tags: ["teachers"], revalidate: 60 },
+);
 
 export async function deleteTeacherProfile(profileId: string): Promise<boolean> {
   // Check existence before update (PGlite rowCount unreliable)
@@ -210,5 +223,6 @@ export async function deleteTeacherProfile(profileId: string): Promise<boolean> 
     [profileId],
   );
 
+  safeRevalidateTag("teachers");
   return true;
 }

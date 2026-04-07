@@ -71,6 +71,7 @@ export default function EventCard({ event }: EventCardProps) {
             alt=""
             width={64}
             height={64}
+            sizes="64px"
             className="w-16 h-16 rounded-md object-cover ms-3 flex-shrink-0"
           />
         )}

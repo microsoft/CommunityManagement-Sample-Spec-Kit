@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import type { WebLocationTreeProps } from "./LocationTree.js";
 import type { LocationNode } from "@acroyoga/shared/types/explorer";

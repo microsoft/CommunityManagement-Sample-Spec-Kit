@@ -29,6 +29,9 @@ function loadEnv(): Env {
 
 let _env: Env | null = null;
 
+export const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+
 export function env(): Env {
   if (!_env) {
     _env = loadEnv();

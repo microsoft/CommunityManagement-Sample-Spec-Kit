@@ -416,6 +416,12 @@
     "unauthorized": "Unauthorized access",
     "forbidden": "You do not have permission to access this resource.",
     "serverError": "An internal server error occurred.",
-    "timeout": "The request timed out. Please try again."
+    "timeout": "The request timed out. Please try again.",
+    "generic": "Something went wrong.",
+    "tryAgain": "Try again",
+    "events": "Could not load events. Please try again.",
+    "teachers": "Could not load teachers. Please try again.",
+    "directory": "Could not load members. Please try again.",
+    "profile": "Could not load this profile. Please try again."
   }
 }
