@@ -1,6 +1,7 @@
 import { db } from "@/lib/db/client";
 import { escapeIlike } from "@/lib/db/utils";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { unstable_cache } from "next/cache";
+import { safeRevalidateTag } from "@/lib/cache-utils";
 import type {
   EventSummary,
   EventSummaryWithCoords,
@@ -211,7 +212,7 @@ export async function listEvents(query: ListEventsQuery): Promise<ListEventsResp
 
 /**
  * Cached wrapper around listEvents with 60s TTL.
- * Invalidated by revalidateTag("events", "default") on writes.
+ * Invalidated by revalidateTag("events") on writes.
  */
 export const listEventsCached = unstable_cache(
   (query: ListEventsQuery) => listEvents(query),
@@ -338,7 +339,7 @@ export async function createEvent(data: CreateEventRequest, createdBy: string): 
   );
 
   const event = await getEventById(result.rows[0].id);
-  revalidateTag("events", "default");
+  safeRevalidateTag("events");
   return event!;
 }
 
@@ -383,7 +384,7 @@ export async function updateEvent(id: string, data: UpdateEventRequest): Promise
     `UPDATE events SET ${sets.join(", ")} WHERE id = $${idx}`,
     params,
   );
-  revalidateTag("events", "default");
+  safeRevalidateTag("events");
   return getEventById(id);
 }
 
@@ -417,7 +418,7 @@ export async function cancelEvent(id: string): Promise<EventDetail | null> {
     // Notification failure should not block event cancellation
   }
 
-  revalidateTag("events", "default");
+  safeRevalidateTag("events");
   return getEventById(id);
 }
 
@@ -425,6 +426,6 @@ export async function cancelEvent(id: string): Promise<EventDetail | null> {
 
 export async function deleteEvent(id: string): Promise<boolean> {
   const result = await db().query("DELETE FROM events WHERE id = $1", [id]);
-  revalidateTag("events", "default");
+  safeRevalidateTag("events");
   return (result.rowCount ?? 0) > 0;
 }

@@ -2,8 +2,6 @@ import { ImageResponse } from "next/og";
 import { NextRequest, NextResponse } from "next/server";
 import { getTeacherProfile } from "@/lib/teachers/profiles";
 
-export const runtime = "edge";
-
 const SIZE = { width: 1200, height: 630 };
 
 function truncate(text: string, max: number): string {
@@ -47,6 +45,7 @@ export async function GET(
         {/* Profile */}
         <div style={{ display: "flex", gap: "40px", alignItems: "center" }}>
           {firstPhoto ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- OG ImageResponse uses satori; next/image is unsupported */
             <img
               src={firstPhoto}
               width={200}

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db/client";
 import { escapeIlike } from "@/lib/db/utils";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { unstable_cache } from "next/cache";
+import { safeRevalidateTag } from "@/lib/cache-utils";
 import type {
   TeacherProfile,
   TeacherProfileDetail,
@@ -98,7 +99,7 @@ export async function updateTeacherProfile(
                is_deleted, deleted_at, created_at, updated_at`,
     values,
   );
-  revalidateTag("teachers", "default");
+  safeRevalidateTag("teachers");
   return result.rows[0] ?? null;
 }
 
@@ -185,7 +186,7 @@ export async function searchTeachers(options: {
 
 /**
  * Cached wrapper around searchTeachers with 60s TTL.
- * Invalidated by revalidateTag("teachers", "default") on writes.
+ * Invalidated by revalidateTag("teachers") on writes.
  */
 export const searchTeachersCached = unstable_cache(
   (options: Parameters<typeof searchTeachers>[0]) => searchTeachers(options),
@@ -222,6 +223,6 @@ export async function deleteTeacherProfile(profileId: string): Promise<boolean> 
     [profileId],
   );
 
-  revalidateTag("teachers", "default");
+  safeRevalidateTag("teachers");
   return true;
 }

@@ -1,9 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest, NextResponse } from "next/server";
 import { getEventById } from "@/lib/events/service";
-import { BASE_URL } from "@/lib/config";
-
-export const runtime = "edge";
 
 const SIZE = { width: 1200, height: 630 };
 

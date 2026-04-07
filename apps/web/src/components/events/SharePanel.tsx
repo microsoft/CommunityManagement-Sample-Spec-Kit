@@ -100,11 +100,13 @@ export default function SharePanel({ meta }: SharePanelProps) {
       </button>
 
       {open && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- dialog role is interactive per WAI-ARIA
         <div
           role="dialog"
           aria-modal="true"
           aria-label={msg.shareEvent}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          tabIndex={-1}
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
