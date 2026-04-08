@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expectNoA11yViolations } from "../__tests__/a11y-helpers.js";
 import { Modal } from "./index.web.js";
