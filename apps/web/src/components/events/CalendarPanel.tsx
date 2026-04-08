@@ -155,16 +155,16 @@ export default function CalendarPanel({
       </div>
 
       {/* Month view — fills remaining space, no scroll */}
-      <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }} onKeyDown={handleGridKeyDown}>
-        {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} />}
+      <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }}>
+        {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} onKeyDown={handleGridKeyDown} />}
       </div>
     </div>
   );
 }
 
-function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthGrid; selectedDay: Date | null; onDayClick: (date: Date) => void; showCounts: boolean }) {
+function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { grid: MonthGrid; selectedDay: Date | null; onDayClick: (date: Date) => void; showCounts: boolean; onKeyDown: React.KeyboardEventHandler<HTMLDivElement> }) {
   return (
-    <div role="grid" aria-label={msg.ariaMonthView} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div role="grid" aria-label={msg.ariaMonthView} style={{ display: "flex", flexDirection: "column", height: "100%" }} onKeyDown={onKeyDown} tabIndex={0}>
       <div
         role="row"
         style={{

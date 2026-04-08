@@ -162,7 +162,6 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
           role="tabpanel"
           aria-labelledby="tab-filters"
           aria-label={msg.ariaLocationFilter}
-          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           className={`explorer-shell__sidebar ${mobilePanel !== "filters" ? "explorer-shell__sidebar--hidden-mobile" : ""}`}
         >
@@ -182,7 +181,6 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
               role="tabpanel"
               aria-labelledby="tab-list"
               aria-label={msg.ariaEventCalendar}
-              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
               className="explorer-shell__calendar"
             >
@@ -253,7 +251,6 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
             role="tabpanel"
             aria-labelledby="tab-map"
             aria-label={msg.ariaEventMap}
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
             className={`explorer-shell__map ${mobilePanel !== "map" ? "explorer-shell__map--hidden-mobile" : ""}`}
           >
