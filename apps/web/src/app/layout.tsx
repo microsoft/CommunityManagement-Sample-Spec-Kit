@@ -26,6 +26,7 @@ export default async function RootLayout({
         <SkipLink targetId="main-content" label="Skip to main content" />
         <NextIntlClientProvider messages={messages}>
           <Providers>
+            {/* tabIndex={-1} is required so the skip link can programmatically focus this element */}
             <main id="main-content" tabIndex={-1}>
               {children}
             </main>

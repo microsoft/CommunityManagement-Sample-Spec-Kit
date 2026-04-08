@@ -7,7 +7,8 @@ export const axe = configureAxe({
 
 export async function expectNoA11yViolations(container: HTMLElement) {
   const results = await axe(container);
-  // Use the raw violation array for assertions to avoid type augmentation issues
+  // vitest-axe exports toHaveNoViolations as a type-only export in its .d.ts which causes
+  // TS2339 when used via expect.extend. We assert on violations directly instead.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((results as any).violations).toEqual([]);
 }
