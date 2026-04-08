@@ -128,13 +128,24 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
 
   return (
     <div className="explorer-shell">
+      {/* Live region for result count announcements */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", borderWidth: 0 }}
+      >
+        {`Showing ${filteredEvents.length} event${filteredEvents.length !== 1 ? "s" : ""}`}
+      </div>
       {/* Mobile tab bar */}
       <div className="explorer-shell__tabs" role="tablist" aria-label={msg.ariaExplorerPanels}>
         {(["list", "map", "filters"] as MobilePanel[]).map((panel) => (
           <button
             key={panel}
             role="tab"
+            id={`tab-${panel}`}
             aria-selected={mobilePanel === panel}
+            aria-controls={`panel-${panel}`}
+            tabIndex={mobilePanel === panel ? 0 : -1}
             onClick={() => setMobilePanel(panel)}
             className={`explorer-shell__tab ${mobilePanel === panel ? "explorer-shell__tab--active" : ""}`}
           >
@@ -147,6 +158,9 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
       <div className="explorer-shell__grid">
         {/* Left sidebar: Location hierarchy */}
         <aside
+          id="panel-filters"
+          role="tabpanel"
+          aria-labelledby="tab-filters"
           aria-label={msg.ariaLocationFilter}
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
@@ -164,7 +178,9 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
           {/* Top row: calendar (left) + filters (right) */}
           <div className={`explorer-shell__top-row ${mobilePanel !== "list" ? "explorer-shell__top-row--hidden-mobile" : ""}`}>
             <div
-              role="region"
+              id="panel-list"
+              role="tabpanel"
+              aria-labelledby="tab-list"
               aria-label={msg.ariaEventCalendar}
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
@@ -233,7 +249,9 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
 
           {/* Bottom: Map */}
           <div
-            role="region"
+            id="panel-map"
+            role="tabpanel"
+            aria-labelledby="tab-map"
             aria-label={msg.ariaEventMap}
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}

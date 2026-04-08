@@ -18,6 +18,9 @@ export const metadata: Metadata = {
 export default function EventsPage() {
   return (
     <div style={{ height: "calc(100vh - 64px)" }}>
+      <h1 style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", borderWidth: 0 }}>
+        Events Explorer
+      </h1>
       <Suspense
         fallback={
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>

@@ -71,7 +71,13 @@ export function TeacherCard({ teacher, onPress, style, ...rest }: WebTeacherCard
       )}
       {teacher.aggregate_rating && (
         <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-surface-muted-foreground)" }}>
-          ★ {teacher.aggregate_rating} ({teacher.review_count} reviews)
+          <span aria-hidden="true">★</span>
+          <span aria-label={`${teacher.aggregate_rating} out of 5 stars`}>
+            {" "}{teacher.aggregate_rating}
+          </span>
+          <span aria-label={`${teacher.review_count} reviews`}>
+            {" "}({teacher.review_count} reviews)
+          </span>
         </div>
       )}
       {teacher.bio && (

@@ -53,6 +53,62 @@ export default function CalendarPanel({
     }
   }
 
+  function handleGridKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const currentDate = selectedDay ?? referenceDate;
+    let newDate: Date | null = null;
+
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 1);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 7);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 7);
+        break;
+      case "Home": {
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        const dayOfWeek = newDate.getDay();
+        // Go to Monday (1) of current week
+        newDate.setDate(newDate.getDate() - ((dayOfWeek + 6) % 7));
+        break;
+      }
+      case "End": {
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        const dayOfWeek2 = newDate.getDay();
+        // Go to Sunday (0) of current week
+        newDate.setDate(newDate.getDate() + ((7 - dayOfWeek2) % 7));
+        break;
+      }
+      case "PageUp":
+        e.preventDefault();
+        handleMonthNav("prev");
+        return;
+      case "PageDown":
+        e.preventDefault();
+        handleMonthNav("next");
+        return;
+    }
+
+    if (newDate) {
+      handleDayClick(newDate);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
       {/* Header with month nav */}
@@ -99,7 +155,7 @@ export default function CalendarPanel({
       </div>
 
       {/* Month view — fills remaining space, no scroll */}
-      <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }}>
+      <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }} onKeyDown={handleGridKeyDown}>
         {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} />}
       </div>
     </div>

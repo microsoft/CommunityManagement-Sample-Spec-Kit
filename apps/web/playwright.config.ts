@@ -36,6 +36,11 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "a11y",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "e2e/a11y/**/*.spec.ts",
+    },
   ],
 
   /* Start the Next.js server before running tests.

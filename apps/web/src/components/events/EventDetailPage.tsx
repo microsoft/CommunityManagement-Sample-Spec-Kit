@@ -115,7 +115,7 @@ export default function EventDetailPage() {
       </div>
 
       {/* RSVP / Capacity */}
-      <div className="mt-4 p-4 border rounded-lg">
+      <div className="mt-4 p-4 border rounded-lg" aria-live="assertive" aria-atomic="true">
         <div className="flex items-center justify-between">
           <span className="font-semibold">
             {event.confirmedCount} / {event.capacity} {msg.attending}

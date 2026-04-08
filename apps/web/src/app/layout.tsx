@@ -26,9 +26,9 @@ export default async function RootLayout({
         <SkipLink targetId="main-content" label="Skip to main content" />
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            <div id="main-content" tabIndex={-1}>
+            <main id="main-content" tabIndex={-1}>
               {children}
-            </div>
+            </main>
           </Providers>
         </NextIntlClientProvider>
       </body>

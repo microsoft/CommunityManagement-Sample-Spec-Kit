@@ -148,6 +148,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    minHeight: 44,
   },
   eventContent: { padding: 16, gap: 4 },
   eventCategory: { fontSize: 12, fontWeight: "600", color: "#2563eb", textTransform: "uppercase" },
