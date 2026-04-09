@@ -348,7 +348,7 @@ export default function MapPanelInner({ tree, markers, selectedLocation, onLocat
   const [showCounts, toggleCounts] = useCountToggle("explorer.showCounts.map");
 
   return (
-    <div style={{ height: "100%", width: "100%", position: "relative" }} role="img" aria-label={msg.mapLabel(markers.length)}>
+    <div style={{ height: "100%", width: "100%", position: "relative" }} role="group" aria-label={msg.mapLabel(markers.length)}>
       <button
         onClick={toggleCounts}
         aria-label={msg.ariaToggleMapCounts}

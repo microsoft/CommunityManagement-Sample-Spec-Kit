@@ -46,8 +46,8 @@ test.describe("Map interactions", () => {
   test("map has accessible label with marker count", async ({
     explorerPage: page,
   }) => {
-    /* The map container role="img" has a computed label like "Map showing 3 events" */
-    const mapImg = page.locator('[role="img"][aria-label*="Map showing"]');
+    /* The map container role="group" has a computed label like "Map showing 3 events" */
+    const mapImg = page.locator('[role="group"][aria-label*="Map showing"]');
     await expect(mapImg).toBeVisible();
     const label = await mapImg.getAttribute("aria-label");
     expect(label).toMatch(/Map showing \d+ events?/);
