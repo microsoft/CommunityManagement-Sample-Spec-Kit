@@ -91,7 +91,7 @@ export default function MyBookingsPage() {
                 <div>
                   <h2 className="font-semibold text-gray-900">{b.group_name}</h2>
                   <p className="text-sm text-gray-600">{b.ticket_type_name}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {formatEventDate(b.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &middot; {b.pricing_tier}
                   </p>
                 </div>

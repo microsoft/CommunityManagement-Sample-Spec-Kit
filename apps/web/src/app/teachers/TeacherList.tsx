@@ -15,7 +15,7 @@ export default async function TeacherList({ query, specialty, badge }: Props) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 text-lg">{msg.noTeachersFound}</p>
-        <p className="text-gray-400 mt-2">{msg.tryAdjusting}</p>
+        <p className="text-gray-500 mt-2">{msg.tryAdjusting}</p>
       </div>
     );
   }

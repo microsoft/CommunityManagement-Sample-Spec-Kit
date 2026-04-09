@@ -75,7 +75,7 @@ export default function SettingsLayout({
                 </Link>
               );
             })}
-            <span className="block px-3 py-2 text-sm text-gray-400 cursor-default">
+            <span className="block px-3 py-2 text-sm text-gray-500 cursor-default">
               {msg.navPayment}
             </span>
           </nav>

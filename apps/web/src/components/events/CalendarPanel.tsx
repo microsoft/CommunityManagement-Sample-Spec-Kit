@@ -224,7 +224,7 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { g
                       : day.isCurrentMonth
                       ? "var(--color-surface-background)"
                       : "var(--color-surface-muted)",
-                    opacity: day.isCurrentMonth ? 1 : 0.4,
+                    opacity: 1,
                     cursor: "pointer",
                     position: "relative",
                     overflow: "hidden",
@@ -237,7 +237,9 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { g
                       fontWeight: isSelected ? 700 : day.isToday ? 600 : 400,
                       color: isSelected
                         ? "var(--color-brand-primary, #5B5DE6)"
-                        : "var(--color-surface-foreground)",
+                        : day.isCurrentMonth
+                        ? "var(--color-surface-foreground)"
+                        : "var(--color-surface-muted-foreground, #4B5563)",
                       lineHeight: 1,
                       borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #5B5DE6)" : "2px solid transparent",
                       paddingBottom: 1,

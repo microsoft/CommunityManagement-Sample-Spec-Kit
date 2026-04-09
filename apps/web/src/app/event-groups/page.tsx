@@ -50,7 +50,7 @@ export default function EventGroupsPage() {
                 {formatEventDate(group.start_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })} &ndash;{" "}
                 {formatEventDate(group.end_date, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
               </p>
-              <p className="text-xs text-gray-400 mt-1">{group.currency}</p>
+              <p className="text-xs text-gray-500 mt-1">{group.currency}</p>
             </a>
           ))}
         </div>
