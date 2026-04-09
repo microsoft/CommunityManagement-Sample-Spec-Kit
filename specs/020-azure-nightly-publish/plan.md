@@ -1,6 +1,6 @@
 # Implementation Plan: Azure Nightly Publish Workflow
 
-**Branch**: `copilot/create-acute-publishing-gh-actions` | **Date**: 2025-07-09 | **Spec**: [spec.md](./spec.md)
+**Branch**: `020-azure-nightly-publish` | **Date**: 2025-07-09 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/020-azure-nightly-publish/spec.md`
 
 ## Summary
@@ -49,9 +49,6 @@ Create a dedicated GitHub Actions workflow that runs nightly at midnight UTC (an
 ```text
 specs/020-azure-nightly-publish/
 ├── spec.md              # Feature specification
-└── checklists/          # Spec checklists
-
-specs/copilot/create-acute-publishing-gh-actions/
 ├── plan.md              # This file
 ├── research.md          # Phase 0: Research findings (9 decisions)
 ├── data-model.md        # Phase 1: Infrastructure entity model
@@ -59,7 +56,8 @@ specs/copilot/create-acute-publishing-gh-actions/
 ├── contracts/
 │   ├── nightly-workflow.yml   # Phase 1: Workflow YAML contract
 │   └── infrastructure.md      # Phase 1: Bicep changes contract
-└── tasks.md             # Phase 2 output (NOT created by plan)
+├── tasks.md             # Phase 2 output
+└── checklists/          # Spec checklists
 ```
 
 ### Source Code (repository root)
