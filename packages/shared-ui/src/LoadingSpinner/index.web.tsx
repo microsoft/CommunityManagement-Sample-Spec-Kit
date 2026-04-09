@@ -35,7 +35,7 @@ export function LoadingSpinner({ size = "md", label = "Loading…", className, s
         width: dim,
         height: dim,
         border: `${bw} solid var(--color-neutral-200)`,
-        borderTopColor: "var(--color-brand-primary, #6366f1)",
+        borderTopColor: "var(--color-brand-primary, #5b5de6)",
         borderRadius: "50%",
         ...style,
       }}

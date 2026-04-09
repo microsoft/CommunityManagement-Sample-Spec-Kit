@@ -23,7 +23,7 @@
 
 /* ─── Accessibility: focus-visible outlines (WCAG 2.4.7) ─── */
 *:focus-visible {
-  outline: var(--global-focus-ring-width, 2px) solid var(--color-brand-primary, #6366f1);
+  outline: var(--global-focus-ring-width, 2px) solid var(--color-brand-primary, #5b5de6);
   outline-offset: var(--global-focus-ring-offset, 2px);
 }
 
@@ -51,7 +51,7 @@
   left: 0;
   z-index: 9999;
   padding: 0.5rem 1rem;
-  background: var(--color-brand-primary, #6366f1);
+  background: var(--color-brand-primary, #5b5de6);
   color: #ffffff;
   font-weight: 600;
   text-decoration: none;

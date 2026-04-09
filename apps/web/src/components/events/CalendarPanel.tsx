@@ -122,7 +122,7 @@ export default function CalendarPanel({
             height: 28,
             borderRadius: "var(--radius-md, 6px)",
             border: "1px solid var(--color-border, #d1d5db)",
-            background: showCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+            background: showCounts ? "var(--color-brand-primary, #5B5DE6)" : "var(--color-surface-background, #fff)",
             color: showCounts ? "#fff" : "var(--color-surface-foreground, #333)",
             cursor: "pointer",
             fontWeight: 700,
@@ -236,10 +236,10 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { g
                       fontSize: 11,
                       fontWeight: isSelected ? 700 : day.isToday ? 600 : 400,
                       color: isSelected
-                        ? "var(--color-brand-primary, #6366F1)"
+                        ? "var(--color-brand-primary, #5B5DE6)"
                         : "var(--color-surface-foreground)",
                       lineHeight: 1,
-                      borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #6366F1)" : "2px solid transparent",
+                      borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #5B5DE6)" : "2px solid transparent",
                       paddingBottom: 1,
                     }}
                   >
@@ -255,7 +255,7 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { g
                         minWidth: 14,
                         height: 14,
                         borderRadius: 7,
-                        backgroundColor: "var(--color-brand-primary, #6366F1)",
+                        backgroundColor: "var(--color-brand-primary, #5B5DE6)",
                         color: "#fff",
                         fontSize: 8,
                         fontWeight: 700,

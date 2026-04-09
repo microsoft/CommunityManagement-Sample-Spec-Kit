@@ -2,7 +2,7 @@
   "color": {
     "brand": {
       "primary": {
-        "$value": "#6366F1",
+        "$value": "#5B5DE6",
         "$type": "color",
         "$description": "Primary interactive colour — buttons, links, focus rings"
       },
@@ -32,7 +32,7 @@
       "card-foreground": { "$value": "#111827", "$type": "color" }
     },
     "category": {
-      "jam": { "$value": "#6366F1", "$type": "color", "$description": "Jam — Indigo" },
+      "jam": { "$value": "#5B5DE6", "$type": "color", "$description": "Jam — Indigo" },
       "workshop": { "$value": "#10B981", "$type": "color", "$description": "Workshop — Emerald" },
       "class": { "$value": "#3B82F6", "$type": "color", "$description": "Class — Blue" },
       "festival": { "$value": "#EC4899", "$type": "color", "$description": "Festival — Pink" },

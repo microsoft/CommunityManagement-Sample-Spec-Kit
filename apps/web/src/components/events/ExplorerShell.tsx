@@ -220,7 +220,7 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
                     height: 28,
                     borderRadius: "var(--radius-md, 6px)",
                     border: "1px solid var(--color-border, #d1d5db)",
-                    background: showFilterCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+                    background: showFilterCounts ? "var(--color-brand-primary, #5B5DE6)" : "var(--color-surface-background, #fff)",
                     color: showFilterCounts ? "#fff" : "var(--color-surface-foreground, #333)",
                     cursor: "pointer",
                     fontWeight: 700,
@@ -317,7 +317,7 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
         .explorer-shell__sidebar:focus,
         .explorer-shell__calendar:focus,
         .explorer-shell__map:focus {
-          outline: 2px solid var(--color-brand-primary, #6366F1);
+          outline: 2px solid var(--color-brand-primary, #5B5DE6);
           outline-offset: -2px;
         }
         .explorer-shell__tab {
@@ -331,7 +331,7 @@ export default function ExplorerShell({ events, coordEvents }: ExplorerShellProp
         }
         .explorer-shell__tab--active {
           font-weight: 600;
-          border-bottom-color: var(--color-primary, #6366F1);
+          border-bottom-color: var(--color-primary, #5B5DE6);
         }
         @media (max-width: 640px) {
           .explorer-shell__tabs {
