@@ -8,7 +8,7 @@ import { test, expect } from "./fixtures";
 
 test.describe("Map interactions", () => {
   test("renders the map region", async ({ explorerPage: page }) => {
-    const mapRegion = page.locator('[role="region"][aria-label="Event map"]');
+    const mapRegion = page.locator('[role="tabpanel"][aria-label="Event map"]');
     await expect(mapRegion).toBeVisible();
 
     /* Leaflet map container should be present */
