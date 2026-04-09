@@ -1,6 +1,6 @@
 # CommunityManagement-Sample-Spec-Kit Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-06
+Auto-generated from all feature plans. Last updated: 2026-04-07
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Next.js 14+ (App Router — API routes + React frontend), Zod (validation), Stripe SDK (Connect Standard — from 004), next-auth / @auth/core with Microsoft Entra External ID (from 004), ical-generator (.ics files) (001-event-discovery-rsvp)
@@ -43,10 +43,9 @@ npm test; npm run lint
 TypeScript 5.x (strict mode): Follow standard conventions
 
 ## Recent Changes
+- copilot/add-web-and-mobile-urls: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 017-seo-social-sharing: TypeScript 5.9 strict + Next.js 16 App Router built-ins only — `generateMetadata()`, `next/og` `ImageResponse`, `sitemap.ts`, `robots.ts` conventions; no new npm packages; `SharePanel` lazy-loaded via `next/dynamic`
 - 019-performance-optimization: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 012-managed-identity-deploy: Added TypeScript 5.x / Node.js 22 + Next.js 16, `@azure/identity` ^4.6.0, `@azure/storage-blob` ^12.31.0, `pg` ^8.20.0
-- 010-events-explorer: Added TypeScript 5.x (strict mode), React 19, Next.js 16 (App Router) + Next.js 16 (App Router), React 19, Leaflet + react-leaflet (lazy-loaded), Leaflet.markercluster, date-fns (calendar logic), @acroyoga/shared (types), @acroyoga/tokens (design tokens)
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -131,7 +131,7 @@ export default function EventDiscussionPage({ params }: { params: Promise<{ id: 
           <div key={m.id} className={`p-3 rounded border ${m.isDeleted ? "opacity-50" : ""}`}>
             <div className="flex justify-between items-baseline">
               <span className="text-sm font-medium">{m.authorName ?? msg.unknownAuthor}</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 {formatEventDate(m.createdAt, locale)}
                 {m.editedAt && " (edited)"}
               </span>

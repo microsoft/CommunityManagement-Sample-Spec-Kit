@@ -9,6 +9,7 @@ export interface TextAreaProps {
   state?: TextAreaState;
   errorMessage?: string;
   disabled?: boolean;
+  required?: boolean;
   rows?: number;
   maxLength?: number;
   onChangeText?: (text: string) => void;

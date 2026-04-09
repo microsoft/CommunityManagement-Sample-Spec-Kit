@@ -13,7 +13,12 @@ export function EventCard({ event, onPress, labels, locale, style, ...rest }: We
       role="article"
       tabIndex={0}
       onClick={() => onPress?.(event.id)}
-      onKeyDown={(e) => e.key === "Enter" && onPress?.(event.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPress?.(event.id);
+        }
+      }}
       style={{
         display: "flex",
         flexDirection: "column",

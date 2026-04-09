@@ -70,7 +70,7 @@ export default function AdminPermissionsPage() {
             <p className="mt-2 text-sm text-red-700">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
+              className="mt-3 text-sm font-medium text-red-700 hover:text-red-800"
             >
               {msg.tryAgain}
             </button>

@@ -54,7 +54,7 @@ export default function ConcessionPage() {
         <div className="border rounded-lg p-4">
           <p className="font-semibold capitalize">{msg.status} {concession.status}</p>
           <p className="text-sm text-gray-600 mt-1">{msg.evidence} {concession.evidence}</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-600 mt-1">
             {msg.applied} {formatEventDate(concession.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
           </p>
           {concession.approved_at && (

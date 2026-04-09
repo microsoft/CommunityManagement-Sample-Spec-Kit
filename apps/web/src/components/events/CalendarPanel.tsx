@@ -53,6 +53,62 @@ export default function CalendarPanel({
     }
   }
 
+  function handleGridKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const currentDate = selectedDay ?? referenceDate;
+    let newDate: Date | null = null;
+
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 1);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 7);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 7);
+        break;
+      case "Home": {
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        const dayOfWeek = newDate.getDay();
+        // Go to Monday (1) of current week
+        newDate.setDate(newDate.getDate() - ((dayOfWeek + 6) % 7));
+        break;
+      }
+      case "End": {
+        e.preventDefault();
+        newDate = new Date(currentDate);
+        const dayOfWeek2 = newDate.getDay();
+        // Go to Sunday (0) of current week
+        newDate.setDate(newDate.getDate() + ((7 - dayOfWeek2) % 7));
+        break;
+      }
+      case "PageUp":
+        e.preventDefault();
+        handleMonthNav("prev");
+        return;
+      case "PageDown":
+        e.preventDefault();
+        handleMonthNav("next");
+        return;
+    }
+
+    if (newDate) {
+      handleDayClick(newDate);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
       {/* Header with month nav */}
@@ -66,7 +122,7 @@ export default function CalendarPanel({
             height: 28,
             borderRadius: "var(--radius-md, 6px)",
             border: "1px solid var(--color-border, #d1d5db)",
-            background: showCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+            background: showCounts ? "var(--color-brand-primary, #5B5DE6)" : "var(--color-surface-background, #fff)",
             color: showCounts ? "#fff" : "var(--color-surface-foreground, #333)",
             cursor: "pointer",
             fontWeight: 700,
@@ -100,15 +156,15 @@ export default function CalendarPanel({
 
       {/* Month view — fills remaining space, no scroll */}
       <div style={{ flex: 1, minHeight: 0, padding: "0 4px 4px" }}>
-        {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} />}
+        {monthGrid && <MonthView grid={monthGrid} selectedDay={selectedDay} onDayClick={handleDayClick} showCounts={showCounts} onKeyDown={handleGridKeyDown} />}
       </div>
     </div>
   );
 }
 
-function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthGrid; selectedDay: Date | null; onDayClick: (date: Date) => void; showCounts: boolean }) {
+function MonthView({ grid, selectedDay, onDayClick, showCounts, onKeyDown }: { grid: MonthGrid; selectedDay: Date | null; onDayClick: (date: Date) => void; showCounts: boolean; onKeyDown: React.KeyboardEventHandler<HTMLDivElement> }) {
   return (
-    <div role="grid" aria-label={msg.ariaMonthView} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div role="grid" aria-label={msg.ariaMonthView} style={{ display: "flex", flexDirection: "column", height: "100%" }} onKeyDown={onKeyDown} tabIndex={0}>
       <div
         role="row"
         style={{
@@ -168,7 +224,7 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthG
                       : day.isCurrentMonth
                       ? "var(--color-surface-background)"
                       : "var(--color-surface-muted)",
-                    opacity: day.isCurrentMonth ? 1 : 0.4,
+                    opacity: 1,
                     cursor: "pointer",
                     position: "relative",
                     overflow: "hidden",
@@ -180,10 +236,12 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthG
                       fontSize: 11,
                       fontWeight: isSelected ? 700 : day.isToday ? 600 : 400,
                       color: isSelected
-                        ? "var(--color-brand-primary, #6366F1)"
-                        : "var(--color-surface-foreground)",
+                        ? "var(--color-brand-primary, #5B5DE6)"
+                        : day.isCurrentMonth
+                        ? "var(--color-surface-foreground)"
+                        : "var(--color-surface-muted-foreground, #4B5563)",
                       lineHeight: 1,
-                      borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #6366F1)" : "2px solid transparent",
+                      borderBottom: day.isToday ? "2px solid var(--color-brand-primary, #5B5DE6)" : "2px solid transparent",
                       paddingBottom: 1,
                     }}
                   >
@@ -199,7 +257,7 @@ function MonthView({ grid, selectedDay, onDayClick, showCounts }: { grid: MonthG
                         minWidth: 14,
                         height: 14,
                         borderRadius: 7,
-                        backgroundColor: "var(--color-brand-primary, #6366F1)",
+                        backgroundColor: "var(--color-brand-primary, #5B5DE6)",
                         color: "#fff",
                         fontSize: 8,
                         fontWeight: 700,

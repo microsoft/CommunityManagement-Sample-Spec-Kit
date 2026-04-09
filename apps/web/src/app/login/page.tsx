@@ -75,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           style={{
             fontSize: "14px",
             textAlign: "center",
-            color: "var(--color-surface-muted-foreground, #6b7280)",
+            color: "var(--color-surface-muted-foreground, #4b5563)",
             marginBottom: "28px",
           }}
         >

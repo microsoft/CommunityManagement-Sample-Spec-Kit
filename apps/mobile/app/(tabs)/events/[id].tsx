@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 16 },
   metaSection: { gap: 12, marginBottom: 16 },
   metaRow: { gap: 2 },
-  metaLabel: { fontSize: 12, fontWeight: "600", color: "#6b7280", textTransform: "uppercase" },
+  metaLabel: { fontSize: 12, fontWeight: "600", color: "#4b5563", textTransform: "uppercase" },
   metaValue: { fontSize: 15, color: "#374151" },
   spotsBadge: { alignSelf: "flex-start", backgroundColor: "#ecfdf5", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginBottom: 16 },
   spotsBadgeFull: { backgroundColor: "#fef2f2" },
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   spotsTextFull: { color: "#dc2626" },
   sectionTitle: { fontSize: 18, fontWeight: "600", color: "#111827", marginBottom: 8 },
   description: { fontSize: 15, color: "#374151", lineHeight: 22 },
-  loadingText: { fontSize: 14, color: "#6b7280", marginTop: 12 },
+  loadingText: { fontSize: 14, color: "#4b5563", marginTop: 12 },
   errorText: { fontSize: 16, color: "#dc2626", marginBottom: 8 },
   retryText: { fontSize: 14, color: "#2563eb" },
   footer: {

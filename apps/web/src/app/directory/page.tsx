@@ -151,7 +151,7 @@ function MemberCard({
             )}
             <button
               onClick={() => onBlock?.(entry.userId)}
-              className="text-xs text-gray-400 hover:text-red-600 hover:underline ms-auto"
+              className="text-xs text-gray-500 hover:text-red-600 hover:underline ms-auto"
               aria-label={`${msg.block} ${entry.displayName ?? "member"}`}
             >
               {msg.block}
@@ -508,7 +508,7 @@ function DirectoryContent() {
       ) : entries.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-gray-500 text-lg font-medium">{msg.noMembersFound}</p>
-          <p className="text-gray-400 text-sm mt-2">
+          <p className="text-gray-500 text-sm mt-2">
             Adjust your filters or{" "}
             <Link href="/settings/profile" className="text-indigo-600 hover:underline">
               update your profile

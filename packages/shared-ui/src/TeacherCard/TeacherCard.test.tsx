@@ -27,8 +27,11 @@ describe("TeacherCard", () => {
 
   it("renders rating and review count", () => {
     const html = renderToStaticMarkup(<TeacherCard teacher={teacher} />);
-    expect(html).toContain("★ 4.8");
+    expect(html).toContain("4.8");
     expect(html).toContain("42 reviews");
+    // The star is aria-hidden for screen reader accessibility
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('aria-label="4.8 out of 5 stars"');
   });
 
   it("renders bio", () => {

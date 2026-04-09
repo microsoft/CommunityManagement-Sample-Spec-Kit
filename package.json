@@ -13,6 +13,7 @@
     "start": "npm run start -w @acroyoga/web",
     "lint": "npm run lint -w @acroyoga/web",
     "test": "npm run test -w @acroyoga/tokens && npm run test -w @acroyoga/shared-ui && npm run test -w @acroyoga/shared && npm run test -w @acroyoga/web && npm run test -w @acroyoga/mobile",
+    "test:a11y": "npm run test:a11y -w @acroyoga/shared-ui && npm run test:a11y -w @acroyoga/web",
     "test:watch": "npm run test:watch -w @acroyoga/web",
     "typecheck": "tsc -b",
     "tokens:build": "npm run tokens:build -w @acroyoga/tokens",

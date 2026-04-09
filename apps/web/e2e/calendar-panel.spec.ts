@@ -21,7 +21,7 @@ test.describe("Calendar panel journey", () => {
   test("navigates to previous and next months", async ({ explorerPage: page }) => {
     /* The month label sits between the prev/next buttons in the calendar header.
        Target by position: it's a <span> between the two navigation buttons. */
-    const calendarRegion = page.locator('[role="region"][aria-label="Event calendar"]');
+    const calendarRegion = page.locator('[role="tabpanel"][aria-label="Event calendar"]');
     const prevBtn = calendarRegion.getByLabel("Previous month");
     const nextBtn = calendarRegion.getByLabel("Next month");
     /* The month label is a span sibling of the navigation buttons */
@@ -53,7 +53,7 @@ test.describe("Calendar panel journey", () => {
 
     /* Determine the current month name from the calendar header so the
        selector works regardless of what month the test runs in. */
-    const calendarRegion = page.locator('[role="region"][aria-label="Event calendar"]');
+    const calendarRegion = page.locator('[role="tabpanel"][aria-label="Event calendar"]');
     const monthLabel = calendarRegion.locator("span").filter({ hasText: /\w+ \d{4}/ }).first();
     const monthText = await monthLabel.textContent();
     const monthName = monthText!.split(" ")[0]; // e.g. "April"

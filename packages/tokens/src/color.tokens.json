@@ -2,7 +2,7 @@
   "color": {
     "brand": {
       "primary": {
-        "$value": "#6366F1",
+        "$value": "#5B5DE6",
         "$type": "color",
         "$description": "Primary interactive colour — buttons, links, focus rings"
       },
@@ -17,28 +17,28 @@
       }
     },
     "semantic": {
-      "success": { "$value": "#10B981", "$type": "color" },
-      "warning": { "$value": "#F59E0B", "$type": "color" },
+      "success": { "$value": "#047857", "$type": "color" },
+      "warning": { "$value": "#B45309", "$type": "color" },
       "error": { "$value": "#EF4444", "$type": "color" },
-      "info": { "$value": "#3B82F6", "$type": "color" }
+      "info": { "$value": "#2563EB", "$type": "color" }
     },
     "surface": {
       "background": { "$value": "#FFFFFF", "$type": "color" },
       "foreground": { "$value": "#111827", "$type": "color" },
       "muted": { "$value": "#F3F4F6", "$type": "color" },
-      "muted-foreground": { "$value": "#6B7280", "$type": "color" },
+      "muted-foreground": { "$value": "#4B5563", "$type": "color" },
       "border": { "$value": "#E5E7EB", "$type": "color" },
       "card": { "$value": "#FFFFFF", "$type": "color" },
       "card-foreground": { "$value": "#111827", "$type": "color" }
     },
     "category": {
-      "jam": { "$value": "#6366F1", "$type": "color", "$description": "Jam — Indigo" },
-      "workshop": { "$value": "#10B981", "$type": "color", "$description": "Workshop — Emerald" },
-      "class": { "$value": "#3B82F6", "$type": "color", "$description": "Class — Blue" },
-      "festival": { "$value": "#EC4899", "$type": "color", "$description": "Festival — Pink" },
-      "social": { "$value": "#F59E0B", "$type": "color", "$description": "Social — Amber" },
-      "retreat": { "$value": "#8B5CF6", "$type": "color", "$description": "Retreat — Purple" },
-      "training": { "$value": "#14B8A6", "$type": "color", "$description": "Teacher Training — Teal" }
+      "jam": { "$value": "#5B5DE6", "$type": "color", "$description": "Jam — Indigo" },
+      "workshop": { "$value": "#047857", "$type": "color", "$description": "Workshop — Emerald" },
+      "class": { "$value": "#2563EB", "$type": "color", "$description": "Class — Blue" },
+      "festival": { "$value": "#BE185D", "$type": "color", "$description": "Festival — Pink" },
+      "social": { "$value": "#B45309", "$type": "color", "$description": "Social — Amber" },
+      "retreat": { "$value": "#7C3AED", "$type": "color", "$description": "Retreat — Purple" },
+      "training": { "$value": "#0F766E", "$type": "color", "$description": "Teacher Training — Teal" }
     },
     "dark": {
       "surface": {
@@ -55,7 +55,7 @@
         "workshop": { "$value": "#34D399", "$type": "color" },
         "class": { "$value": "#60A5FA", "$type": "color" },
         "festival": { "$value": "#F472B6", "$type": "color" },
-        "social": { "$value": "#FBBF24", "$type": "color" },
+        "social": { "$value": "#FCD34D", "$type": "color" },
         "retreat": { "$value": "#A78BFA", "$type": "color" },
         "training": { "$value": "#2DD4BF", "$type": "color" }
       }

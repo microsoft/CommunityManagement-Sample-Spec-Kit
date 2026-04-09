@@ -83,7 +83,7 @@ export default function EventGroupDetailPage() {
                   </span>
                 )}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 {msg.capacityLabel} {t.capacity} &middot;{" "}
                 {t.covers_all_events ? msg.coversAll : msg.partialCoverage}
               </p>

@@ -20,3 +20,46 @@
   --color-card: var(--color-surface-card);
   --color-card-foreground: var(--color-surface-card-foreground);
 }
+
+/* ─── Accessibility: focus-visible outlines (WCAG 2.4.7) ─── */
+*:focus-visible {
+  outline: var(--global-focus-ring-width, 2px) solid var(--color-brand-primary, #5b5de6);
+  outline-offset: var(--global-focus-ring-offset, 2px);
+}
+
+/* Remove default outline when focus-visible is supported */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ─── Accessibility: reduced motion (WCAG 2.3.3) ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Accessibility: skip navigation link (WCAG 2.4.1) ─── */
+.skip-link {
+  position: absolute;
+  top: -9999px;
+  left: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--color-brand-primary, #5b5de6);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  white-space: nowrap;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+

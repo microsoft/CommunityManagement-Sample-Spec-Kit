@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NAV_MESSAGES as msg } from "./nav-messages";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import NotificationBell from "./NotificationBell";
@@ -21,6 +21,17 @@ export default function NavHeader() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -82,6 +93,7 @@ export default function NavHeader() {
             className="md:hidden p-2 text-muted-foreground hover:text-foreground"
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
+            aria-controls="mobile-nav-menu"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {menuOpen ? (
@@ -96,7 +108,7 @@ export default function NavHeader() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <nav className="md:hidden border-t border-border bg-background px-4 pb-4 pt-2 space-y-1">
+        <nav id="mobile-nav-menu" className="md:hidden border-t border-border bg-background px-4 pb-4 pt-2 space-y-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}

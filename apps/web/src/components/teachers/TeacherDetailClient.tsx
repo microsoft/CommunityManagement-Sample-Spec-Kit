@@ -179,7 +179,7 @@ export default function TeacherDetailClient() {
                     {c.status}
                   </span>
                   {c.expiry_date && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       Expires:{" "}
                       {formatEventDate(c.expiry_date, locale, undefined, {
                         year: "numeric",
@@ -205,7 +205,7 @@ export default function TeacherDetailClient() {
               <div key={r.id} className="border rounded p-3">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{r.reviewer_name}</span>
-                  <span className="text-gray-400">
+                  <span className="text-gray-500">
                     {formatEventDate(r.created_at, locale, undefined, {
                       year: "numeric",
                       month: "short",

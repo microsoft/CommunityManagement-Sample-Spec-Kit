@@ -45,7 +45,7 @@ export function CategoryLegend({
               fontSize: "var(--font-size-xs, 12px)",
               fontWeight: 500,
               cursor: "pointer",
-              opacity: isEnabled ? 1 : 0.6,
+              opacity: 1,
               transition: "all 150ms ease",
               minHeight: 32,
             }}
@@ -61,7 +61,7 @@ export function CategoryLegend({
             />
             {config.category.replace("_", " ")}
             {categoryCounts?.[config.category] != null && (
-              <span style={{ opacity: 0.8, fontSize: "10px", marginLeft: 2 }}>
+              <span style={{ fontSize: "10px", marginLeft: 2 }}>
                 ({categoryCounts[config.category]})
               </span>
             )}
