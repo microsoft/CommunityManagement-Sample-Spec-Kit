@@ -79,7 +79,7 @@ export function Modal({ open, title, children, onClose, className, style }: WebM
               cursor: "pointer",
               fontSize: "1.5rem",
               lineHeight: 1,
-              color: "var(--color-surface-muted-foreground, #6b7280)",
+              color: "var(--color-surface-muted-foreground, #4b5563)",
               padding: "var(--spacing-1, 4px)",
             }}
           >

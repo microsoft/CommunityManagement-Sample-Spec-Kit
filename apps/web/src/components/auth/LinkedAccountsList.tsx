@@ -127,7 +127,7 @@ export default function LinkedAccountsList({
       {accounts.length === 0 ? (
         <p
           style={{
-            color: "var(--color-surface-muted-foreground, #6b7280)",
+            color: "var(--color-surface-muted-foreground, #4b5563)",
             fontSize: "14px",
           }}
         >
@@ -176,7 +176,7 @@ export default function LinkedAccountsList({
                     style={{
                       display: "block",
                       fontSize: "12px",
-                      color: "var(--color-surface-muted-foreground, #6b7280)",
+                      color: "var(--color-surface-muted-foreground, #4b5563)",
                     }}
                   >
                     {AUTH_MESSAGES.linkedAccountsLinkedAt}{" "}
@@ -204,7 +204,7 @@ export default function LinkedAccountsList({
                       ? "var(--color-surface-muted, #f3f4f6)"
                       : "transparent",
                     color: isLastIdentity
-                      ? "var(--color-surface-muted-foreground, #6b7280)"
+                      ? "var(--color-surface-muted-foreground, #4b5563)"
                       : "var(--color-semantic-error, #dc2626)",
                     cursor: isLastIdentity ? "not-allowed" : "pointer",
                     fontSize: "13px",

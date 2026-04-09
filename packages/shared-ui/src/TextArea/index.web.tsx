@@ -84,7 +84,7 @@ export function TextArea({
         </span>
       )}
       {maxLength != null && (
-        <span style={{ fontSize: "0.75rem", color: "var(--color-surface-muted-foreground, #6b7280)", textAlign: "right" }}>
+        <span style={{ fontSize: "0.75rem", color: "var(--color-surface-muted-foreground, #4b5563)", textAlign: "right" }}>
           {(value ?? "").length}/{maxLength}
         </span>
       )}

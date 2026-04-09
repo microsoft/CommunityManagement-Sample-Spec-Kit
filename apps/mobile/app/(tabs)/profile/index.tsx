@@ -143,9 +143,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitial: { fontSize: 36, fontWeight: "700", color: "#6b7280" },
+  avatarInitial: { fontSize: 36, fontWeight: "700", color: "#4b5563" },
   name: { fontSize: 22, fontWeight: "700", color: "#111827" },
-  email: { fontSize: 14, color: "#6b7280", marginTop: 4 },
+  email: { fontSize: 14, color: "#4b5563", marginTop: 4 },
   memberSince: { fontSize: 13, color: "#9ca3af", marginTop: 4 },
   bio: { fontSize: 15, color: "#374151", lineHeight: 22, marginBottom: 24 },
   menuSection: {

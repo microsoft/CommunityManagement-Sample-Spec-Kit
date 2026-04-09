@@ -72,7 +72,7 @@ export default function BookingsScreen() {
       case "cancelled":
         return { color: "#dc2626", label: MSG.cancelled };
       default:
-        return { color: "#6b7280", label: status };
+        return { color: "#4b5563", label: status };
     }
   }
 
@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
   },
   bookingInfo: { flex: 1, gap: 4 },
   bookingTitle: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  bookingDate: { fontSize: 13, color: "#6b7280" },
-  bookingLocation: { fontSize: 13, color: "#6b7280" },
+  bookingDate: { fontSize: 13, color: "#4b5563" },
+  bookingLocation: { fontSize: 13, color: "#4b5563" },
   bookingMeta: { alignItems: "flex-end", gap: 6 },
   statusBadge: { fontSize: 12, fontWeight: "600" },
   roleBadge: {
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 8,
   },
-  emptySubtext: { fontSize: 14, color: "#6b7280", textAlign: "center" },
+  emptySubtext: { fontSize: 14, color: "#4b5563", textAlign: "center" },
   errorText: { fontSize: 16, color: "#dc2626", marginBottom: 8 },
   retryText: { fontSize: 14, color: "#2563eb" },
 });

@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   settingInfo: { flex: 1, marginRight: 16 },
   settingTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
-  settingDesc: { fontSize: 13, color: "#6b7280", marginTop: 2 },
+  settingDesc: { fontSize: 13, color: "#4b5563", marginTop: 2 },
   errorText: { fontSize: 16, color: "#dc2626", marginBottom: 8 },
   retryText: { fontSize: 14, color: "#2563eb" },
 });

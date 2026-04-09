@@ -3,14 +3,14 @@ import type { ToastProps, ToastVariant } from "./Toast.js";
 
 const variantStyles: Record<ToastVariant, { bg: string; text: string; border: string }> = {
   info: {
-    bg: "var(--color-semantic-info, #3b82f6)",
+    bg: "var(--color-semantic-info, #2563eb)",
     text: "#fff",
-    border: "var(--color-semantic-info, #3b82f6)",
+    border: "var(--color-semantic-info, #2563eb)",
   },
   success: {
-    bg: "var(--color-semantic-success, #10b981)",
+    bg: "var(--color-semantic-success, #047857)",
     text: "#fff",
-    border: "var(--color-semantic-success, #10b981)",
+    border: "var(--color-semantic-success, #047857)",
   },
   warning: {
     bg: "var(--color-semantic-warning, #f59e0b)",
