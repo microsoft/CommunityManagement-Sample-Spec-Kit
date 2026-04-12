@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   eventInfo: { flex: 1, gap: 4 },
   eventTitle: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  eventMeta: { fontSize: 13, color: "#6b7280" },
+  eventMeta: { fontSize: 13, color: "#4b5563" },
   badge: {
     fontSize: 12,
     fontWeight: "600",
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   emptyState: { alignItems: "center", padding: 48 },
-  emptyText: { fontSize: 16, color: "#6b7280" },
+  emptyText: { fontSize: 16, color: "#4b5563" },
   errorText: { fontSize: 16, color: "#dc2626", marginBottom: 8 },
   retryText: { fontSize: 14, color: "#2563eb" },
 });

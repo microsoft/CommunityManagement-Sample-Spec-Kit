@@ -228,7 +228,7 @@ function LevelRenderer({
               key={country.id}
               center={[country.latitude!, country.longitude!]}
               radius={Math.min(30, 12 + country.eventCount)}
-              pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.8, color: "#fff", weight: 2 }}
+              pathOptions={{ fillColor: "#5B5DE6", fillOpacity: 0.8, color: "#fff", weight: 2 }}
               eventHandlers={{
                 click: () => onLocationSelect(country.id),
                 mouseover: (e) => e.target.openPopup(),
@@ -262,7 +262,7 @@ function LevelRenderer({
               key={city.id}
               center={[city.latitude!, city.longitude!]}
               radius={Math.min(30, 12 + city.eventCount)}
-              pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.8, color: "#fff", weight: 2 }}
+              pathOptions={{ fillColor: "#5B5DE6", fillOpacity: 0.8, color: "#fff", weight: 2 }}
               eventHandlers={{
                 click: () => onLocationSelect(city.id),
                 mouseover: (e) => e.target.openPopup(),
@@ -300,7 +300,7 @@ function LevelRenderer({
             key={`cl-${i}`}
             center={[cluster.lat, cluster.lng]}
             radius={Math.min(30, 14 + cluster.markers.length * 2)}
-            pathOptions={{ fillColor: "#6366F1", fillOpacity: 0.85, color: "#fff", weight: 2 }}
+            pathOptions={{ fillColor: "#5B5DE6", fillOpacity: 0.85, color: "#fff", weight: 2 }}
             eventHandlers={{ click: () => map.flyTo([cluster.lat, cluster.lng], map.getZoom() + 2) }}
           >
             {showCounts && (
@@ -348,7 +348,7 @@ export default function MapPanelInner({ tree, markers, selectedLocation, onLocat
   const [showCounts, toggleCounts] = useCountToggle("explorer.showCounts.map");
 
   return (
-    <div style={{ height: "100%", width: "100%", position: "relative" }} role="img" aria-label={msg.mapLabel(markers.length)}>
+    <div style={{ height: "100%", width: "100%", position: "relative" }} role="group" aria-label={msg.mapLabel(markers.length)}>
       <button
         onClick={toggleCounts}
         aria-label={msg.ariaToggleMapCounts}
@@ -362,7 +362,7 @@ export default function MapPanelInner({ tree, markers, selectedLocation, onLocat
           height: 32,
           borderRadius: "var(--radius-md, 6px)",
           border: "1px solid var(--color-border, #d1d5db)",
-          background: showCounts ? "var(--color-brand-primary, #6366F1)" : "var(--color-surface-background, #fff)",
+          background: showCounts ? "var(--color-brand-primary, #5B5DE6)" : "var(--color-surface-background, #fff)",
           color: showCounts ? "#fff" : "var(--color-surface-foreground, #333)",
           cursor: "pointer",
           fontWeight: 700,

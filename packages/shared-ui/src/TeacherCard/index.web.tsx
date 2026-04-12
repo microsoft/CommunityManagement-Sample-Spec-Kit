@@ -14,7 +14,12 @@ export function TeacherCard({ teacher, onPress, style, ...rest }: WebTeacherCard
       role="article"
       tabIndex={0}
       onClick={() => onPress?.(teacher.id)}
-      onKeyDown={(e) => e.key === "Enter" && onPress?.(teacher.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPress?.(teacher.id);
+        }
+      }}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -66,7 +71,13 @@ export function TeacherCard({ teacher, onPress, style, ...rest }: WebTeacherCard
       )}
       {teacher.aggregate_rating && (
         <div style={{ fontSize: "var(--font-size-sm)", color: "var(--color-surface-muted-foreground)" }}>
-          ★ {teacher.aggregate_rating} ({teacher.review_count} reviews)
+          <span aria-hidden="true">★</span>
+          <span aria-label={`${teacher.aggregate_rating} out of 5 stars`}>
+            {" "}{teacher.aggregate_rating}
+          </span>
+          <span aria-label={`${teacher.review_count} reviews`}>
+            {" "}({teacher.review_count} reviews)
+          </span>
         </div>
       )}
       {teacher.bio && (

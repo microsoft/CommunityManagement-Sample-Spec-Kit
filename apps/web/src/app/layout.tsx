@@ -4,6 +4,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { getLocaleDirection } from "@acroyoga/shared/types/i18n";
 import type { Locale } from "@acroyoga/shared/types/i18n";
 import Providers from "@/components/Providers";
+import { SkipLink } from "@acroyoga/shared-ui";
 
 export const metadata = {
   title: "AcroYoga Community",
@@ -22,10 +23,17 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir}>
       <body className="min-h-screen bg-gray-50 font-sans text-gray-900 antialiased">
+        <SkipLink targetId="main-content" label="Skip to main content" />
         <NextIntlClientProvider messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers>
+            {/* tabIndex={-1} is required so the skip link can programmatically focus this element */}
+            <main id="main-content" tabIndex={-1}>
+              {children}
+            </main>
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
   );
 }
+

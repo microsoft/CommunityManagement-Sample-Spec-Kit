@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     root: resolve(import.meta.dirname!, "."),
-    include: ["src/**/*.test.tsx"],
+    include: ["src/**/*.test.tsx", "src/**/*.a11y.test.tsx"],
   },
   esbuild: {
     jsx: "automatic",

@@ -54,7 +54,7 @@ export default function AdminConcessionsPage() {
             <div key={c.id} className="border rounded-lg p-4">
               <p className="text-sm text-gray-500">User: {c.user_id}</p>
               <p className="mt-1">{c.evidence}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Applied: {formatEventDate(c.created_at, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
               </p>
               <div className="mt-3 space-x-2">

@@ -67,7 +67,7 @@ export default function AdminRequestsPage() {
         <p className="mt-2 text-sm text-red-700">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-3 text-sm font-medium text-red-600 hover:text-red-500"
+          className="mt-3 text-sm font-medium text-red-700 hover:text-red-800"
         >
           Try again
         </button>
@@ -93,7 +93,7 @@ export default function AdminRequestsPage() {
                     <span className="font-semibold">{req.scopeValue}</span>
                   </p>
                   {req.message && <p className="mt-2 text-sm text-gray-600 italic">&ldquo;{req.message}&rdquo;</p>}
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Submitted {formatEventDate(req.createdAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>

@@ -5,12 +5,44 @@ import type { WebLocationTreeProps } from "./LocationTree.js";
 import type { LocationNode } from "@acroyoga/shared/types/explorer";
 
 export function LocationTree({ nodes, selectedId, onSelect, className, style, expandAll }: WebLocationTreeProps) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const container = e.currentTarget;
+    const items = Array.from(
+      container.querySelectorAll<HTMLElement>('[role="treeitem"]'),
+    ).filter((el) => {
+      // Only include visible items (not hidden by collapsed parents)
+      return el.offsetParent !== null;
+    });
+    const focused = document.activeElement as HTMLElement;
+    const idx = items.indexOf(focused);
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        items[idx + 1]?.focus();
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        items[idx - 1]?.focus();
+        break;
+      case "Home":
+        e.preventDefault();
+        items[0]?.focus();
+        break;
+      case "End":
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+        break;
+    }
+  }
+
   return (
     <div
       className={className}
       style={style}
       role="tree"
       aria-label="Location tree"
+      onKeyDown={handleKeyDown}
     >
       {nodes.map((node) => (
         <TreeNode
@@ -47,7 +79,7 @@ function TreeNode({
   const expanded = expandAll || (manualExpanded ?? (isSelected || isAncestor || level <= 1));
 
   return (
-    <div role="treeitem" aria-expanded={hasChildren ? expanded : undefined} aria-selected={isSelected}>
+    <div role="treeitem" aria-expanded={hasChildren ? expanded : undefined} aria-selected={isSelected} aria-level={level + 1} tabIndex={isSelected ? 0 : -1}>
       <div
         style={{
           display: "flex",
@@ -113,7 +145,7 @@ function TreeNode({
         </button>
       </div>
       {hasChildren && expanded && (
-        <div role="group">
+        <div role="group" aria-label={node.name}>
           {node.children.map((child) => (
             <TreeNode
               key={child.id}

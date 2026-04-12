@@ -46,6 +46,7 @@ TypeScript 5.x (strict mode): Follow standard conventions
 
 ## Recent Changes
 - copilot/create-acute-publishing-gh-actions: Added Node.js 24 (application), Bicep (infrastructure), YAML (GitHub Actions workflows) + GitHub Actions (`actions/checkout@v4`, `actions/setup-node@v4`, `azure/login@v2`, `azure/container-apps-deploy-action@v2`), Azure CLI
+- copilot/add-web-and-mobile-urls: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 017-seo-social-sharing: TypeScript 5.9 strict + Next.js 16 App Router built-ins only — `generateMetadata()`, `next/og` `ImageResponse`, `sitemap.ts`, `robots.ts` conventions; no new npm packages; `SharePanel` lazy-loaded via `next/dynamic`
 - 019-performance-optimization: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 

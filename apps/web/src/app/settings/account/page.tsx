@@ -85,7 +85,7 @@ export default function AccountSettingsPage() {
                   }`}>
                     {exp.status}
                   </span>
-                  <span className="text-xs text-gray-400 ms-2">
+                  <span className="text-xs text-gray-500 ms-2">
                     {formatEventDate(exp.createdAt, locale, undefined, { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                 </div>

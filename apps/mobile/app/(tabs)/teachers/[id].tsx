@@ -142,9 +142,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitial: { fontSize: 36, fontWeight: "700", color: "#6b7280" },
+  avatarInitial: { fontSize: 36, fontWeight: "700", color: "#4b5563" },
   name: { fontSize: 24, fontWeight: "700", color: "#111827" },
-  city: { fontSize: 15, color: "#6b7280", marginTop: 4 },
+  city: { fontSize: 15, color: "#4b5563", marginTop: 4 },
   section: { marginBottom: 24 },
   sectionTitle: {
     fontSize: 18,
@@ -161,9 +161,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   certName: { fontSize: 14, fontWeight: "600", color: "#059669" },
-  certDate: { fontSize: 13, color: "#6b7280" },
+  certDate: { fontSize: 13, color: "#4b5563" },
   bio: { fontSize: 15, color: "#374151", lineHeight: 22 },
-  noReviews: { fontSize: 14, color: "#6b7280", fontStyle: "italic" },
+  noReviews: { fontSize: 14, color: "#4b5563", fontStyle: "italic" },
   reviewCard: {
     backgroundColor: "#f9fafb",
     padding: 14,

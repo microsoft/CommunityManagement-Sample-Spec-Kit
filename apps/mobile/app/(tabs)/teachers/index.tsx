@@ -164,10 +164,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitial: { fontSize: 22, fontWeight: "700", color: "#6b7280" },
+  avatarInitial: { fontSize: 22, fontWeight: "700", color: "#4b5563" },
   teacherInfo: { flex: 1, gap: 4 },
   teacherName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  teacherCity: { fontSize: 13, color: "#6b7280" },
+  teacherCity: { fontSize: 13, color: "#4b5563" },
   certBadges: { flexDirection: "row", gap: 6, marginTop: 4, flexWrap: "wrap" },
   certBadge: {
     backgroundColor: "#ecfdf5",
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   },
   certText: { fontSize: 11, fontWeight: "600", color: "#059669" },
   emptyState: { alignItems: "center", padding: 48 },
-  emptyText: { fontSize: 16, color: "#6b7280" },
+  emptyText: { fontSize: 16, color: "#4b5563" },
   errorText: { fontSize: 16, color: "#dc2626", marginBottom: 8 },
   retryText: { fontSize: 14, color: "#2563eb" },
 });

@@ -17,6 +17,10 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:a11y": "vitest run --reporter verbose"
+  },
+  "devDependencies": {
+    "vitest-axe": "^0.1.0"
   }
 }

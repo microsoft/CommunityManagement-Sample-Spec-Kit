@@ -10,6 +10,7 @@
     "lint": "eslint src",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:a11y": "vitest run --reporter verbose",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -47,6 +48,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@electric-sql/pglite": "^0.3.16",
     "@next/bundle-analyzer": "^16.2.0",
     "@playwright/test": "^1.59.1",

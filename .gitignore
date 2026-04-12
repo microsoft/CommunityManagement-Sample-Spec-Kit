@@ -9,6 +9,10 @@ next-env.d.ts
 test-output.txt
 _test-*.mjs
 
+# Mobile compiled JS (build artifacts alongside .tsx/.ts sources)
+apps/mobile/**/*.js
+apps/mobile/**/*.js.map
+
 # Package build outputs
 packages/*/dist/
 packages/*/build/
