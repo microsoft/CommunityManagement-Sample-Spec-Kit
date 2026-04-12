@@ -28,8 +28,6 @@
     "node": ">=22.0.0"
   },
   "overrides": {
-    "@xmldom/xmldom": ">=0.8.12",
-    "tar": ">=7.5.11",
     "@tootallnate/once": ">=3.0.1"
   },
   "devDependencies": {

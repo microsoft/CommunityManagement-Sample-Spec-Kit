@@ -3,6 +3,12 @@
  * Provides mocks for React Native modules not available in test environment
  */
 
+// React 19 strict act() enforcement — RNTL v12 wraps fireEvent in act() internally,
+// but React 19 now collects async errors from react-query mutations as AggregateError.
+// Disable strict act environment to allow async state updates from mutations to settle
+// naturally via waitFor() assertions. This matches the RNTL v12 expected behavior.
+globalThis.IS_REACT_ACT_ENVIRONMENT = false;
+
 // Mock expo-secure-store
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),
