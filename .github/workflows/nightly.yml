@@ -19,9 +19,9 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "24"
           cache: "npm"
@@ -110,10 +110,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Azure login (OIDC — nightly identity for ACR push)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -159,10 +159,10 @@ jobs:
       APP_NAME: ca-acroyoga-web-nightly
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Azure login (OIDC — nightly managed identity)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -179,8 +179,8 @@ jobs:
               dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
               nextAuthSecret="$(openssl rand -base64 32)" \
               sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
-              githubOrg="microsoft" \
-              githubRepo="CommunityManagement-Sample-Spec-Kit"
+              githubOwnerId="${{ github.repository_owner_id }}" \
+              githubRepoId="${{ github.repository_id }}"
 
       - name: Wait for readiness
         run: |
