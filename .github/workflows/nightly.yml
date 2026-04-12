@@ -1,0 +1,201 @@
+name: Nightly Build & Deploy
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Midnight UTC daily (FR-002)
+  workflow_dispatch: # Manual trigger (FR-003)
+
+# Prevent overlapping nightly runs (FR-012)
+concurrency:
+  group: nightly-build
+  cancel-in-progress: false
+
+jobs:
+  # ── Job 1: Full CI validation suite (FR-004, FR-013, FR-015) ──
+  # Mirrors ci.yml steps. Failure here prevents build or deployment.
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build design tokens
+        run: npm run tokens:build -w @acroyoga/tokens
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (includes jsx-a11y)
+        run: npm run lint -w @acroyoga/web
+
+      - name: Build web app
+        run: npm run build -w @acroyoga/web
+
+      - name: Check bundle size
+        run: |
+          # Check gzipped size of initial JS chunks for the home page (Constitution VI, FR-013)
+          # Only chunks referenced in the prerendered index.html count as "initial bundle"
+          INDEX_HTML="apps/web/.next/server/app/index.html"
+          TOTAL_GZ=0
+          while IFS= read -r chunk; do
+            CHUNK_FILE="apps/web/.next/static/chunks/${chunk}"
+            if [ -f "$CHUNK_FILE" ]; then
+              GZ_SIZE=$(gzip -c "$CHUNK_FILE" | wc -c)
+              TOTAL_GZ=$((TOTAL_GZ + GZ_SIZE))
+            fi
+          done < <(grep -oP 'src="/_next/static/chunks/\K[^"]+(?=")' "$INDEX_HTML" 2>/dev/null)
+          TOTAL_KB=$((TOTAL_GZ / 1024))
+          echo "Initial JS bundle size (gzipped): ${TOTAL_KB}KB"
+          if [ "$TOTAL_KB" -gt 200 ]; then
+            echo "::error::Initial JS bundle size (${TOTAL_KB}KB gzipped) exceeds 200KB budget (Constitution VI, FR-013)"
+            exit 1
+          fi
+
+      - name: Run token tests
+        run: npm run test -w @acroyoga/tokens
+
+      - name: Run shared-ui tests
+        run: npm run test -w @acroyoga/shared-ui
+
+      - name: Run shared tests
+        run: npm run test -w @acroyoga/shared
+
+      - name: Run web tests
+        run: npm run test -w @acroyoga/web
+
+      - name: Run mobile unit tests (Spec 016)
+        run: npm run test -w @acroyoga/mobile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests (Playwright)
+        run: npx playwright test --config apps/web/playwright.config.ts
+        env:
+          CI: true
+
+      - name: i18n string lint (Constitution VIII, QG-9)
+        run: bash scripts/lint-i18n.sh
+
+      - name: Build Storybook
+        run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
+
+      - name: Storybook a11y audit (FR-019, QG-6)
+        run: |
+          npx concurrently -k -s first -n storybook,test \
+            "npx http-server apps/web/storybook-static --port 6006 --silent" \
+            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006 --config-dir apps/web/.storybook"
+
+  # ── Job 2: Build and push container image (FR-005, FR-006, FR-007) ──
+  # Uses the single nightly identity (AcrPush on shared ACR).
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [validate]
+    environment: nightly
+    outputs:
+      image-tag-date: ${{ steps.meta.outputs.date-tag }}
+      image-tag-sha: ${{ steps.meta.outputs.sha-tag }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC — nightly identity for ACR push)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_NIGHTLY }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: ACR login
+        run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
+      - name: Generate image tags (FR-007)
+        id: meta
+        run: |
+          DATE_TAG="nightly-$(date -u +'%Y%m%d')"
+          SHA_TAG="nightly-sha-${GITHUB_SHA:0:7}"
+          echo "date-tag=${DATE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "sha-tag=${SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Date tag: ${DATE_TAG}"
+          echo "SHA tag: ${SHA_TAG}"
+
+      - name: Build and push container image
+        run: |
+          REGISTRY="${{ secrets.AZURE_CONTAINER_REGISTRY }}"
+          docker build \
+            -t ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.date-tag }} \
+            -t ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.sha-tag }} \
+            .
+          docker push ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.date-tag }}
+          docker push ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.sha-tag }}
+
+  # ── Job 3: Deploy infrastructure and app (FR-008, FR-009, FR-010, FR-011) ──
+  # Runs full Bicep deployment then verifies with smoke tests.
+  # Uses nightly identity with Owner on rg-acroyoga-nightly.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    environment: nightly
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag-date }}
+      RESOURCE_GROUP: rg-acroyoga-nightly
+      APP_NAME: ca-acroyoga-web-nightly
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC — nightly managed identity)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_NIGHTLY }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure (Bicep)
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file infra/main.bicep \
+            --parameters infra/main.parameters.nightly.json \
+            --parameters \
+              imageTag="${{ env.IMAGE_TAG }}" \
+              dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+              nextAuthSecret="$(openssl rand -base64 32)" \
+              sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
+              githubOrg="microsoft" \
+              githubRepo="CommunityManagement-Sample-Spec-Kit"
+
+      - name: Wait for readiness
+        run: |
+          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Waiting for https://${APP_URL}/api/ready ..."
+          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+
+      - name: Smoke test — health
+        run: |
+          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
+          echo "Health response: ${RESPONSE}"
+          echo "${RESPONSE}" | grep -q '"status":"healthy"'
+
+      - name: Smoke test — home page
+        run: |
+          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          curl -sf "https://${APP_URL}/" | head -20

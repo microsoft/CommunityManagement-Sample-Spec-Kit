@@ -4,7 +4,7 @@ targetScope = 'resourceGroup'
 // Parameters (per contracts/infrastructure.md)
 // ──────────────────────────────────────────────
 
-@description('Environment name (staging or production)')
+@description('Environment name (staging, production, or nightly)')
 param environmentName string
 
 @description('Azure region')
@@ -78,6 +78,21 @@ param githubOrg string = ''
 @description('GitHub repository name (e.g. "CommunityManagement-Sample-Spec-Kit"). Required when githubOrg is set.')
 param githubRepo string = ''
 
+@description('Deploy Azure Front Door CDN. Set to false for non-user-facing environments like nightly.')
+param deployFrontDoor bool = true
+
+@description('Deploy a Container Registry in this resource group. Set to false when using a shared ACR from another resource group.')
+param deployContainerRegistry bool = true
+
+@description('Shared Container Registry login server URL. Required when deployContainerRegistry is false.')
+param sharedContainerRegistryLoginServer string = ''
+
+@description('Deploy monitoring alert rules. Set to false for cost-optimized environments.')
+param deployMonitoringAlerts bool = true
+
+@description('Deploy the DB Wake custom role (requires subscription-level Microsoft.Authorization/roleDefinitions/write). Set to false for environments where the deploying identity only has resource-group-scoped permissions.')
+param deployDbWakeRole bool = true
+
 // ──────────────────────────────────────────────
 // 1. Managed Identity
 // ──────────────────────────────────────────────
@@ -94,15 +109,18 @@ module identity 'modules/managed-identity.bicep' = {
 }
 
 // ──────────────────────────────────────────────
-// 2. Container Registry
+// 2. Container Registry (skip for nightly — uses shared ACR)
 // ──────────────────────────────────────────────
-module registry 'modules/container-registry.bicep' = {
+module registry 'modules/container-registry.bicep' = if (deployContainerRegistry) {
   name: 'container-registry'
   params: {
     location: location
     managedIdentityPrincipalId: identity.outputs.principalId
   }
 }
+
+// Resolve ACR login server: own ACR if deployed, shared otherwise
+var resolvedContainerRegistryLoginServer = deployContainerRegistry ? registry.outputs.loginServer : sharedContainerRegistryLoginServer
 
 // ──────────────────────────────────────────────
 // 3. Monitoring (Log Analytics + App Insights)
@@ -131,6 +149,7 @@ module database 'modules/database.bicep' = {
     storageSizeGB: dbStorageSizeGB
     managedIdentityPrincipalId: identity.outputs.principalId
     managedIdentityClientId: identity.outputs.clientId
+    deployDbWakeRole: deployDbWakeRole
   }
 }
 
@@ -178,7 +197,7 @@ module containerApps 'modules/container-apps.bicep' = {
   params: {
     environmentName: environmentName
     location: location
-    containerRegistryLoginServer: registry.outputs.loginServer
+    containerRegistryLoginServer: resolvedContainerRegistryLoginServer
     imageTag: imageTag
     managedIdentityId: identity.outputs.resourceId
     managedIdentityClientId: identity.outputs.clientId
@@ -198,9 +217,9 @@ module containerApps 'modules/container-apps.bicep' = {
 }
 
 // ──────────────────────────────────────────────
-// 8. Front Door (depends on Container App FQDN)
+// 8. Front Door (skip for non-user-facing environments like nightly)
 // ──────────────────────────────────────────────
-module frontDoor 'modules/front-door.bicep' = {
+module frontDoor 'modules/front-door.bicep' = if (deployFrontDoor) {
   name: 'front-door'
   params: {
     originHostname: containerApps.outputs.fqdn
@@ -209,9 +228,9 @@ module frontDoor 'modules/front-door.bicep' = {
 }
 
 // ──────────────────────────────────────────────
-// 9. Monitoring alerts (now that App Insights exists)
+// 9. Monitoring alerts (skip for cost-optimized environments)
 // ──────────────────────────────────────────────
-module monitoringAlerts 'modules/monitoring.bicep' = {
+module monitoringAlerts 'modules/monitoring.bicep' = if (deployMonitoringAlerts) {
   name: 'monitoring-alerts'
   params: {
     environmentName: environmentName
@@ -225,7 +244,7 @@ module monitoringAlerts 'modules/monitoring.bicep' = {
 // ──────────────────────────────────────────────
 // Outputs
 // ──────────────────────────────────────────────
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.loginServer
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resolvedContainerRegistryLoginServer
 output containerAppFqdn string = containerApps.outputs.fqdn
-output frontDoorEndpoint string = frontDoor.outputs.endpoint
-output containerRegistryLoginServer string = registry.outputs.loginServer
+output frontDoorEndpoint string = deployFrontDoor ? frontDoor.outputs.endpoint : ''
+output containerRegistryLoginServer string = resolvedContainerRegistryLoginServer

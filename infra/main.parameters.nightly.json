@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "nightly"
+    },
+    "location": {
+      "value": "eastus2"
+    },
+    "imageTag": {
+      "value": "latest"
+    },
+    "deployFrontDoor": {
+      "value": false
+    },
+    "deployContainerRegistry": {
+      "value": false
+    },
+    "deployMonitoringAlerts": {
+      "value": false
+    },
+    "deployDbWakeRole": {
+      "value": false
+    },
+    "dbAdminLogin": {
+      "value": "acroyogaadmin"
+    },
+    "stripeSecretKey": {
+      "value": "sk_test_nightly_mock_000000000000"
+    },
+    "stripeWebhookSecret": {
+      "value": "whsec_nightly_mock_000000000000"
+    },
+    "stripeClientId": {
+      "value": "ca_nightly_mock_000000000000"
+    },
+    "entraClientId": {
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    "entraTenantId": {
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    "entraTenantDomain": {
+      "value": "mock-nightly"
+    },
+    "customDomainHostname": {
+      "value": ""
+    },
+    "minReplicas": {
+      "value": 0
+    },
+    "maxReplicas": {
+      "value": 2
+    },
+    "cpuCores": {
+      "value": "0.5"
+    },
+    "memorySize": {
+      "value": "1Gi"
+    },
+    "dbSkuName": {
+      "value": "Standard_B1ms"
+    },
+    "dbStorageSizeGB": {
+      "value": 32
+    }
+  }
+}
