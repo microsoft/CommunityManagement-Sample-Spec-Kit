@@ -109,8 +109,8 @@ File: `infra/main.parameters.nightly.json`
     "entraClientId": { "value": "${ENTRA_CLIENT_ID}" },
     "entraTenantId": { "value": "${ENTRA_TENANT_ID}" },
     "entraTenantDomain": { "value": "${ENTRA_TENANT_DOMAIN}" },
-    "githubOrg": { "value": "${GITHUB_ORG}" },
-    "githubRepo": { "value": "${GITHUB_REPO}" },
+    "githubOwnerId": { "value": "${GITHUB_OWNER_ID}" },
+    "githubRepoId": { "value": "${GITHUB_REPO_ID}" },
     "customDomainHostname": { "value": "" },
     "alertEmailAddress": { "value": "" }
   }
