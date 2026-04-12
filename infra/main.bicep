@@ -90,6 +90,9 @@ param sharedContainerRegistryLoginServer string = ''
 @description('Deploy monitoring alert rules. Set to false for cost-optimized environments.')
 param deployMonitoringAlerts bool = true
 
+@description('Deploy the DB Wake custom role (requires subscription-level Microsoft.Authorization/roleDefinitions/write). Set to false for environments where the deploying identity only has resource-group-scoped permissions.')
+param deployDbWakeRole bool = true
+
 // ──────────────────────────────────────────────
 // 1. Managed Identity
 // ──────────────────────────────────────────────
@@ -146,6 +149,7 @@ module database 'modules/database.bicep' = {
     storageSizeGB: dbStorageSizeGB
     managedIdentityPrincipalId: identity.outputs.principalId
     managedIdentityClientId: identity.outputs.clientId
+    deployDbWakeRole: deployDbWakeRole
   }
 }
 
