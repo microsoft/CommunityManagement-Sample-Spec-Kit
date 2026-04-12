@@ -24,6 +24,9 @@ param managedIdentityPrincipalId string
 @description('Client ID of the managed identity (used as DB username for token auth)')
 param managedIdentityClientId string
 
+@description('Deploy the DB Wake custom role and assignment. Set to false when the deploying identity does not have subscription-level Microsoft.Authorization/roleDefinitions/write permission (e.g. nightly).')
+param deployDbWakeRole bool = true
+
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var serverName = 'psql-acro-${environmentName}-${uniqueSuffix}'
 var databaseName = 'acroyoga'
@@ -113,7 +116,7 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-0
 // Only grants start and read on this specific PostgreSQL server.
 // (Constitution XIV — least-privilege Managed Identity access)
 
-resource dbWakeCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+resource dbWakeCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = if (deployDbWakeRole) {
   scope: subscription()
   name: guid('db-wake-role', subscription().subscriptionId, resourceGroup().id)
   properties: {
@@ -137,7 +140,7 @@ resource dbWakeCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' =
   }
 }
 
-resource dbWakeRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource dbWakeRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployDbWakeRole) {
   name: guid(postgresServer.id, managedIdentityPrincipalId, 'db-wake')
   scope: postgresServer
   properties: {
