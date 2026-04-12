@@ -22,7 +22,7 @@ Run the entire block below as a single script. It creates:
 RG_NIGHTLY="rg-acroyoga-nightly"
 RG_STAGING="rg-acroyoga-stg"
 IDENTITY_NAME="id-acroyoga-nightly"
-LOCATION="eastus2"
+LOCATION="uksouth"
 GH_REPO="microsoft/CommunityManagement-Sample-Spec-Kit"
 
 # ── 1. Resource group ──
