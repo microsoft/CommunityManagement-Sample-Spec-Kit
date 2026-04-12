@@ -126,11 +126,9 @@ describe("RSVP Flow", () => {
     // Select Base role
     fireEvent.press(screen.getByText("Base"));
 
-    // Confirm — triggers async mutation; flush with act + tick
+    // Confirm
     await act(async () => {
       fireEvent.press(screen.getByText("Confirm"));
-      // Allow mutation promise chain to settle
-      await new Promise((r) => setTimeout(r, 0));
     });
 
     expect(mockPost).toHaveBeenCalledWith("/api/rsvps", {
@@ -157,7 +155,6 @@ describe("RSVP Flow", () => {
 
     await act(async () => {
       fireEvent.press(screen.getByText("Confirm"));
-      await new Promise((r) => setTimeout(r, 0));
     });
 
     await waitFor(() => {
@@ -183,7 +180,6 @@ describe("RSVP Flow", () => {
 
     await act(async () => {
       fireEvent.press(screen.getByText("Confirm"));
-      await new Promise((r) => setTimeout(r, 0));
     });
 
     await waitFor(() => {
@@ -206,7 +202,6 @@ describe("RSVP Flow", () => {
 
     await act(async () => {
       fireEvent.press(screen.getByText("Confirm"));
-      await new Promise((r) => setTimeout(r, 0));
     });
 
     await waitFor(() => {
