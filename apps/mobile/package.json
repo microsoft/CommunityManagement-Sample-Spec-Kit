@@ -56,12 +56,12 @@
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1",
-      "^react$": "<rootDir>/node_modules/react",
-      "^react/(.*)$": "<rootDir>/node_modules/react/$1",
-      "^react-native$": "<rootDir>/node_modules/react-native"
+      "^react$": "<rootDir>/../../node_modules/react",
+      "^react/(.*)$": "<rootDir>/../../node_modules/react/$1",
+      "^react-native$": "<rootDir>/../../node_modules/react-native"
     },
     "moduleDirectories": [
-      "<rootDir>/node_modules",
+      "<rootDir>/../../node_modules",
       "node_modules"
     ],
     "setupFilesAfterEnv": [
