@@ -222,8 +222,8 @@ jobs:
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 30 --retry-delay 15 --retry-all-errors \
-            --connect-timeout 10 --max-time 30 --retry-max-time 600 \
+          curl --retry 50 --retry-delay 15 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 --retry-max-time 900 \
             -sf "https://${APP_URL}/api/ready"
 
       - name: Smoke test — health

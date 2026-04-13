@@ -12,7 +12,7 @@ export default defineConfig({
     setupFiles: [],
     testTimeout: 30000,
     hookTimeout: 30000,
-    pool: "threads",
+    pool: "forks",
     server: {
       deps: {
         external: [/^node:/, "path", "fs", "util", "crypto"],

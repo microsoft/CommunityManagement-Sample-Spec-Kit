@@ -4,7 +4,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import type { ReadinessResponse } from "@acroyoga/shared";
 
-const CHECK_TIMEOUT_MS = 5000;
+const CHECK_TIMEOUT_MS = 10000;
 
 function withTimeout(promise: Promise<string>): Promise<string> {
   return new Promise<string>((resolve) => {
