@@ -184,16 +184,23 @@ jobs:
               az postgres flexible-server start \
                 --resource-group ${{ env.RESOURCE_GROUP }} \
                 --name "${SERVER}"
-              # Verify the server reached 'Ready' state
-              STATE=$(az postgres flexible-server show \
-                --resource-group ${{ env.RESOURCE_GROUP }} \
-                --name "${SERVER}" \
-                --query state -o tsv)
-              echo "Server ${SERVER} state: ${STATE}"
-              if [ "$STATE" != "Ready" ]; then
-                echo "::error::PostgreSQL server ${SERVER} is not ready (state: ${STATE})"
-                exit 1
-              fi
+              # Poll until the server reaches 'Ready' state (up to 5 minutes)
+              for i in $(seq 1 30); do
+                STATE=$(az postgres flexible-server show \
+                  --resource-group ${{ env.RESOURCE_GROUP }} \
+                  --name "${SERVER}" \
+                  --query state -o tsv)
+                echo "  Attempt ${i}: server state = ${STATE}"
+                if [ "$STATE" = "Ready" ]; then
+                  echo "Server ${SERVER} is ready."
+                  break
+                fi
+                if [ "$i" -eq 30 ]; then
+                  echo "::error::PostgreSQL server ${SERVER} did not reach Ready state after 5 minutes (state: ${STATE})"
+                  exit 1
+                fi
+                sleep 10
+              done
             done
           fi
 
@@ -216,7 +223,7 @@ jobs:
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Waiting for https://${APP_URL}/api/ready ..."
           curl --retry 30 --retry-delay 15 --retry-all-errors \
-            --connect-timeout 10 --max-time 30 \
+            --connect-timeout 10 --max-time 30 --retry-max-time 600 \
             -sf "https://${APP_URL}/api/ready"
 
       - name: Smoke test — health
