@@ -135,4 +135,4 @@ Workflow
 |--------|-----------|--------|
 | REMOVE | `customDomainHostname` (line 5) | Declared but never referenced in module body |
 
-**Caller impact**: None — `infra/main.bicep` doesn't pass this parameter to the front-door module.
+**Caller impact**: Remove `customDomainHostname: customDomainHostname` from `infra/main.bicep` front-door module invocation.

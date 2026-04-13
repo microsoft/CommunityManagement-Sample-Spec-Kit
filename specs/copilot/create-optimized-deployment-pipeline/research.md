@@ -143,13 +143,13 @@ curl --retry 50 --retry-delay 15 --retry-all-errors \
 
 **Also update callers**:
 - `infra/main.bicep` line 151: Remove `managedIdentityClientId` from the `database` module invocation
-- `infra/main.bicep` does NOT pass `customDomainHostname` to `front-door` module (only passes `originHostname`), so no caller change needed for front-door
+- `infra/main.bicep` line 206: Remove `appInsightsConnectionString` from the `containerApps` module invocation
+- `infra/main.bicep` line 226: Remove `customDomainHostname` from the `frontDoor` module invocation
 
 **Rationale**:
 - Unused parameters generate Bicep linter warnings (`no-unused-params`), adding noise to CI output
 - Removing unused params improves maintainability and reduces confusion about what's actually used
-- Both removals are non-breaking: the params are never referenced, so removing them has no runtime effect
-- `container-apps.bicep` has NO unused params — all declared params are referenced in the module body
+- All removals are non-breaking: the params are never referenced, so removing them has no runtime effect
 
 **Alternatives Considered**:
 - **Suppress warnings with `#disable-next-line`**: Hides the problem rather than fixing it. The params truly aren't used.
