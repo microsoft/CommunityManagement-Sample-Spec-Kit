@@ -7,12 +7,16 @@ import type { ReadinessResponse } from "@acroyoga/shared";
 const CHECK_TIMEOUT_MS = 5000;
 
 function withTimeout(promise: Promise<string>): Promise<string> {
-  return Promise.race([
-    promise,
-    new Promise<string>((resolve) =>
-      setTimeout(() => resolve("error: health check timeout"), CHECK_TIMEOUT_MS),
-    ),
-  ]);
+  return new Promise<string>((resolve) => {
+    const timer = setTimeout(
+      () => resolve("error: health check timeout"),
+      CHECK_TIMEOUT_MS,
+    );
+    promise.then((value) => {
+      clearTimeout(timer);
+      resolve(value);
+    });
+  });
 }
 
 async function checkDatabase(): Promise<string> {
