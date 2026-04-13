@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { createTestDb } from "../helpers/db";
 import { setTestDb, clearTestDb } from "../../src/lib/db/client";
 import type { PGlite } from "@electric-sql/pglite";
@@ -68,6 +68,33 @@ describe("Health API endpoints", () => {
         delete process.env.DATABASE_URL;
       }
       setTestDb(testDb);
+    });
+
+    it("returns 503 with timeout error when database check hangs", async () => {
+      vi.useFakeTimers();
+
+      // Inject a DB client whose query never resolves (simulates a hanging connection)
+      setTestDb({
+        query: () => new Promise(() => {}),
+      } as unknown as PGlite);
+
+      try {
+        const { GET } = await readyModule();
+        const responsePromise = GET();
+
+        // Advance past the 5 000 ms check timeout
+        await vi.advanceTimersByTimeAsync(5001);
+
+        const response = await responsePromise;
+        expect(response.status).toBe(503);
+
+        const body = await response.json();
+        expect(body).toHaveProperty("status", "not_ready");
+        expect(body.checks.database).toBe("error: health check timeout");
+      } finally {
+        vi.useRealTimers();
+        setTestDb(testDb);
+      }
     });
   });
 });
