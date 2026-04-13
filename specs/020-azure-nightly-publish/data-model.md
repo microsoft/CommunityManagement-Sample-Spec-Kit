@@ -29,7 +29,7 @@ This feature does not introduce traditional application data entities (database 
 |----------|-------|-------|
 | name | `id-acroyoga-nightly` | Pattern: `id-acroyoga-{env}` |
 | federatedCredentials[0].name | `github-actions-env-nightly` | OIDC for deploy job |
-| federatedCredentials[0].subject | `repository_owner_id:{owner_id}:repository_id:{repo_id}:environment:nightly` | Org-level customised OIDC subject |
+| federatedCredentials[0].subject | `repo:{org}/{repo}:environment:nightly` | GitHub environment binding |
 | federatedCredentials[0].issuer | `https://token.actions.githubusercontent.com` | GitHub OIDC issuer |
 | federatedCredentials[0].audiences | `['api://AzureADTokenExchange']` | Standard Entra audience |
 

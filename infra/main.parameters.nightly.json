@@ -6,7 +6,7 @@
       "value": "nightly"
     },
     "location": {
-      "value": "uksouth"
+      "value": "eastus2"
     },
     "imageTag": {
       "value": "latest"

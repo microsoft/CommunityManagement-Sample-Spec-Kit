@@ -39,7 +39,7 @@ az identity federated-credential create \
   --identity-name "$IDENTITY_NAME" \
   --resource-group "$RG_NIGHTLY" \
   --issuer "https://token.actions.githubusercontent.com" \
-  --subject "repository_owner_id:${GH_OWNER_ID}:repository_id:${GH_REPO_ID}:environment:nightly" \
+  --subject "repo:${GH_REPO}:environment:nightly" \
   --audiences "api://AzureADTokenExchange"
 
 # ── 4. Role assignments ──
@@ -132,7 +132,7 @@ The `deploy` job runs `az deployment group create` with `infra/main.bicep` + `in
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
-| OIDC login fails | FIC subject mismatch | Verify FIC subject matches org-level OIDC template: `repository_owner_id:<owner_id>:repository_id:<repo_id>:environment:nightly` |
+| OIDC login fails | FIC subject mismatch | Verify FIC subject is `repo:microsoft/CommunityManagement-Sample-Spec-Kit:environment:nightly` |
 | ACR push denied | Missing AcrPush role | Re-run the `az role assignment create --role AcrPush` command |
 | Bicep deploy fails on role assignment | Identity needs Owner, not Contributor | Re-run the `az role assignment create --role Owner` command |
 | Container app can't pull image | Missing AcrPull role | Re-run the `az role assignment create --role AcrPull` command |

@@ -3,6 +3,22 @@
  * Provides mocks for React Native modules not available in test environment
  */
 
+// Pre-configure RNTL host component names to avoid auto-detection which can
+// trigger React 19's strict act() error collection during module initialization.
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
+const rntlConfig = require("@testing-library/react-native/build/config");
+rntlConfig.configureInternal({
+  hostComponentNames: {
+    text: "Text",
+    textInput: "TextInput",
+    image: "Image",
+    switch: "Switch",
+    scrollView: "ScrollView",
+    modal: "Modal",
+  },
+});
+/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
+
 // Mock expo-secure-store
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(),

@@ -72,11 +72,11 @@ param memorySize string = '1Gi'
 @description('Email address for alert notifications')
 param alertEmailAddress string = ''
 
-@description('GitHub repository owner (organisation) numeric ID (e.g. "6154722"). When set together with githubRepoId, OIDC federated identity credentials are provisioned on the managed identity so GitHub Actions can authenticate without stored secrets.')
-param githubOwnerId string = ''
+@description('GitHub organisation name (e.g. "microsoft"). When set together with githubRepo, OIDC federated identity credentials are provisioned on the managed identity so GitHub Actions can authenticate without stored secrets.')
+param githubOrg string = ''
 
-@description('GitHub repository numeric ID (e.g. "1182392763"). Required when githubOwnerId is set.')
-param githubRepoId string = ''
+@description('GitHub repository name (e.g. "CommunityManagement-Sample-Spec-Kit"). Required when githubOrg is set.')
+param githubRepo string = ''
 
 @description('Deploy Azure Front Door CDN. Set to false for non-user-facing environments like nightly.')
 param deployFrontDoor bool = true
@@ -101,8 +101,8 @@ module identity 'modules/managed-identity.bicep' = {
   params: {
     environmentName: environmentName
     location: location
-    githubOwnerId: githubOwnerId
-    githubRepoId: githubRepoId
+    githubOrg: githubOrg
+    githubRepo: githubRepo
     // Only the staging identity gets the main-branch FIC (for the build-and-push CI job)
     addMainBranchFic: environmentName == 'staging'
   }
