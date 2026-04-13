@@ -208,6 +208,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               failureThreshold: 10
             }
             {
+              // Startup probe window: initialDelaySeconds + failureThreshold × periodSeconds
+              // = 30 + 60 × 5 = 330 s total — sized to accommodate start.sh's 3 migration
+              // retry attempts (each capped at 60 s) before Node.js becomes healthy.
               type: 'Startup'
               httpGet: {
                 path: '/api/health'

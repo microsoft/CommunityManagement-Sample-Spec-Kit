@@ -12,10 +12,13 @@ function withTimeout(promise: Promise<string>): Promise<string> {
       () => resolve("error: health check timeout"),
       CHECK_TIMEOUT_MS,
     );
-    promise.then((value) => {
-      clearTimeout(timer);
-      resolve(value);
-    });
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (err: unknown) => {
+        clearTimeout(timer);
+        resolve(`error: ${err instanceof Error ? err.message : "unknown"}`);
+      },
+    );
   });
 }
 
