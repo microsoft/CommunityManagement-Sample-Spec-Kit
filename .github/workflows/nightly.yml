@@ -168,6 +168,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Start PostgreSQL server if stopped
+        run: |
+          # The Flexible Server cannot be updated while stopped (UpsertServerManagementOperationUnsupportedForStoppedServer).
+          # Find any stopped PG servers in the RG and start them before Bicep deployment.
+          SERVERS=$(az postgres flexible-server list \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "[?state=='Stopped'].name" -o tsv)
+          for SERVER in $SERVERS; do
+            echo "Starting stopped PostgreSQL server: ${SERVER}"
+            az postgres flexible-server start \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --name "${SERVER}"
+            echo "Server ${SERVER} started."
+          done
+
       - name: Deploy infrastructure (Bicep)
         run: |
           az deployment group create \
