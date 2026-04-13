@@ -1,6 +1,6 @@
 # CommunityManagement-Sample-Spec-Kit Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-09
+Auto-generated from all feature plans. Last updated: 2026-04-13
 
 ## Active Technologies
 - TypeScript 5.x (strict mode) + Next.js 14+ (App Router — API routes + React frontend), Zod (validation), Stripe SDK (Connect Standard — from 004), next-auth / @auth/core with Microsoft Entra External ID (from 004), ical-generator (.ics files) (001-event-discovery-rsvp)
@@ -25,6 +25,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-09
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (019-performance-optimization)
 - Node.js 24 (application), Bicep (infrastructure), YAML (GitHub Actions workflows) + GitHub Actions (`actions/checkout@v4`, `actions/setup-node@v4`, `azure/login@v2`, `azure/container-apps-deploy-action@v2`), Azure CLI (copilot/create-acute-publishing-gh-actions)
 - PostgreSQL Flexible Server (nightly instance, Standard_B1ms), Azure Blob Storage (nightly instance), Azure Key Vault (nightly instance) (copilot/create-acute-publishing-gh-actions)
+- YAML (GitHub Actions), Bicep (Azure IaC), Bash (step scripts) + GitHub Actions (`actions/checkout@v5`, `actions/setup-node@v5`, `azure/login@v3`, `docker/setup-buildx-action`, `docker/build-push-action`, `actions/cache`), Azure CLI, Docker buildx (copilot/create-optimized-deployment-pipeline)
+- N/A (pipeline consumes existing PostgreSQL Flexible Server infrastructure) (copilot/create-optimized-deployment-pipeline)
 
 - TypeScript 5.x (strict mode) + Next.js 14+ (App Router — API routes + React frontend), Zod (validation), Stripe SDK (Connect Standard), next-auth / @auth/core with Microsoft Entra External ID (004-permissions-creator-accounts)
 
@@ -45,10 +47,9 @@ npm test; npm run lint
 TypeScript 5.x (strict mode): Follow standard conventions
 
 ## Recent Changes
+- copilot/create-optimized-deployment-pipeline: Added YAML (GitHub Actions), Bicep (Azure IaC), Bash (step scripts) + GitHub Actions (`actions/checkout@v5`, `actions/setup-node@v5`, `azure/login@v3`, `docker/setup-buildx-action`, `docker/build-push-action`, `actions/cache`), Azure CLI, Docker buildx
 - copilot/create-acute-publishing-gh-actions: Added Node.js 24 (application), Bicep (infrastructure), YAML (GitHub Actions workflows) + GitHub Actions (`actions/checkout@v4`, `actions/setup-node@v4`, `azure/login@v2`, `azure/container-apps-deploy-action@v2`), Azure CLI
 - copilot/add-web-and-mobile-urls: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 017-seo-social-sharing: TypeScript 5.9 strict + Next.js 16 App Router built-ins only — `generateMetadata()`, `next/og` `ImageResponse`, `sitemap.ts`, `robots.ts` conventions; no new npm packages; `SharePanel` lazy-loaded via `next/dynamic`
-- 019-performance-optimization: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 
 
 <!-- MANUAL ADDITIONS START -->
