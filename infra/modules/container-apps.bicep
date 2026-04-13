@@ -22,9 +22,6 @@ param managedIdentityName string
 @description('Key Vault name for secret references')
 param keyVaultName string
 
-@description('Application Insights connection string')
-param appInsightsConnectionString string
-
 @description('Log Analytics workspace resource ID')
 param logAnalyticsWorkspaceId string
 

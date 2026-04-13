@@ -1,9 +1,6 @@
 @description('Container App FQDN (backend origin)')
 param originHostname string
 
-@description('Custom domain hostname (optional)')
-param customDomainHostname string = ''
-
 @description('WAF policy name (alphanumeric only)')
 param wafPolicyName string = 'wafacroyoga'
 
