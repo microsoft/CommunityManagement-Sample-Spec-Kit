@@ -213,6 +213,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 path: '/api/health'
                 port: 3000
               }
+              initialDelaySeconds: 30
               periodSeconds: 5
               timeoutSeconds: 5
               failureThreshold: 30
