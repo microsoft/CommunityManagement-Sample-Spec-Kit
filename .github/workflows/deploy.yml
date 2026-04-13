@@ -17,19 +17,23 @@ on:
         required: false
         type: string
 
-env:
-  REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.image-tag)
+    # The staging environment grants access to environment-scoped secrets
+    # (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_CONTAINER_REGISTRY)
+    # and its OIDC federated identity credential allows authentication.
+    environment: staging
     outputs:
       image-tag: sha-${{ github.sha }}
     # OIDC token is required for the azure/login action (Constitution XIV — Managed Identity)
     permissions:
       id-token: write
       contents: read
+
+    env:
+      REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
     steps:
       - uses: actions/checkout@v5
@@ -60,6 +64,7 @@ jobs:
       contents: read
 
     env:
+      REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
       IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag || inputs.image-tag }}
       RESOURCE_GROUP: rg-acroyoga-stg
       APP_NAME: ca-acroyoga-web-staging
@@ -85,30 +90,36 @@ jobs:
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+          curl --retry 30 --retry-delay 15 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 --retry-max-time 600 \
+            -sf "https://${APP_URL}/api/ready"
 
       - name: Smoke test — health
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
+          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health")
           echo "Health response: ${RESPONSE}"
           echo "${RESPONSE}" | grep -q '"status":"healthy"'
 
       - name: Smoke test — home page
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          curl -sf "https://${APP_URL}/" | head -20
+          curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" | head -20
 
   deploy-production:
     runs-on: ubuntu-latest
     needs: [build-and-push, deploy-staging]
-    if: always() && needs.deploy-staging.result == 'success' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production'))
+    if: >-
+      always() &&
+      (needs.deploy-staging.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production')) &&
+      (needs.build-and-push.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.image-tag != ''))
     environment: production
     permissions:
       id-token: write
       contents: read
 
     env:
+      REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
       IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag || inputs.image-tag }}
       RESOURCE_GROUP: rg-acroyoga-prod
       APP_NAME: ca-acroyoga-web-production
@@ -134,12 +145,14 @@ jobs:
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+          curl --retry 30 --retry-delay 15 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 --retry-max-time 600 \
+            -sf "https://${APP_URL}/api/ready"
 
       - name: Verify deployed version
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
+          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health")
           echo "Health response: ${RESPONSE}"
           EXPECTED_VERSION="sha-${{ github.sha }}"
           echo "${RESPONSE}" | grep -q "${EXPECTED_VERSION}" || echo "Warning: version mismatch (may be using workflow_dispatch tag)"
