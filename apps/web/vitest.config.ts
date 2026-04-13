@@ -25,8 +25,6 @@ export default defineConfig({
       fs: "node:fs",
       util: "node:util",
       crypto: "node:crypto",
-      react: nativePath.resolve(__dirname, "./node_modules/react"),
-      "react-dom": nativePath.resolve(__dirname, "./node_modules/react-dom"),
       "@": nativePath.resolve(__dirname, "./src"),
       "@acroyoga/shared": nativePath.resolve(__dirname, "../../packages/shared/src"),
       "@acroyoga/shared-ui": nativePath.resolve(__dirname, "../../packages/shared-ui/src"),

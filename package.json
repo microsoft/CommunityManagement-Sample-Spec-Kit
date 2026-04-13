@@ -27,9 +27,6 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "overrides": {
-    "@tootallnate/once": ">=3.0.1"
-  },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "prettier": "^3.8.1",

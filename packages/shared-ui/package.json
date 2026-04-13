@@ -21,8 +21,6 @@
     "test:a11y": "vitest run --reporter verbose"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "vitest-axe": "^0.1.0"
   }
 }
