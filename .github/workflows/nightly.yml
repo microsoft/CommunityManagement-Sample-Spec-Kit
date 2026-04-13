@@ -170,18 +170,32 @@ jobs:
 
       - name: Start PostgreSQL server if stopped
         run: |
+          set -euo pipefail
           # The Flexible Server cannot be updated while stopped (UpsertServerManagementOperationUnsupportedForStoppedServer).
           # Find any stopped PG servers in the RG and start them before Bicep deployment.
           SERVERS=$(az postgres flexible-server list \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --query "[?state=='Stopped'].name" -o tsv)
-          for SERVER in $SERVERS; do
-            echo "Starting stopped PostgreSQL server: ${SERVER}"
-            az postgres flexible-server start \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --name "${SERVER}"
-            echo "Server ${SERVER} started."
-          done
+          if [ -z "$SERVERS" ]; then
+            echo "No stopped PostgreSQL servers found."
+          else
+            for SERVER in $SERVERS; do
+              echo "Starting stopped PostgreSQL server: ${SERVER}"
+              az postgres flexible-server start \
+                --resource-group ${{ env.RESOURCE_GROUP }} \
+                --name "${SERVER}"
+              # Verify the server reached 'Ready' state
+              STATE=$(az postgres flexible-server show \
+                --resource-group ${{ env.RESOURCE_GROUP }} \
+                --name "${SERVER}" \
+                --query state -o tsv)
+              echo "Server ${SERVER} state: ${STATE}"
+              if [ "$STATE" != "Ready" ]; then
+                echo "::error::PostgreSQL server ${SERVER} is not ready (state: ${STATE})"
+                exit 1
+              fi
+            done
+          fi
 
       - name: Deploy infrastructure (Bicep)
         run: |
@@ -201,16 +215,18 @@ jobs:
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+          curl --retry 30 --retry-delay 15 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
+            -sf "https://${APP_URL}/api/ready"
 
       - name: Smoke test — health
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
+          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health")
           echo "Health response: ${RESPONSE}"
           echo "${RESPONSE}" | grep -q '"status":"healthy"'
 
       - name: Smoke test — home page
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          curl -sf "https://${APP_URL}/" | head -20
+          curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" | head -20
