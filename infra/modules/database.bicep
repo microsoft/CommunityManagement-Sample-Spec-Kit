@@ -117,7 +117,6 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-0
 // (Constitution XIV — least-privilege Managed Identity access)
 
 resource dbWakeCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = if (deployDbWakeRole) {
-  scope: subscription()
   name: guid('db-wake-role', subscription().subscriptionId, resourceGroup().id)
   properties: {
     roleName: 'AcroYoga DB Wake - ${environmentName}'
