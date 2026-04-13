@@ -94,7 +94,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
-      activeRevisionsMode: 'Multiple'
+      activeRevisionsMode: 'Single'
       ingress: {
         external: true
         targetPort: 3000
@@ -216,7 +216,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               initialDelaySeconds: 30
               periodSeconds: 5
               timeoutSeconds: 5
-              failureThreshold: 30
+              failureThreshold: 60
             }
           ]
         }
