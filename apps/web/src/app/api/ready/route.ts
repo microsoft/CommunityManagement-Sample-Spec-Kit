@@ -4,6 +4,23 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import type { ReadinessResponse } from "@acroyoga/shared";
 
+const CHECK_TIMEOUT_MS = 5000;
+
+function withTimeout(promise: Promise<string>): Promise<string> {
+  return new Promise<string>((resolve) => {
+    const timer = setTimeout(
+      () => resolve("error: health check timeout"),
+      CHECK_TIMEOUT_MS,
+    );
+    promise
+      .then((value) => { clearTimeout(timer); resolve(value); })
+      .catch((err: unknown) => {
+        clearTimeout(timer);
+        resolve(`error: ${err instanceof Error ? err.message : "unknown"}`);
+      });
+  });
+}
+
 async function checkDatabase(): Promise<string> {
   try {
     await db().query("SELECT 1");
@@ -33,8 +50,8 @@ async function checkStorage(): Promise<string> {
 
 export async function GET(): Promise<NextResponse<ReadinessResponse>> {
   const [databaseStatus, storageStatus] = await Promise.all([
-    checkDatabase(),
-    checkStorage(),
+    withTimeout(checkDatabase()),
+    withTimeout(checkStorage()),
   ]);
 
   const allOk = databaseStatus === "ok" && storageStatus === "ok";
