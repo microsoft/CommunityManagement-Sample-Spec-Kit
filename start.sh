@@ -3,9 +3,6 @@ set -e
 
 # Run database migrations with retries to handle transient cold-start failures
 # (e.g. Managed Identity IMDS delays, PostgreSQL not yet accepting connections).
-# Each attempt is capped at MIGRATION_TIMEOUT seconds; MAX_RETRIES attempts with
-# RETRY_DELAY backoff comfortably fit within the startup probe window
-# (initialDelaySeconds=30 + failureThreshold=60 × periodSeconds=5 = 330 s total).
 MAX_RETRIES=3
 RETRY_DELAY=10
 MIGRATION_TIMEOUT=60
