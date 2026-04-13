@@ -82,8 +82,8 @@ describe("Health API endpoints", () => {
         const { GET } = await readyModule();
         const responsePromise = GET();
 
-        // Advance past the 5000 ms check timeout
-        await vi.advanceTimersByTimeAsync(5001);
+        // Advance past the 10000 ms check timeout
+        await vi.advanceTimersByTimeAsync(10001);
 
         const response = await responsePromise;
         expect(response.status).toBe(503);

@@ -42,7 +42,7 @@ export function getDb(): DbClient {
         password: getEntraPassword,
         ssl: { rejectUnauthorized: true },
         max: 10,
-        connectionTimeoutMillis: 5000,
+        connectionTimeoutMillis: 10000,
       });
     }
     return pool;
@@ -69,7 +69,7 @@ export function getDb(): DbClient {
     pool = new pg.Pool({
       connectionString: dbUrl,
       max: 10,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
     });
   }
   return pool;
