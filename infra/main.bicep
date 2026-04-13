@@ -148,7 +148,6 @@ module database 'modules/database.bicep' = {
     skuName: dbSkuName
     storageSizeGB: dbStorageSizeGB
     managedIdentityPrincipalId: identity.outputs.principalId
-    managedIdentityClientId: identity.outputs.clientId
     deployDbWakeRole: deployDbWakeRole
   }
 }
@@ -203,7 +202,6 @@ module containerApps 'modules/container-apps.bicep' = {
     managedIdentityClientId: identity.outputs.clientId
     managedIdentityName: identity.outputs.name
     keyVaultName: keyVault.outputs.vaultName
-    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
     minReplicas: minReplicas
     maxReplicas: maxReplicas
@@ -223,7 +221,6 @@ module frontDoor 'modules/front-door.bicep' = if (deployFrontDoor) {
   name: 'front-door'
   params: {
     originHostname: containerApps.outputs.fqdn
-    customDomainHostname: customDomainHostname
   }
 }
 

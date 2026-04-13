@@ -15,6 +15,7 @@ jobs:
   # Mirrors ci.yml steps. Failure here prevents build or deployment.
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
 
@@ -30,16 +31,32 @@ jobs:
         run: npm ci
 
       - name: Build design tokens
-        run: npm run tokens:build -w @acroyoga/tokens
+        run: |
+          if ! npm run tokens:build -w @acroyoga/tokens; then
+            echo "::error title=BUILD: Design Tokens::Token build failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          if ! npm run typecheck; then
+            echo "::error title=BUILD: Typecheck::TypeScript type checking failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Lint (includes jsx-a11y)
-        run: npm run lint -w @acroyoga/web
+        run: |
+          if ! npm run lint -w @acroyoga/web; then
+            echo "::error title=BUILD: Lint::ESLint linting failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Build web app
-        run: npm run build -w @acroyoga/web
+        run: |
+          if ! npm run build -w @acroyoga/web; then
+            echo "::error title=BUILD: Web App::Next.js production build failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Check bundle size
         run: |
@@ -57,49 +74,86 @@ jobs:
           TOTAL_KB=$((TOTAL_GZ / 1024))
           echo "Initial JS bundle size (gzipped): ${TOTAL_KB}KB"
           if [ "$TOTAL_KB" -gt 200 ]; then
-            echo "::error::Initial JS bundle size (${TOTAL_KB}KB gzipped) exceeds 200KB budget (Constitution VI, FR-013)"
+            echo "::error title=BUILD: Bundle Size Check::Initial JS bundle size (${TOTAL_KB}KB gzipped) exceeds 200KB budget (Constitution VI, FR-013)"
+            exit 1
+          fi
+          echo "::notice title=Bundle Size::Initial JS bundle size: ${TOTAL_KB}KB gzipped (budget: 200KB)"
+
+      - name: Run token tests
+        run: |
+          if ! npm run test -w @acroyoga/tokens -- --pool forks; then
+            echo "::error title=BUILD: Token Tests::Token test suite failed (exit code: $?)"
             exit 1
           fi
 
-      - name: Run token tests
-        run: npm run test -w @acroyoga/tokens
-
       - name: Run shared-ui tests
-        run: npm run test -w @acroyoga/shared-ui
+        run: |
+          if ! npm run test -w @acroyoga/shared-ui -- --pool forks; then
+            echo "::error title=BUILD: Shared-UI Tests::Shared-UI test suite failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Run shared tests
-        run: npm run test -w @acroyoga/shared
+        run: |
+          if ! npm run test -w @acroyoga/shared -- --pool forks; then
+            echo "::error title=BUILD: Shared Tests::Shared test suite failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Run web tests
-        run: npm run test -w @acroyoga/web
+        run: |
+          if ! npm run test -w @acroyoga/web -- --pool forks; then
+            echo "::error title=BUILD: Web Tests::Web test suite failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Run mobile unit tests (Spec 016)
-        run: npm run test -w @acroyoga/mobile
+        run: |
+          if ! npm run test -w @acroyoga/mobile -- --pool forks; then
+            echo "::error title=BUILD: Mobile Tests::Mobile test suite failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests (Playwright)
-        run: npx playwright test --config apps/web/playwright.config.ts
+        run: |
+          if ! npx playwright test --config apps/web/playwright.config.ts; then
+            echo "::error title=BUILD: E2E Tests::Playwright end-to-end tests failed (exit code: $?)"
+            exit 1
+          fi
         env:
           CI: true
 
       - name: i18n string lint (Constitution VIII, QG-9)
-        run: bash scripts/lint-i18n.sh
+        run: |
+          if ! bash scripts/lint-i18n.sh; then
+            echo "::error title=BUILD: i18n Lint::Internationalization string lint failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Build Storybook
-        run: npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static
+        run: |
+          if ! npx storybook build --config-dir apps/web/.storybook -o apps/web/storybook-static; then
+            echo "::error title=BUILD: Storybook::Storybook build failed (exit code: $?)"
+            exit 1
+          fi
 
       - name: Storybook a11y audit (FR-019, QG-6)
         run: |
-          npx concurrently -k -s first -n storybook,test \
+          if ! npx concurrently -k -s first -n storybook,test \
             "npx http-server apps/web/storybook-static --port 6006 --silent" \
-            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006 --config-dir apps/web/.storybook"
+            "npx wait-on http://localhost:6006 && npx test-storybook --url http://localhost:6006 --config-dir apps/web/.storybook"; then
+            echo "::error title=BUILD: Storybook a11y::Storybook accessibility audit failed (exit code: $?)"
+            exit 1
+          fi
 
   # ── Job 2: Build and push container image (FR-005, FR-006, FR-007) ──
   # Uses the single nightly identity (AcrPush on shared ACR).
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [validate]
     environment: nightly
     outputs:
@@ -119,8 +173,23 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: ACR login
-        run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+      - name: ACR login (with retry)
+        run: |
+          REGISTRY="${{ secrets.AZURE_CONTAINER_REGISTRY }}"
+          MAX_ATTEMPTS=3
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "ACR login attempt ${attempt}/${MAX_ATTEMPTS}..."
+            if az acr login --name "${REGISTRY}"; then
+              echo "::notice title=ACR Login::Successfully authenticated to ${REGISTRY} (attempt ${attempt})"
+              exit 0
+            fi
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "::warning title=AUTHENTICATION: ACR login::Attempt ${attempt} failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
+          echo "::error title=AUTHENTICATION: ACR login::Failed to log in to ACR ${REGISTRY} after ${MAX_ATTEMPTS} attempts"
+          exit 1
 
       - name: Generate image tags (FR-007)
         id: meta
@@ -132,21 +201,37 @@ jobs:
           echo "Date tag: ${DATE_TAG}"
           echo "SHA tag: ${SHA_TAG}"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/acroyoga-web:${{ steps.meta.outputs.date-tag }}
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/acroyoga-web:${{ steps.meta.outputs.sha-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Annotate build result
+        if: success()
         run: |
-          REGISTRY="${{ secrets.AZURE_CONTAINER_REGISTRY }}"
-          docker build \
-            -t ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.date-tag }} \
-            -t ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.sha-tag }} \
-            .
-          docker push ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.date-tag }}
-          docker push ${REGISTRY}/acroyoga-web:${{ steps.meta.outputs.sha-tag }}
+          echo "::notice title=Docker Build::Container image built and pushed with tags ${{ steps.meta.outputs.date-tag }}, ${{ steps.meta.outputs.sha-tag }}"
+
+      - name: Annotate build failure
+        if: failure()
+        run: |
+          echo "::error title=BUILD: Docker build and push::Docker build/push failed - check previous step for details"
 
   # ── Job 3: Deploy infrastructure and app (FR-008, FR-009, FR-010, FR-011) ──
   # Runs full Bicep deployment then verifies with smoke tests.
   # Uses nightly identity with Owner on rg-acroyoga-nightly.
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [build-and-push]
     environment: nightly
     permissions:
@@ -173,14 +258,30 @@ jobs:
           set -euo pipefail
           # The Flexible Server cannot be updated while stopped (UpsertServerManagementOperationUnsupportedForStoppedServer).
           # Find any stopped PG servers in the RG and start them before Bicep deployment.
-          SERVERS=$(az postgres flexible-server list \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --query "[?state=='Stopped'].name" -o tsv)
+
+          # Retry the list query to handle transient Azure API failures
+          SERVERS=""
+          for list_attempt in $(seq 1 3); do
+            if SERVERS=$(az postgres flexible-server list \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --query "[?state=='Stopped'].name" -o tsv 2>&1); then
+              break
+            fi
+            if [ "$list_attempt" -lt 3 ]; then
+              echo "::warning title=INFRASTRUCTURE: PostgreSQL list::Attempt ${list_attempt} to list servers failed, retrying in 10s..."
+              sleep 10
+            else
+              echo "::error title=INFRASTRUCTURE: PostgreSQL list::Failed to list PostgreSQL servers after 3 attempts — ${SERVERS}"
+              exit 1
+            fi
+          done
+
           if [ -z "$SERVERS" ]; then
-            echo "No stopped PostgreSQL servers found."
+            echo "::notice title=PostgreSQL Wake::No stopped PostgreSQL servers found — skipping start"
           else
             for SERVER in $SERVERS; do
               echo "Starting stopped PostgreSQL server: ${SERVER}"
+              WAKE_START=$SECONDS
               az postgres flexible-server start \
                 --resource-group ${{ env.RESOURCE_GROUP }} \
                 --name "${SERVER}"
@@ -192,11 +293,13 @@ jobs:
                   --query state -o tsv)
                 echo "  Attempt ${i}: server state = ${STATE}"
                 if [ "$STATE" = "Ready" ]; then
-                  echo "Server ${SERVER} is ready."
+                  ELAPSED=$((SECONDS - WAKE_START))
+                  echo "::notice title=PostgreSQL Wake::Server ${SERVER} started and ready (elapsed: ${ELAPSED}s)"
                   break
                 fi
                 if [ "$i" -eq 30 ]; then
-                  echo "::error::PostgreSQL server ${SERVER} did not reach Ready state after 5 minutes (state: ${STATE})"
+                  ELAPSED=$((SECONDS - WAKE_START))
+                  echo "::error title=TIMEOUT: PostgreSQL Wake::Server ${SERVER} did not reach Ready state after ${ELAPSED}s (last state: ${STATE}, attempts: ${i}/30)"
                   exit 1
                 fi
                 sleep 10
@@ -204,9 +307,10 @@ jobs:
             done
           fi
 
-      - name: Deploy infrastructure (Bicep)
+      - name: Validate infrastructure (Bicep)
         run: |
-          az deployment group create \
+          echo "Running Bicep template validation..."
+          if ! az deployment group validate \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --template-file infra/main.bicep \
             --parameters infra/main.parameters.nightly.json \
@@ -216,24 +320,116 @@ jobs:
               nextAuthSecret="$(openssl rand -base64 32)" \
               sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
               githubOwnerId="${{ github.repository_owner_id }}" \
-              githubRepoId="${{ github.repository_id }}"
+              githubRepoId="${{ github.repository_id }}" 2>&1; then
+            echo "::error title=DEPLOYMENT: Bicep validate::Template validation failed — fix Bicep errors before deployment"
+            exit 1
+          fi
+          echo "::notice title=Bicep Validate::Template validation passed"
+
+      - name: Deploy infrastructure (Bicep) (with retry)
+        run: |
+          MAX_ATTEMPTS=2
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Bicep deployment attempt ${attempt}/${MAX_ATTEMPTS}..."
+            DEPLOY_OUTPUT=$(az deployment group create \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --template-file infra/main.bicep \
+              --parameters infra/main.parameters.nightly.json \
+              --parameters \
+                imageTag="${{ env.IMAGE_TAG }}" \
+                dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+                nextAuthSecret="$(openssl rand -base64 32)" \
+                sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
+                githubOwnerId="${{ github.repository_owner_id }}" \
+                githubRepoId="${{ github.repository_id }}" 2>&1) && {
+              echo "::notice title=Bicep Deploy::Infrastructure deployment completed successfully (attempt ${attempt})"
+              exit 0
+            }
+            echo "Deployment attempt ${attempt} failed:"
+            echo "$DEPLOY_OUTPUT" | tail -5
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "::warning title=DEPLOYMENT: Bicep deploy::Attempt ${attempt} failed, retrying in 60s..."
+              sleep 60
+            fi
+          done
+          echo "::error title=DEPLOYMENT: Bicep deploy::Deployment failed after ${MAX_ATTEMPTS} attempts"
+          exit 1
 
       - name: Wait for readiness
         run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          # Resolve FQDN with retry
+          APP_URL=""
+          for url_attempt in $(seq 1 3); do
+            if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
+              break
+            fi
+            if [ "$url_attempt" -lt 3 ]; then
+              echo "::warning title=INFRASTRUCTURE: Container App query::Attempt ${url_attempt} to resolve FQDN failed, retrying in 5s..."
+              sleep 5
+            else
+              echo "::error title=INFRASTRUCTURE: Container App query::Failed to resolve FQDN for ${{ env.APP_NAME }} after 3 attempts"
+              exit 1
+            fi
+          done
+
+          READY_START=$SECONDS
           echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 50 --retry-delay 15 --retry-all-errors \
+          if curl --retry 50 --retry-delay 15 --retry-all-errors \
             --connect-timeout 10 --max-time 30 --retry-max-time 900 \
-            -sf "https://${APP_URL}/api/ready"
+            -sf "https://${APP_URL}/api/ready"; then
+            ELAPSED=$((SECONDS - READY_START))
+            echo "::notice title=Readiness Check::Application ready after ${ELAPSED}s"
+          else
+            ELAPSED=$((SECONDS - READY_START))
+            echo "::error title=TIMEOUT: Readiness Check::Readiness check failed after ${ELAPSED}s. Endpoint: https://${APP_URL}/api/ready, retries: 50, delay: 15s"
+            exit 1
+          fi
 
       - name: Smoke test — health
         run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health")
+          # Resolve FQDN with retry
+          APP_URL=""
+          for url_attempt in $(seq 1 3); do
+            if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
+              break
+            fi
+            if [ "$url_attempt" -lt 3 ]; then
+              sleep 5
+            else
+              echo "::error title=INFRASTRUCTURE: Container App query::Failed to resolve FQDN for ${{ env.APP_NAME }} after 3 attempts"
+              exit 1
+            fi
+          done
+
+          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health") || {
+            echo "::error title=SMOKE_TEST: Health Check::Health check failed. Endpoint: https://${APP_URL}/api/health"
+            exit 1
+          }
           echo "Health response: ${RESPONSE}"
-          echo "${RESPONSE}" | grep -q '"status":"healthy"'
+          if ! echo "${RESPONSE}" | grep -q '"status":"healthy"'; then
+            echo "::error title=SMOKE_TEST: Health Check::Health endpoint returned unexpected status. Response: ${RESPONSE}"
+            exit 1
+          fi
+          echo "::notice title=Smoke Test::Health check passed"
 
       - name: Smoke test — home page
         run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" | head -20
+          # Resolve FQDN with retry
+          APP_URL=""
+          for url_attempt in $(seq 1 3); do
+            if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
+              break
+            fi
+            if [ "$url_attempt" -lt 3 ]; then
+              sleep 5
+            else
+              echo "::error title=INFRASTRUCTURE: Container App query::Failed to resolve FQDN for ${{ env.APP_NAME }} after 3 attempts"
+              exit 1
+            fi
+          done
+
+          if ! curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" | head -20; then
+            echo "::error title=SMOKE_TEST: Home Page::Home page check failed. Endpoint: https://${APP_URL}/"
+            exit 1
+          fi
+          echo "::notice title=Smoke Test::Home page check passed"

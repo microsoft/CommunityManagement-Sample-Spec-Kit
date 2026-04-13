@@ -21,9 +21,6 @@ param storageSizeGB int = 32
 @description('Principal ID of the managed identity for Entra admin')
 param managedIdentityPrincipalId string
 
-@description('Client ID of the managed identity (used as DB username for token auth)')
-param managedIdentityClientId string
-
 @description('Deploy the DB Wake custom role and assignment. Set to false when the deploying identity does not have subscription-level Microsoft.Authorization/roleDefinitions/write permission (e.g. nightly).')
 param deployDbWakeRole bool = true
 
