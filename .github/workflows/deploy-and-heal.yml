@@ -155,6 +155,36 @@ jobs:
           echo "IMAGE_TAG=nightly-sha-${SHA:0:7}" >> "$GITHUB_ENV"
           echo "::notice title=Image Tag::Resolved nightly image tag: nightly-sha-${SHA:0:7}"
 
+      # Ensure required labels exist before the self-healing loop tries to use them.
+      # GitHub returns 422 when creating an issue with non-existent labels.
+      - name: Ensure deploy-fix labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'deploy-fix-auto', color: 'd93f0b', description: 'Auto-created by self-healing deploy pipeline' },
+              { name: 'copilot', color: '1d76db', description: 'Assigned to Copilot agent for autonomous fix' },
+              { name: 'needs-human-review', color: 'e4e669', description: 'Requires human review — agent cannot fix autonomously' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                });
+              } catch (e) {
+                if (e.status === 404) {
+                  console.log(`Creating missing label: ${label.name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ...label,
+                  });
+                }
+              }
+            }
+
       - name: Start PostgreSQL server if stopped
         uses: ./.github/actions/pg-wake
         with:
