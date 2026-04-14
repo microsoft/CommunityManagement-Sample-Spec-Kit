@@ -1,12 +1,13 @@
 {
   "name": "AcroYoga Community",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli": {},
     "ghcr.io/devcontainers/features/github-cli": {},
     "ghcr.io/devcontainers/features/postgresql": {}
   },
-  "postCreateCommand": "npm ci --force",
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "npm run tokens:build -w @acroyoga/tokens",
   "forwardPorts": [3000],
   "customizations": {
     "vscode": {
@@ -14,6 +15,12 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode"
       ]
+    },
+    "codespaces": {
+      "prebuild": {
+        "trigger": "push",
+        "branches": ["main"]
+      }
     }
   }
 }

@@ -1,0 +1,99 @@
+name: CI Fast
+
+# Tier 1 CI — runs on every PR for rapid iteration (< 3 min target)
+# Full quality gates run in ci-full.yml before merge
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      tokens: ${{ steps.filter.outputs.tokens }}
+      shared-ui: ${{ steps.filter.outputs.shared-ui }}
+      shared: ${{ steps.filter.outputs.shared }}
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      infra: ${{ steps.filter.outputs.infra }}
+      docs-only: ${{ steps.filter.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            tokens:
+              - 'packages/tokens/**'
+            shared-ui:
+              - 'packages/shared-ui/**'
+            shared:
+              - 'packages/shared/**'
+            web:
+              - 'apps/web/**'
+            mobile:
+              - 'apps/mobile/**'
+            infra:
+              - 'infra/**'
+              - '.github/workflows/**'
+            docs-only:
+              - '**/*.md'
+              - 'docs/**'
+              - 'specs/**'
+
+  fast-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs-only != 'true' || needs.detect-changes.outputs.web == 'true' || needs.detect-changes.outputs.tokens == 'true' || needs.detect-changes.outputs.shared-ui == 'true' || needs.detect-changes.outputs.shared == 'true' || needs.detect-changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build design tokens
+        run: npm run tokens:build -w @acroyoga/tokens
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (includes jsx-a11y)
+        run: npm run lint -w @acroyoga/web
+
+      # Run tests only for workspaces with changes
+      - name: Run token tests
+        if: needs.detect-changes.outputs.tokens == 'true'
+        run: npm run test -w @acroyoga/tokens
+
+      - name: Run shared-ui tests
+        if: needs.detect-changes.outputs.shared-ui == 'true' || needs.detect-changes.outputs.tokens == 'true'
+        run: npm run test -w @acroyoga/shared-ui
+
+      - name: Run shared tests
+        if: needs.detect-changes.outputs.shared == 'true'
+        run: npm run test -w @acroyoga/shared
+
+      - name: Run web tests
+        if: needs.detect-changes.outputs.web == 'true' || needs.detect-changes.outputs.shared == 'true' || needs.detect-changes.outputs.shared-ui == 'true' || needs.detect-changes.outputs.tokens == 'true'
+        run: npm run test -w @acroyoga/web
+
+      - name: Run mobile tests
+        if: needs.detect-changes.outputs.mobile == 'true'
+        run: npm run test -w @acroyoga/mobile
+
+  # Always pass for docs-only changes
+  docs-pass:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs-only == 'true' && needs.detect-changes.outputs.web != 'true' && needs.detect-changes.outputs.tokens != 'true' && needs.detect-changes.outputs.shared-ui != 'true' && needs.detect-changes.outputs.shared != 'true' && needs.detect-changes.outputs.mobile != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Documentation-only change — skipping code checks"

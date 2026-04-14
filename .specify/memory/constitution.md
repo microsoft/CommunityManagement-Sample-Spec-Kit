@@ -1,17 +1,18 @@
 <!--
   Sync Impact Report
-  Version change: 1.4.0 → 1.5.0 (MINOR — rewrote XIII, added XIV)
-  Modified principles: XIII (Development Environment — WSL → Codespaces)
-  Unchanged principles: I–XII
+  Version change: 1.5.0 → 1.6.0 (MINOR — added XV, tiered QG, agent protocol)
+  Modified principles: (none)
+  Unchanged principles: I–XIV
   Added sections:
-    - XIV. Managed Identity — DefaultAzureCredential for all Azure connections
+    - XV. Autonomous Development Pipeline — tiered CI, auto-merge, agent protocol
+  Modified sections:
+    - Quality Gates — split into Tier 1 (fast) and Tier 2 (full)
+    - Governance — added Autonomous Agent Protocol subsection
   Removed sections: (none)
-  Alignment matrix: added row for XIV; updated XIII description
+  Alignment matrix: added row for XV
   Templates requiring updates:
-    - .specify/templates/plan-template.md ✅ no updates needed (Constitution Check is generic)
-    - .specify/templates/spec-template.md ✅ no updates needed (constitution check line is generic)
-    - .specify/templates/tasks-template.md ✅ no updates needed (phase structure unchanged)
-    - .specify/templates/constitution-template.md ✅ no updates needed (placeholder structure unchanged)
+    - .github/copilot-instructions.md ✅ updated (autonomous protocol, fast iteration, branch naming)
+    - .specify/templates/tasks-template.md ✅ updated (concurrency rules for agent sessions)
   Follow-up TODOs:
     - Existing routes using x-user-id header MUST be migrated to getServerSession()/requireAuth()
     - GDPR deletion function MUST be audited to cover Spec 005 tables
@@ -19,7 +20,7 @@
 -->
 # AcroYoga Community — Project Constitution
 
-> Version 1.5.0 — Governing architectural principles for the
+> Version 1.6.0 — Governing architectural principles for the
 > AcroYoga Community Events platform.
 
 ## Core Principles
@@ -245,26 +246,52 @@ fallback chain that works in Codespaces, CI, and production.
 - The `AZURE_CLIENT_ID` environment variable MUST be set in all deployed containers to identify the User-Assigned Managed Identity
 - New Azure service integrations MUST use `DefaultAzureCredential` — PR reviewers MUST reject any code that introduces shared keys or connection strings for Azure services
 
+### XV. Autonomous Development Pipeline
+
+Feature development follows an automated pipeline: issue creation →
+spec generation → planning → task decomposition → GitHub issue
+creation → agent implementation → fast CI → merge. Human review is
+required only at designated gates.
+
+**Rationale:** Maximising autonomy reduces cycle time from days to
+hours for standard features. Human gates remain for architectural
+decisions and security-sensitive changes. The two-tier CI approach
+ensures rapid iteration during development while maintaining full
+quality before merge.
+
+**Constraints:**
+- Feature requests tagged `feature-request-auto` MUST trigger the full spec-kit pipeline automatically via GitHub Actions
+- Agent sessions MUST use fast CI (typecheck + lint + affected-workspace tests) during development
+- Full quality gates (production build, E2E, Storybook, bundle size, i18n lint) run ONLY before merge to `main`
+- Concurrent agent sessions MUST be isolated by workspace to prevent merge conflicts
+- PRs passing all quality gates are eligible for auto-merge via merge queue
+- Human review is REQUIRED for: new constitution amendments, security-sensitive changes, new dependency additions, and database migrations
+- Each agent session MUST create atomic, small PRs — one task per PR preferred
+- Agent branches MUST follow the naming convention: `copilot/{spec-number}/{task-id}`
+- PRs MUST include `Fixes #{issue-number}` in the description to auto-close the originating issue on merge
+- Failed agent PRs are relabelled `needs-human-review` after 3 retry attempts
+
 ---
 
 ## Principle–Spec Alignment Matrix
 
-| Principle | 001 Discovery | 002 Social | 003 Recurring | 004 Permissions | 005 Teachers |
-|-----------|:---:|:---:|:---:|:---:|:---:|
-| I. API-First | ✅ | ✅ | ✅ | ✅ | ✅ |
-| II. Test-First | ✅ | ✅ | ✅ | ✅ | ✅ |
-| III. Privacy | ✅ | ✅ | | | ✅ |
-| IV. Server-Side Authority | ✅ | ✅ | ✅ | ✅ | ✅ |
-| V. UX Consistency | ✅ | ✅ | | | ✅ |
-| VI. Performance Budget | ✅ | ✅ | ✅ | | ✅ |
-| VII. Simplicity | | | ✅ | | |
-| VIII. Internationalisation | ✅ | ✅ | | | ✅ |
-| IX. Scoped Permissions | | | | ✅ | ✅ |
-| X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ |
-| XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ |
-| XII. Financial Integrity | | | ✅ | ✅ | ✅ |
-| XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ |
-| XIV. Managed Identity | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Principle | 001 Discovery | 002 Social | 003 Recurring | 004 Permissions | 005 Teachers | 011 Entra External ID |
+|-----------|:---:|:---:|:---:|:---:|:---:|:---:|
+| I. API-First | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| II. Test-First | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| III. Privacy | ✅ | ✅ | | | ✅ | ✅ |
+| IV. Server-Side Authority | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| V. UX Consistency | ✅ | ✅ | | | ✅ | ✅ |
+| VI. Performance Budget | ✅ | ✅ | ✅ | | ✅ | ✅ |
+| VII. Simplicity | | | ✅ | | | ✅ |
+| VIII. Internationalisation | ✅ | ✅ | | | ✅ | ✅ |
+| IX. Scoped Permissions | | | | ✅ | ✅ | ✅ |
+| X. Notification Architecture | ✅ | ✅ | ✅ | | ✅ | |
+| XI. Resource Ownership | ✅ | | ✅ | ✅ | ✅ | ✅ |
+| XII. Financial Integrity | | | ✅ | ✅ | ✅ | |
+| XIII. Development Environment | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XIV. Managed Identity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XV. Autonomous Pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Usage:** Each spec's header SHOULD list the principles that apply.
 > Specs 003, 004, and 005 should be updated to include XI and XII
@@ -274,20 +301,38 @@ fallback chain that works in Codespaces, CI, and production.
 
 ## Quality Gates
 
-Every pull request MUST pass these gates before merge:
+Quality gates are split into two tiers to enable rapid iteration
+during development while maintaining full quality before merge
+(Constitution XV — Autonomous Development Pipeline).
 
-1. **Type check** — `tsc --noEmit` passes with zero errors
-2. **Tests** — `npm run test` passes; no skipped tests without linked issue
+### Tier 1: Fast CI (every PR, every push)
+
+These gates run on every PR via `ci-fast.yml` and MUST pass before
+any further work proceeds:
+
+1. **Tokens build** — design tokens compile without errors
+2. **Type check** — `tsc --noEmit` passes with zero errors
 3. **Lint** — linter passes with zero warnings (warnings are errors)
-4. **Build** — production build completes without errors
-5. **Bundle size** — initial JS bundle MUST NOT exceed 200 KB compressed
-6. **Accessibility** — no new axe-core violations in changed components
-7. **API contract** — any API change updates the central types file and has a corresponding test
-8. **Constitution review** — reviewer confirms the change does not violate any core principle
-9. **i18n compliance** — no raw user-facing string literals in UI components (automated lint)
-10. **Permission smoke test** — any new mutation endpoint MUST include an integration test proving a 403 response for an unauthorised caller
-11. **Auth consistency** — all API routes MUST authenticate through `getServerSession()` or the `requireAuth()` wrapper; client-injectable headers (e.g., `x-user-id`, `x-api-key`) MUST NOT be used as the authentication mechanism; PR reviewers MUST reject any route that reads identity from a request header instead of the session
-12. **Cross-spec data integrity** — any new spec that references tables defined in another spec MUST include an integration test that exercises the cross-spec query path with realistic data; additionally, any new PII table MUST appear in the GDPR deletion and data-export test suites before the PR can merge
+4. **Affected tests** — tests for changed workspaces pass
+
+### Tier 2: Full CI (before merge to main)
+
+These gates run via `ci-full.yml` when the `ready-for-merge` label is
+applied, on pushes to `main`, or on manual dispatch. ALL gates must
+pass before merge:
+
+5. **All tests** — full test suite passes across all workspaces
+6. **Build** — production build completes without errors
+7. **Bundle size** — initial JS bundle MUST NOT exceed 200 KB compressed
+8. **Accessibility** — no new axe-core violations in changed components
+9. **API contract** — any API change updates the central types file and has a corresponding test
+10. **Constitution review** — reviewer confirms the change does not violate any core principle
+11. **i18n compliance** — no raw user-facing string literals in UI components (automated lint)
+12. **Permission smoke test** — any new mutation endpoint MUST include an integration test proving a 403 response for an unauthorised caller
+13. **Auth consistency** — all API routes MUST authenticate through `getServerSession()` or the `requireAuth()` wrapper; client-injectable headers (e.g., `x-user-id`, `x-api-key`) MUST NOT be used as the authentication mechanism; PR reviewers MUST reject any route that reads identity from a request header instead of the session
+14. **Cross-spec data integrity** — any new spec that references tables defined in another spec MUST include an integration test that exercises the cross-spec query path with realistic data; additionally, any new PII table MUST appear in the GDPR deletion and data-export test suites before the PR can merge
+15. **Storybook** — Storybook build + a11y audit passes
+16. **E2E** — Playwright end-to-end tests pass
 
 ### Performance Thresholds
 
@@ -331,4 +376,23 @@ Exceptions may be granted for prototyping/spike branches clearly
 labelled as such (branch prefix `spike/` or `prototype/`).
 Exceptions MUST NOT merge to `main`.
 
-**Version**: 1.5.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-03-22
+### Autonomous Agent Protocol
+
+Agent sessions (Copilot, GitHub Actions bots) follow these rules:
+
+- Agents follow the Autonomous Session Protocol in `.github/copilot-instructions.md`
+- Agents create branches named `copilot/{spec}/{task}` (e.g., `copilot/022/T005`)
+- Agents run Tier 1 CI only during development iteration
+- Agents create PRs with `Fixes #{issue}` to auto-close issues on merge
+- PRs from agents enter the merge queue after Tier 2 CI passes
+- Failed agent PRs are relabelled `needs-human-review` after 3 retry attempts
+- Human review is REQUIRED for: constitution changes, security changes, new dependencies, and DB migrations
+
+### Auto-Merge Policy
+
+PRs authored by automated agents (Copilot, GitHub Actions) that pass
+all quality gates in `ci-full.yml` are eligible for auto-merge via
+merge queue. Human-authored PRs require at least one human approval.
+The merge queue MUST run full CI on the merge commit before completing.
+
+**Version**: 1.6.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-04-14

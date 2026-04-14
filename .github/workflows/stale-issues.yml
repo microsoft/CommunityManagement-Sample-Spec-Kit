@@ -1,0 +1,94 @@
+name: Stale Issue Cleanup
+
+# Labels issues untouched for 14 days, closes after 7 more days of inactivity
+# Agent-assigned issues that fail repeatedly get flagged for human review
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  stale-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const STALE_DAYS = 14;
+            const CLOSE_DAYS = 21;
+
+            let page = 1;
+            let staled = 0;
+            let closed = 0;
+
+            while (true) {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                sort: 'updated',
+                direction: 'asc',
+                per_page: 100,
+                page: page
+              });
+
+              if (issues.length === 0) break;
+
+              for (const issue of issues) {
+                if (issue.pull_request) continue;
+
+                const updatedAt = new Date(issue.updated_at);
+                const daysSinceUpdate = (now - updatedAt) / (1000 * 60 * 60 * 24);
+                const labels = issue.labels.map(l => l.name);
+
+                // Skip issues with certain labels
+                if (labels.includes('pinned') || labels.includes('needs-human-review')) continue;
+
+                if (daysSinceUpdate >= CLOSE_DAYS && labels.includes('stale')) {
+                  // Close stale issues after CLOSE_DAYS
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    state: 'closed',
+                    state_reason: 'not_planned'
+                  });
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: '🤖 Closing — this issue has been stale for 21+ days with no activity. Reopen if still needed.'
+                  });
+                  closed++;
+                } else if (daysSinceUpdate >= STALE_DAYS && !labels.includes('stale')) {
+                  // Label as stale after STALE_DAYS
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: ['stale']
+                  });
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: '🤖 This issue has been inactive for 14+ days. It will be closed in 7 days if there is no further activity. Remove the `stale` label to keep it open.'
+                  });
+                  staled++;
+                }
+
+                // Rate limit protection
+                await new Promise(r => setTimeout(r, 500));
+              }
+
+              page++;
+            }
+
+            console.log(`Stale check complete. Staled: ${staled}, Closed: ${closed}`);
