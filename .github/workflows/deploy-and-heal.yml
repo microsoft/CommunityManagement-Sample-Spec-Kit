@@ -72,10 +72,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ inputs.environment == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
@@ -137,17 +138,49 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ (inputs.environment || 'nightly') == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Fix IMAGE_TAG for workflow_run trigger: nightly tags images with 7-char SHA
+      # (nightly-sha-abc1234) but the env default uses the full SHA
+      - name: Resolve image tag for nightly trigger
+        if: github.event_name == 'workflow_run'
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          echo "IMAGE_TAG=nightly-sha-${SHA:0:7}" >> "$GITHUB_ENV"
+          echo "::notice title=Image Tag::Resolved nightly image tag: nightly-sha-${SHA:0:7}"
 
       - name: Start PostgreSQL server if stopped
         uses: ./.github/actions/pg-wake
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
+
+      - name: Validate infrastructure (Bicep)
+        if: inputs.deploy-infrastructure == true
+        run: |
+          ENV="${{ inputs.environment || 'nightly' }}"
+          PARAMS_FILE="infra/main.parameters.${ENV}.json"
+          echo "Running Bicep template validation for ${ENV}..."
+          if ! az deployment group validate \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file infra/main.bicep \
+            --parameters "$PARAMS_FILE" \
+            --parameters \
+              imageTag="${{ env.IMAGE_TAG }}" \
+              dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+              nextAuthSecret="$(openssl rand -base64 32)" \
+              sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
+              githubOwnerId="${{ github.repository_owner_id }}" \
+              githubRepoId="${{ github.repository_id }}" 2>&1; then
+            echo "::error title=DEPLOYMENT: Bicep validate::Template validation failed — fix Bicep errors before deployment"
+            exit 1
+          fi
+          echo "::notice title=Bicep Validate::Template validation passed"
 
       - name: Deploy infrastructure (Bicep)
         if: inputs.deploy-infrastructure == true
