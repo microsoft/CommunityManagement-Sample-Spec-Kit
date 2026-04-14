@@ -123,19 +123,31 @@ For staging and nightly environments, the self-healing pipeline automates
 failure recovery (Constitution XV):
 
 ```
-Trigger deploy-and-heal.yml (manual or scheduled):
+Trigger deploy-and-heal.yml (manual, scheduled, or nightly failure):
   1. Build & push container image to ACR
-  2. Deploy new revision to Container App
-  3. Run smoke tests (readiness, health, home page)
+  2. Record baseline (known-good) revision
+  3. Deploy new revision to Container App
+  4. Run smoke tests (readiness, health, home page) via composite action
      ├── ✅ All pass → deployment successful, exit
      └── ❌ Any fail → collect structured diagnostics
-  4. Classify error (runtime | dependency | config | infra)
-  5. Create GitHub issue with diagnostics (labels: deploy-fix-auto, copilot)
-  6. Copilot agent picks up issue, diagnoses, implements fix, opens PR
-  7. PR goes through Tier 1 → Tier 2 CI → auto-merge
-  8. Rebuild & redeploy with fix (go to step 2)
-  9. After 3 iterations → label 'needs-human-review', stop
+  5. Classify error (runtime | dependency | config | credential | infra)
+  6. Create GitHub issue with diagnostics (labels: deploy-fix-auto, copilot)
+  7. Copilot agent picks up issue, diagnoses, implements fix, opens PR
+  8. PR goes through Tier 1 → Tier 2 CI → auto-merge
+  9. Exponential backoff (60s → 120s → 240s), then rebuild & redeploy (go to step 3)
+  10. After 3 iterations → rollback to baseline revision → create 'needs-human-review' issue
 ```
+
+**Automatic rollback**: When all self-heal iterations are exhausted, the
+pipeline automatically activates the baseline revision that was running before
+the deploy began, shifts 100% traffic to it, and deactivates the broken
+revision. This ensures the environment is restored to a working state before
+escalating to human review.
+
+**Nightly integration**: The `deploy-and-heal.yml` workflow has a `workflow_run`
+trigger that fires when `Nightly Build & Deploy` completes with failure. This
+means nightly deploy failures automatically enter the self-healing loop without
+manual intervention.
 
 **Error categories:**
 | Category | Auto-fixable | Examples |
@@ -143,8 +155,8 @@ Trigger deploy-and-heal.yml (manual or scheduled):
 | `runtime` | ✅ | Crash loops, health check failures, startup errors |
 | `dependency` | ✅ | Missing modules, import errors |
 | `config` | ✅ | Wrong env vars in code, misconfigured routes |
+| `credential` | ❌ | Expired secrets, missing OIDC, RBAC errors, Key Vault access denied |
 | `infra` | ❌ | Bicep errors, resource quota, networking |
-| Credentials | ❌ | Expired secrets, missing OIDC |
 
 **Manual trigger:**
 ```bash
@@ -152,6 +164,57 @@ gh workflow run deploy-and-heal.yml \
   -f environment=staging \
   -f max-heal-iterations=3
 ```
+
+**With a specific image tag:**
+```bash
+gh workflow run deploy-and-heal.yml \
+  -f environment=nightly \
+  -f image-tag=nightly-20260414
+```
+
+### When Human Review Is Escalated
+
+When the self-healing pipeline creates an issue with the `needs-human-review`
+label, a human must:
+
+1. **Review the issue** — read the error category, logs, and smoke test results
+2. **Check the rollback** — verify the baseline revision is active and healthy
+3. **Investigate root cause** — use the diagnostics to identify the failure
+4. **Apply a fix** — either manually fix or re-assign to an agent with guidance
+5. **Redeploy** — trigger `deploy-and-heal.yml` manually after the fix merges
+
+### Diagnostics JSON Schema
+
+The `deploy-diagnostics` action produces a JSON artifact with this structure:
+
+```json
+{
+  "timestamp": "2026-04-14T16:00:00Z",
+  "appName": "ca-acroyoga-web-staging",
+  "resourceGroup": "rg-acroyoga-stg",
+  "revision": { /* az containerapp revision show output */ },
+  "containerLogs": [ /* az containerapp logs show output */ ],
+  "systemLogs": [ /* az containerapp logs show --type system output */ ],
+  "deploymentOperations": [ /* az deployment group list — failed ops */ ],
+  "appConfig": {
+    "ingress": { /* ingress config */ },
+    "activeRevisions": "Single",
+    "latestRevision": "ca-acroyoga-web-staging--h1-abc123",
+    "latestReady": "ca-acroyoga-web-staging--previous"
+  },
+  "smokeTestResults": {
+    "readiness": "pass|fail",
+    "health": "pass|fail",
+    "homepage": "pass|fail",
+    "readyResponse": { /* /api/ready response body */ },
+    "healthResponse": { /* /api/health response body */ }
+  }
+}
+```
+
+The `classify-error` action reads this JSON and outputs an `error-category`
+(`runtime`, `dependency`, `config`, `credential`, `infra`, or `unknown`) and
+a human-readable `summary`.
 
 ### PR Lifecycle
 

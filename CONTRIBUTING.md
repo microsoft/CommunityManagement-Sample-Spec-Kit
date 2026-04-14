@@ -161,9 +161,17 @@ The spec-kit process supports near-fully autonomous execution:
 4. PRs include `Fixes #{issue-number}` for automatic issue closure on merge
 5. Tier 1 CI runs on every push; on pass, `ready-for-merge` is auto-applied
 6. Tier 2 CI runs; on pass, the PR is auto-merged
-7. **Self-healing deployment** — after merge to `main`, `deploy-and-heal.yml` deploys a canary revision, runs smoke tests (readiness + health + home page), and if they fail: collects structured diagnostics → creates a `deploy-fix-auto` issue → Copilot agent diagnoses and fixes → redeploys automatically (up to 3 iterations)
+7. **Self-healing deployment** — after merge to `main`, `deploy-and-heal.yml` deploys a canary revision, runs smoke tests (readiness + health + home page), and if they fail: collects structured diagnostics → classifies error → creates a `deploy-fix-auto` issue → Copilot agent diagnoses and fixes → redeploys automatically (up to 3 iterations with exponential backoff). On final failure, the pipeline rolls back to the last known-good revision before escalating.
+8. **Nightly integration** — when the nightly build & deploy workflow fails, `deploy-and-heal.yml` triggers automatically via `workflow_run` to attempt self-healing recovery.
 
-Human review is required only for: spec approval, constitution amendments, security-sensitive changes, new dependencies, database migrations, and infrastructure errors during self-healing. See [Constitution XV](specs/constitution.md) for the full policy.
+Human review is required only for: spec approval, constitution amendments, security-sensitive changes, new dependencies, database migrations, credential/identity errors, and infrastructure errors during self-healing. See [Constitution XV](specs/constitution.md) for the full policy.
+
+When an issue is labelled `needs-human-review` by the self-healing pipeline:
+1. Review the issue's error category, container logs, and smoke test results
+2. Verify the automatic rollback restored the previous working revision
+3. Investigate the root cause using the diagnostics JSON (see [Deployment Runbook](docs/deployment-runbook.md))
+4. Apply a fix manually or re-assign to an agent with additional context
+5. Trigger `deploy-and-heal.yml` manually after the fix merges
 
 ## Code Conventions
 
