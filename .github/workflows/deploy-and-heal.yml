@@ -55,9 +55,7 @@ jobs:
     timeout-minutes: 30
     # Skip build when: image-tag is provided, or triggered by nightly (which already built)
     # Only trigger self-heal on nightly failure, not success
-    if: >
-      (github.event_name == 'workflow_dispatch' && !inputs.image-tag) &&
-      !(github.event_name == 'workflow_run')
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.image-tag }}
     outputs:
       image-tag: sha-${{ github.sha }}
     environment: ${{ inputs.environment || 'nightly' }}
@@ -122,7 +120,9 @@ jobs:
       pull-requests: read
 
     env:
-      IMAGE_TAG: ${{ needs.build.outputs.image-tag || inputs.image-tag || format('nightly-sha-{0}', github.event.workflow_run.head_sha) }}
+      # For workflow_run triggers, head_sha may be empty if nightly failed before checkout;
+      # fall back to github.sha in that case
+      IMAGE_TAG: ${{ needs.build.outputs.image-tag || inputs.image-tag || format('nightly-sha-{0}', github.event.workflow_run.head_sha || github.sha) }}
       RESOURCE_GROUP: rg-acroyoga-${{ inputs.environment || 'nightly' }}
       APP_NAME: ca-acroyoga-web-${{ inputs.environment || 'nightly' }}
       MAX_ITERATIONS: ${{ inputs.max-heal-iterations || 3 }}
@@ -419,11 +419,13 @@ jobs:
                   '',
                   '### Container Logs (last 50 lines)',
                   '```',
+                  // Truncate to 3000 chars to stay within GitHub issue body limit (~65535 chars)
                   containerLogs.slice(-3000),
                   '```',
                   '',
                   '### System Logs (last 30 lines)',
                   '```',
+                  // Truncate to 2000 chars — system logs are less verbose than container logs
                   systemLogs.slice(-2000),
                   '```',
                   '',
@@ -483,11 +485,13 @@ jobs:
                 '',
                 '### Container Logs',
                 '```',
+                // Truncate to 3000 chars to stay within GitHub issue body limit (~65535 chars)
                 containerLogs.slice(-3000),
                 '```',
                 '',
                 '### System Logs',
                 '```',
+                // Truncate to 2000 chars — system logs are less verbose than container logs
                 systemLogs.slice(-2000),
                 '```',
                 '',
