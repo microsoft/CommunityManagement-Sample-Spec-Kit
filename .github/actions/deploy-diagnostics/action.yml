@@ -1,0 +1,163 @@
+name: Deploy Diagnostics
+description: >
+  Collect structured diagnostics from a failed Container App deployment.
+  Captures container logs, revision status, HTTP responses, and Bicep errors.
+
+inputs:
+  app-name:
+    description: 'Container App name'
+    required: true
+  resource-group:
+    description: 'Azure resource group'
+    required: true
+  revision-name:
+    description: 'Specific revision to diagnose (optional — uses latest if omitted)'
+    required: false
+    default: ''
+  smoke-test-diagnostics:
+    description: 'JSON output from the smoke-test action'
+    required: false
+    default: '{}'
+
+outputs:
+  diagnostics:
+    description: 'Full structured diagnostics JSON'
+    value: ${{ steps.collect.outputs.diagnostics }}
+  error-category:
+    description: 'Classified error category: infra | runtime | dependency | config | unknown'
+    value: ${{ steps.classify.outputs.category }}
+  summary:
+    description: 'Human-readable one-line summary of the failure'
+    value: ${{ steps.classify.outputs.summary }}
+
+runs:
+  using: composite
+  steps:
+    - name: Collect diagnostics
+      id: collect
+      shell: bash
+      run: |
+        set +e  # Don't exit on errors — we want to collect as much as we can
+
+        APP_NAME="${{ inputs.app-name }}"
+        RG="${{ inputs.resource-group }}"
+        REVISION="${{ inputs.revision-name }}"
+
+        # 1. Get revision status
+        echo "Collecting revision status..."
+        if [ -n "$REVISION" ]; then
+          REVISION_INFO=$(az containerapp revision show \
+            --name "$APP_NAME" --resource-group "$RG" \
+            --revision "$REVISION" -o json 2>&1) || REVISION_INFO='{"error":"failed to query revision"}'
+        else
+          REVISION_INFO=$(az containerapp revision list \
+            --name "$APP_NAME" --resource-group "$RG" \
+            --query "[0]" -o json 2>&1) || REVISION_INFO='{"error":"failed to list revisions"}'
+        fi
+
+        # 2. Get container logs (last 200 lines)
+        echo "Collecting container logs..."
+        CONTAINER_LOGS=$(az containerapp logs show \
+          --name "$APP_NAME" --resource-group "$RG" \
+          --tail 200 -o json 2>&1) || CONTAINER_LOGS='[]'
+
+        # 3. Get system logs
+        echo "Collecting system logs..."
+        SYSTEM_LOGS=$(az containerapp logs show \
+          --name "$APP_NAME" --resource-group "$RG" \
+          --type system --tail 100 -o json 2>&1) || SYSTEM_LOGS='[]'
+
+        # 4. Get recent deployment operations
+        echo "Collecting deployment operations..."
+        DEPLOY_OPS=$(az deployment group list \
+          --resource-group "$RG" \
+          --query "[?properties.provisioningState!='Succeeded'] | [0:5]" \
+          -o json 2>&1) || DEPLOY_OPS='[]'
+
+        # 5. Get app configuration
+        echo "Collecting app configuration..."
+        APP_CONFIG=$(az containerapp show \
+          --name "$APP_NAME" --resource-group "$RG" \
+          --query "{ingress:properties.configuration.ingress, activeRevisions:properties.configuration.activeRevisionsMode, latestRevision:properties.latestRevisionName, latestReady:properties.latestReadyRevisionName}" \
+          -o json 2>&1) || APP_CONFIG='{"error":"failed to query app config"}'
+
+        # Build full diagnostics JSON
+        DIAG=$(jq -n \
+          --arg appName "$APP_NAME" \
+          --arg rg "$RG" \
+          --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          --argjson revision "$(echo "$REVISION_INFO" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson containerLogs "$(echo "$CONTAINER_LOGS" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson systemLogs "$(echo "$SYSTEM_LOGS" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson deployOps "$(echo "$DEPLOY_OPS" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson appConfig "$(echo "$APP_CONFIG" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson smokeTests "$(echo '${{ inputs.smoke-test-diagnostics }}' | jq '.' 2>/dev/null || echo 'null')" \
+          '{
+            timestamp: $timestamp,
+            appName: $appName,
+            resourceGroup: $rg,
+            revision: $revision,
+            containerLogs: $containerLogs,
+            systemLogs: $systemLogs,
+            deploymentOperations: $deployOps,
+            appConfig: $appConfig,
+            smokeTestResults: $smokeTests
+          }')
+
+        # Write to file for artifact upload
+        echo "$DIAG" > /tmp/deploy-diagnostics.json
+
+        # Output (use EOF delimiter for multi-line)
+        {
+          echo "diagnostics<<DIAG_EOF"
+          echo "$DIAG"
+          echo "DIAG_EOF"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Classify error
+      id: classify
+      shell: bash
+      run: |
+        DIAG=$(cat /tmp/deploy-diagnostics.json 2>/dev/null || echo '{}')
+
+        # Simple heuristic classification
+        CATEGORY="unknown"
+        SUMMARY="Deployment failed — see diagnostics for details"
+
+        # Check for infrastructure errors
+        if echo "$DIAG" | jq -e '.deploymentOperations | length > 0' >/dev/null 2>&1; then
+          CATEGORY="infra"
+          SUMMARY="Infrastructure deployment error — check Bicep deployment operations"
+        # Check for container crash / runtime errors
+        elif echo "$DIAG" | jq -e '.systemLogs | tostring | test("BackOff|CrashLoop|OOMKilled|Error")' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Container runtime error — application is crashing or OOM"
+        # Check for dependency / startup errors in container logs
+        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("MODULE_NOT_FOUND|Cannot find module|ENOENT")' >/dev/null 2>&1; then
+          CATEGORY="dependency"
+          SUMMARY="Missing dependency — module not found during startup"
+        # Check for config errors
+        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("ECONNREFUSED|ENOTFOUND|ETIMEDOUT|AZURE_CLIENT_ID")' >/dev/null 2>&1; then
+          CATEGORY="config"
+          SUMMARY="Configuration error — connection refused or missing environment variable"
+        # Check smoke test results
+        elif echo "$DIAG" | jq -e '.smokeTestResults.readiness == "fail"' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Application failed readiness check — not responding on /api/ready"
+        elif echo "$DIAG" | jq -e '.smokeTestResults.health == "fail"' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Application health check failed — /api/health returned unhealthy"
+        fi
+
+        echo "category=${CATEGORY}" >> "$GITHUB_OUTPUT"
+        echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
+
+        echo "::notice title=Diagnostics::Category: ${CATEGORY} — ${SUMMARY}"
+
+    - name: Upload diagnostics artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: deploy-diagnostics-${{ github.run_id }}
+        path: /tmp/deploy-diagnostics.json
+        retention-days: 30
