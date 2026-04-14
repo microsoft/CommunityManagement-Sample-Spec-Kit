@@ -112,7 +112,8 @@ jobs:
 
                 // Track retry count via labels
                 const failLabel = labels.find(l => l.startsWith('merge-fail-'));
-                const failCount = failLabel ? parseInt(failLabel.split('-')[2], 10) + 1 : 1;
+                const currentCount = failLabel ? parseInt(failLabel.replace('merge-fail-', ''), 10) : 0;
+                const failCount = (isNaN(currentCount) ? 0 : currentCount) + 1;
 
                 if (failLabel) {
                   await github.rest.issues.removeLabel({

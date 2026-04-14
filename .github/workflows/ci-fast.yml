@@ -10,6 +10,8 @@ on:
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       tokens: ${{ steps.filter.outputs.tokens }}
       shared-ui: ${{ steps.filter.outputs.shared-ui }}
@@ -47,6 +49,8 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.docs-only != 'true' || needs.detect-changes.outputs.web == 'true' || needs.detect-changes.outputs.tokens == 'true' || needs.detect-changes.outputs.shared-ui == 'true' || needs.detect-changes.outputs.shared == 'true' || needs.detect-changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
 
     steps:
@@ -95,5 +99,6 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.docs-only == 'true' && needs.detect-changes.outputs.web != 'true' && needs.detect-changes.outputs.tokens != 'true' && needs.detect-changes.outputs.shared-ui != 'true' && needs.detect-changes.outputs.shared != 'true' && needs.detect-changes.outputs.mobile != 'true'
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - run: echo "Documentation-only change — skipping code checks"

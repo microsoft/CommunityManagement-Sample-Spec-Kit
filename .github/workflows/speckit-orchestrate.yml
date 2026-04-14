@@ -39,10 +39,10 @@ jobs:
 
       - name: Create initial spec placeholder
         run: |
-          cat > "${SPEC_DIR}/spec.md" << 'SPECEOF'
+          cat > "${SPEC_DIR}/spec.md" << SPECEOF
           # Feature Specification: ${{ inputs.feature-name }}
 
-          **Feature Branch**: `${{ inputs.spec-number }}-${{ inputs.feature-name }}`
+          **Feature Branch**: \`${{ inputs.spec-number }}-${{ inputs.feature-name }}\`
           **Created**: $(date +%Y-%m-%d)
           **Status**: Draft — Awaiting Copilot agent processing
           **Input**: User description: "${{ inputs.feature-description }}"

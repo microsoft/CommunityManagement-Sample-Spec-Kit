@@ -16,6 +16,7 @@ jobs:
   # Gate: only run full CI when appropriate
   should-run:
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       run: ${{ steps.check.outputs.run }}
     steps:
@@ -37,6 +38,8 @@ jobs:
     needs: should-run
     if: needs.should-run.outputs.run == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 30
 
     steps:
