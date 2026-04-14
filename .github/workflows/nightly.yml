@@ -109,8 +109,9 @@ jobs:
 
       - name: Run mobile unit tests (Spec 016)
         run: |
-          if ! npm run test -w @acroyoga/mobile -- --pool forks; then
-            echo "::error title=BUILD: Mobile Tests::Mobile test suite failed (exit code: $?)"
+          # Mobile workspace uses Jest (not Vitest), so --pool forks is NOT applicable
+          if ! npm run test -w @acroyoga/mobile; then
+            echo "::error title=BUILD: Mobile Tests::Mobile test suite failed"
             exit 1
           fi
 
