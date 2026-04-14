@@ -1,0 +1,84 @@
+name: Auto-Process Feature Request
+
+# When an issue is created with the 'feature-request-auto' label,
+# trigger the spec-kit orchestration pipeline automatically
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  trigger-orchestration:
+    if: github.event.label.name == 'feature-request-auto'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Parse issue and trigger orchestration
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title;
+            const body = issue.body || '';
+
+            // Extract feature name from title (convert to kebab-case)
+            const featureName = title
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+              .replace(/^-|-$/g, '')
+              .substring(0, 40);
+
+            // Determine next spec number by scanning existing specs
+            const fs = require('fs');
+            const specsDir = 'specs';
+            const existing = fs.readdirSync(specsDir)
+              .filter(d => /^\d{3}-/.test(d))
+              .map(d => parseInt(d.substring(0, 3), 10))
+              .sort((a, b) => b - a);
+            const nextNumber = String((existing[0] || 0) + 1).padStart(3, '0');
+
+            console.log(`Feature: ${featureName}, Spec: ${nextNumber}`);
+            console.log(`Description: ${body.substring(0, 200)}...`);
+
+            // Trigger the orchestration workflow
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'speckit-orchestrate.yml',
+              ref: 'main',
+              inputs: {
+                'feature-name': featureName,
+                'feature-description': body.substring(0, 1000),
+                'spec-number': nextNumber
+              }
+            });
+
+            // Add a comment to the issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: [
+                `🚀 **Spec-Kit Orchestration Started**`,
+                '',
+                `- Spec number: \`${nextNumber}\``,
+                `- Feature name: \`${featureName}\``,
+                `- Spec directory: \`specs/${nextNumber}-${featureName}/\``,
+                '',
+                'The orchestration pipeline will:',
+                '1. Create the spec folder structure',
+                '2. Generate spec, plan, and tasks via Copilot agents',
+                '3. Create GitHub issues for each implementation task',
+                '',
+                'You will be notified when implementation issues are ready.',
+              ].join('\n')
+            });

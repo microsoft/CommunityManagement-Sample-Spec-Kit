@@ -1,0 +1,144 @@
+name: Auto-Merge Agent PRs
+
+# Automates the merge lifecycle for Copilot agent PRs:
+# 1. When fast CI passes → apply 'ready-for-merge' label
+# 2. When full CI passes → auto-merge via squash
+
+on:
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted]
+  workflow_run:
+    workflows: ["CI Full"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-label:
+    # Apply 'ready-for-merge' when fast CI passes on agent PRs
+    if: >
+      github.event_name == 'check_suite' &&
+      github.event.check_suite.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const checkSuite = context.payload.check_suite;
+            const prs = checkSuite.pull_requests || [];
+
+            for (const pr of prs) {
+              // Get full PR details
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+
+              // Only auto-label PRs from Copilot agent (copilot/* branches)
+              const isCopilotBranch = pullRequest.head.ref.startsWith('copilot/');
+              const isBot = pullRequest.user.type === 'Bot';
+
+              if (isCopilotBranch || isBot) {
+                const labels = pullRequest.labels.map(l => l.name);
+                if (!labels.includes('ready-for-merge')) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    labels: ['ready-for-merge']
+                  });
+                  console.log(`Applied 'ready-for-merge' to PR #${pr.number}`);
+                }
+              }
+            }
+
+  auto-merge:
+    # Auto-merge agent PRs when full CI passes
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const runBranch = context.payload.workflow_run.head_branch;
+            const runSha = context.payload.workflow_run.head_sha;
+
+            // Find PRs for this branch
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${runBranch}`
+            });
+
+            for (const pr of prs) {
+              const isCopilotBranch = pr.head.ref.startsWith('copilot/');
+              const isBot = pr.user.type === 'Bot';
+
+              if (!isCopilotBranch && !isBot) {
+                console.log(`PR #${pr.number} is not an agent PR — skipping auto-merge`);
+                continue;
+              }
+
+              // Check that full CI passed (the triggering workflow)
+              const labels = pr.labels.map(l => l.name);
+              if (!labels.includes('ready-for-merge')) {
+                console.log(`PR #${pr.number} missing 'ready-for-merge' label — skipping`);
+                continue;
+              }
+
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash'
+                });
+                console.log(`Auto-merged PR #${pr.number}`);
+              } catch (err) {
+                console.error(`Failed to merge PR #${pr.number}: ${err.message}`);
+
+                // Track retry count via labels
+                const failLabel = labels.find(l => l.startsWith('merge-fail-'));
+                const currentCount = failLabel ? parseInt(failLabel.replace('merge-fail-', ''), 10) : 0;
+                const failCount = (isNaN(currentCount) ? 0 : currentCount) + 1;
+
+                if (failLabel) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    name: failLabel
+                  });
+                }
+
+                if (failCount >= 3) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    labels: ['needs-human-review']
+                  });
+                  console.log(`PR #${pr.number} failed 3 times — flagged for human review`);
+                } else {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    labels: [`merge-fail-${failCount}`]
+                  });
+                }
+              }
+            }

@@ -249,3 +249,15 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+## Concurrency Rules for Autonomous Agent Sessions
+
+When tasks are converted to GitHub issues for parallel agent sessions:
+
+- Tasks marked `[P]` MUST touch different files — verify no file overlap before marking parallel
+- Tasks modifying the same file MUST be in the same issue to prevent merge conflicts
+- Cross-workspace tasks (e.g., shared types + web consumer) SHOULD be in the same issue
+- Each issue SHOULD include a workspace label (`workspace:tokens`, `workspace:shared-ui`, `workspace:shared`, `workspace:web`, `workspace:mobile`, `workspace:infra`, `workspace:docs`)
+- Issues with the same workspace label are serialized automatically via CI concurrency groups
+- Agent branches follow the naming convention: `copilot/{spec-number}/{task-id}`
+- PRs MUST include `Fixes #{issue-number}` to auto-close the originating issue on merge

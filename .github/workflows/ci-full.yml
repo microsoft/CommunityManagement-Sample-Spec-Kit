@@ -1,14 +1,46 @@
-name: CI
+name: CI Full
+
+# Tier 2 CI — full quality gates before merge to main
+# Runs on: pushes to main, PRs labelled 'ready-for-merge', or manual dispatch
+# For fast iteration CI, see ci-fast.yml
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [labeled, synchronize, opened, reopened]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
+  # Gate: only run full CI when appropriate
+  should-run:
     runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        run: |
+          # Always run on push to main or manual dispatch
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # For PRs, run if labelled 'ready-for-merge'
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-for-merge') }}" == "true" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-test:
+    needs: should-run
+    if: needs.should-run.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v5

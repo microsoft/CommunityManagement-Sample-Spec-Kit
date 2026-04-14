@@ -39,26 +39,36 @@ This is an **npm workspaces monorepo** with shared packages:
 
 ```
 ├── apps/
-│   └── web/                    # Next.js 16 web application
-│       ├── src/app/            # App Router pages & API routes
-│       ├── src/components/     # Web-specific components
-│       ├── src/db/             # SQL migrations & seeds
-│       ├── src/lib/            # Business logic by domain (20+ modules)
-│       ├── .storybook/         # Storybook 10 config
-│       └── tests/              # Integration tests (PGlite)
+│   ├── web/                    # Next.js 16 web application
+│   │   ├── src/app/            # App Router pages & API routes
+│   │   ├── src/components/     # Web-specific components
+│   │   ├── src/db/             # SQL migrations & seeds
+│   │   ├── src/lib/            # Business logic by domain (20+ modules)
+│   │   ├── .storybook/         # Storybook 10 config
+│   │   └── tests/              # Integration tests (PGlite)
+│   └── mobile/                 # Expo/React Native mobile app
 │
 ├── packages/
 │   ├── shared/                 # Cross-platform types & utilities
 │   │   └── src/types/          # Shared TypeScript interfaces
-│   ├── shared-ui/              # Cross-platform UI components (15 components)
+│   ├── shared-ui/              # Cross-platform UI components (17 components)
 │   │   └── src/                # 5-file pattern per component
 │   └── tokens/                 # Design token pipeline
 │       ├── src/                # Token definitions (JSON, W3C DTCG format)
 │       └── build/              # Generated CSS, TS, Swift, Kotlin
 │
 ├── specs/                      # Spec-Kit feature specifications
-│   ├── constitution.md         # Architectural principles (v1.5.0)
-│   └── 001–016/                # Feature specs with plans, tasks, contracts
+│   ├── constitution.md         # Architectural principles (v1.6.0, 15 principles)
+│   └── 001–021/                # Feature specs with plans, tasks, contracts
+│
+├── .github/
+│   ├── copilot-instructions.md # Autonomous agent session protocol
+│   └── workflows/
+│       ├── ci-fast.yml         # Tier 1: typecheck + lint + affected tests (<3 min)
+│       ├── ci-full.yml         # Tier 2: full quality gates (ready-for-merge)
+│       ├── auto-merge-agent.yml    # Auto-merge for agent PRs
+│       ├── speckit-orchestrate.yml # Spec-kit orchestration pipeline
+│       └── feature-request-auto.yml # Issue → spec automation
 │
 └── .agent.md                   # UI Expert agent configuration
 ```
@@ -125,7 +135,7 @@ Additional deferred work (lower priority, not yet specced):
 
 ## Architectural Principles
 
-The project is governed by a [constitution](specs/constitution.md) (v1.5.0) defining 14 core principles:
+The project is governed by a [constitution](specs/constitution.md) (v1.6.0) defining 15 core principles:
 
 1. **API-First Design** — Every feature exposes a versioned REST API before any UI
 2. **Test-First Development** — Integration tests against real (in-memory) Postgres; ≥80% service coverage
@@ -141,12 +151,13 @@ The project is governed by a [constitution](specs/constitution.md) (v1.5.0) defi
 12. **Financial Integrity** — Server-side pricing; Stripe Connect; signed OAuth state
 13. **Codespaces Mandate** — All development runs in GitHub Codespaces
 14. **Managed Identity** — Azure Managed Identity with DefaultAzureCredential for all service connections
+15. **Autonomous Development Pipeline** — Two-tier CI (fast iteration + full pre-merge); auto-merge for agent PRs; workspace-isolated concurrency; human gates only for architecture and security decisions
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 22+ (managed via fnm)
+- Node.js 24+ (managed via fnm — see `.nvmrc`)
 - PostgreSQL 15+ (or use PGlite for development/testing)
 - GitHub Codespaces (recommended) or a Linux environment — ensures local–CI parity
 
@@ -177,32 +188,61 @@ npm run tokens:build                  # Rebuild design tokens
 npm run tokens:watch                  # Watch token source & rebuild on change
 ```
 
-## Quality Gates
+## Quality Gates (Two-Tier CI)
 
-Every PR must pass before merge:
+Quality gates are split into two tiers to enable rapid iteration during development while maintaining full quality before merge (see [Constitution XV](specs/constitution.md)).
 
-- `tsc --noEmit` — zero type errors
-- `vitest run` — all tests pass, no skipped tests without a linked issue
-- ESLint — zero warnings (warnings are errors)
+### Tier 1: Fast CI (`ci-fast.yml`) — every PR push
+
+Runs automatically on every PR, targeting **< 3 minutes**:
+
+- **Tokens build** — design tokens compile without errors
+- **Type check** — `tsc --noEmit` with zero errors
+- **Lint** — ESLint with `jsx-a11y`, zero warnings
+- **Affected tests** — only tests for changed workspaces (via `dorny/paths-filter`)
+
+### Tier 2: Full CI (`ci-full.yml`) — before merge to main
+
+Runs when the `ready-for-merge` label is applied, on push to `main`, or via manual dispatch:
+
+- All tests across all workspaces
 - Production build completes
-- Bundle size ≤200 KB compressed
+- Bundle size ≤ 200 KB compressed
 - No new axe-core accessibility violations
 - API changes update the central types file with corresponding tests
 - Constitution compliance confirmed by reviewer
+- i18n string lint — no raw string literals in UI
 - Permission smoke test for every new mutation endpoint (403 for unauthorized callers)
 - Auth consistency — session-based only, no client-injectable headers
+- Storybook build + a11y audit
+- Playwright E2E tests
+
+Agent PRs (from `copilot/*` branches) get the `ready-for-merge` label auto-applied after Tier 1 passes, and are auto-merged after Tier 2 passes. See the [auto-merge workflow](.github/workflows/auto-merge-agent.yml) for details.
 
 ## Spec-Kit Workflow
 
 This project was developed using the Spec-Kit agentic workflow:
 
-1. **Constitution** — Define architectural principles and quality gates
+1. **Constitution** — Define architectural principles and quality gates (`specs/constitution.md`)
 2. **Specify** — Write detailed feature specs with user scenarios (Given/When/Then)
 3. **Plan** — Generate implementation plans with data models and API contracts
 4. **Tasks** — Break plans into dependency-ordered, actionable tasks
-5. **Implement** — AI agents execute tasks following the spec and constitution
+5. **Issues** — Convert tasks to GitHub issues with workspace labels for parallel execution
+6. **Implement** — AI agents execute tasks following the spec and constitution
 
 Each feature lives in `specs/NNN-feature-name/` with its own spec, plan, tasks, data model, research notes, and API contracts.
+
+### Autonomous Pipeline
+
+The spec-kit process can run near-fully autonomously:
+
+- **Create an issue** with the `feature-request-auto` label → the [orchestration workflow](.github/workflows/feature-request-auto.yml) determines the next spec number and triggers `speckit-orchestrate.yml`
+- **`speckit-orchestrate.yml`** scaffolds the spec folder and creates a Copilot agent issue to run specify → plan → tasks → issues in sequence
+- **Agent sessions** pick up implementation issues, create `copilot/{spec}/{task}` branches, and open PRs with `Fixes #N`
+- **Tier 1 CI** runs automatically; on pass, `ready-for-merge` is auto-applied
+- **Tier 2 CI** runs; on pass, the PR is auto-merged via squash
+
+Human review is required only at two gates: (1) spec approval before implementation, and (2) the `ready-for-merge` label for human PRs. See [Constitution XV](specs/constitution.md) for the full policy.
 
 ## License
 

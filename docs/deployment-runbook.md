@@ -111,10 +111,22 @@ az containerapp revision deactivate --name ca-acroyoga-web-production \
 ### Automatic Deployment (on merge to main)
 
 ```
-Push to main → ci.yml passes → deploy.yml triggers:
+Push to main → ci-full.yml passes → deploy.yml triggers:
   1. Build container image → push to ACR
   2. Deploy to staging → run smoke tests
   3. Manual approval → promote to production
+```
+
+### PR Lifecycle
+
+```
+PR opened → ci-fast.yml (Tier 1: typecheck + lint + affected tests)
+  ↓ passes
+'ready-for-merge' label applied (auto for agent PRs, manual for human PRs)
+  ↓
+ci-full.yml (Tier 2: full test suite, build, bundle size, Storybook, E2E)
+  ↓ passes
+Auto-merge (agent PRs) or manual merge (human PRs)
 ```
 
 ### Manual Deployment

@@ -5,18 +5,20 @@
 > **Database**: [PGlite](https://electric-sql.com/product/pglite) — in-memory PostgreSQL  
 > **DOM**: jsdom for React component tests  
 > **Accessibility**: axe-core via Storybook  
-> **CI**: Tests run on every PR via GitHub Actions
+> **CI**: Tier 1 (fast CI) runs affected-workspace tests on every PR; Tier 2 (full CI) runs the complete test suite before merge. See `.github/workflows/ci-fast.yml` and `.github/workflows/ci-full.yml`.
 
 ## Running Tests
 
 ```bash
-# Run all tests (tokens → shared-ui → web)
+# Run all tests (tokens → shared-ui → shared → web → mobile)
 npm run test
 
 # Run tests for a specific workspace
 npm run test -w @acroyoga/tokens      # 20 token pipeline tests
-npm run test -w @acroyoga/shared-ui   # 85 component tests
-npm run test -w @acroyoga/web         # 630+ integration & unit tests
+npm run test -w @acroyoga/shared-ui   # 175 component tests
+npm run test -w @acroyoga/shared      # 44 shared utility tests
+npm run test -w @acroyoga/web         # 935 integration & unit tests
+npm run test -w @acroyoga/mobile      # 52 mobile tests (Jest)
 
 # Watch mode for development
 npm run test:watch
@@ -325,7 +327,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     testTimeout: 30000,
     hookTimeout: 30000,
-    pool: "threads",
+    pool: "forks",
   },
   resolve: {
     alias: {
