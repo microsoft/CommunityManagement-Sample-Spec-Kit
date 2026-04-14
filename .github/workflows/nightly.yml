@@ -254,58 +254,9 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Start PostgreSQL server if stopped
-        run: |
-          set -euo pipefail
-          # The Flexible Server cannot be updated while stopped (UpsertServerManagementOperationUnsupportedForStoppedServer).
-          # Find any stopped PG servers in the RG and start them before Bicep deployment.
-
-          # Retry the list query to handle transient Azure API failures
-          SERVERS=""
-          for list_attempt in $(seq 1 3); do
-            if SERVERS=$(az postgres flexible-server list \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --query "[?state=='Stopped'].name" -o tsv 2>&1); then
-              break
-            fi
-            if [ "$list_attempt" -lt 3 ]; then
-              echo "::warning title=INFRASTRUCTURE: PostgreSQL list::Attempt ${list_attempt} to list servers failed, retrying in 10s..."
-              sleep 10
-            else
-              echo "::error title=INFRASTRUCTURE: PostgreSQL list::Failed to list PostgreSQL servers after 3 attempts — ${SERVERS}"
-              exit 1
-            fi
-          done
-
-          if [ -z "$SERVERS" ]; then
-            echo "::notice title=PostgreSQL Wake::No stopped PostgreSQL servers found — skipping start"
-          else
-            for SERVER in $SERVERS; do
-              echo "Starting stopped PostgreSQL server: ${SERVER}"
-              WAKE_START=$SECONDS
-              az postgres flexible-server start \
-                --resource-group ${{ env.RESOURCE_GROUP }} \
-                --name "${SERVER}"
-              # Poll until the server reaches 'Ready' state (up to 5 minutes)
-              for i in $(seq 1 30); do
-                STATE=$(az postgres flexible-server show \
-                  --resource-group ${{ env.RESOURCE_GROUP }} \
-                  --name "${SERVER}" \
-                  --query state -o tsv)
-                echo "  Attempt ${i}: server state = ${STATE}"
-                if [ "$STATE" = "Ready" ]; then
-                  ELAPSED=$((SECONDS - WAKE_START))
-                  echo "::notice title=PostgreSQL Wake::Server ${SERVER} started and ready (elapsed: ${ELAPSED}s)"
-                  break
-                fi
-                if [ "$i" -eq 30 ]; then
-                  ELAPSED=$((SECONDS - WAKE_START))
-                  echo "::error title=TIMEOUT: PostgreSQL Wake::Server ${SERVER} did not reach Ready state after ${ELAPSED}s (last state: ${STATE}, attempts: ${i}/30)"
-                  exit 1
-                fi
-                sleep 10
-              done
-            done
-          fi
+        uses: ./.github/actions/pg-wake
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
 
       - name: Validate infrastructure (Bicep)
         run: |
@@ -355,9 +306,9 @@ jobs:
           echo "::error title=DEPLOYMENT: Bicep deploy::Deployment failed after ${MAX_ATTEMPTS} attempts"
           exit 1
 
-      - name: Wait for readiness
+      - name: Resolve app FQDN
+        id: fqdn
         run: |
-          # Resolve FQDN with retry
           APP_URL=""
           for url_attempt in $(seq 1 3); do
             if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
@@ -371,65 +322,27 @@ jobs:
               exit 1
             fi
           done
+          echo "url=${APP_URL}" >> "$GITHUB_OUTPUT"
 
-          READY_START=$SECONDS
-          echo "Waiting for https://${APP_URL}/api/ready ..."
-          if curl --retry 50 --retry-delay 15 --retry-all-errors \
-            --connect-timeout 10 --max-time 30 --retry-max-time 900 \
-            -sf "https://${APP_URL}/api/ready"; then
-            ELAPSED=$((SECONDS - READY_START))
-            echo "::notice title=Readiness Check::Application ready after ${ELAPSED}s"
-          else
-            ELAPSED=$((SECONDS - READY_START))
-            echo "::error title=TIMEOUT: Readiness Check::Readiness check failed after ${ELAPSED}s. Endpoint: https://${APP_URL}/api/ready, retries: 50, delay: 15s"
-            exit 1
-          fi
+      - name: Run smoke tests
+        id: smoke
+        uses: ./.github/actions/smoke-test
+        with:
+          app-url: ${{ steps.fqdn.outputs.url }}
+          readiness-retries: '50'
+          readiness-delay: '15'
+          readiness-max-time: '900'
 
-      - name: Smoke test — health
+      - name: Collect diagnostics on failure
+        if: failure() || steps.smoke.outputs.result == 'fail'
+        uses: ./.github/actions/deploy-diagnostics
+        with:
+          app-name: ${{ env.APP_NAME }}
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          smoke-test-diagnostics: ${{ steps.smoke.outputs.diagnostics }}
+
+      - name: Fail if smoke tests failed
+        if: steps.smoke.outputs.result == 'fail'
         run: |
-          # Resolve FQDN with retry
-          APP_URL=""
-          for url_attempt in $(seq 1 3); do
-            if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
-              break
-            fi
-            if [ "$url_attempt" -lt 3 ]; then
-              sleep 5
-            else
-              echo "::error title=INFRASTRUCTURE: Container App query::Failed to resolve FQDN for ${{ env.APP_NAME }} after 3 attempts"
-              exit 1
-            fi
-          done
-
-          RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health") || {
-            echo "::error title=SMOKE_TEST: Health Check::Health check failed. Endpoint: https://${APP_URL}/api/health"
-            exit 1
-          }
-          echo "Health response: ${RESPONSE}"
-          if ! echo "${RESPONSE}" | grep -q '"status":"healthy"'; then
-            echo "::error title=SMOKE_TEST: Health Check::Health endpoint returned unexpected status. Response: ${RESPONSE}"
-            exit 1
-          fi
-          echo "::notice title=Smoke Test::Health check passed"
-
-      - name: Smoke test — home page
-        run: |
-          # Resolve FQDN with retry
-          APP_URL=""
-          for url_attempt in $(seq 1 3); do
-            if APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv 2>&1); then
-              break
-            fi
-            if [ "$url_attempt" -lt 3 ]; then
-              sleep 5
-            else
-              echo "::error title=INFRASTRUCTURE: Container App query::Failed to resolve FQDN for ${{ env.APP_NAME }} after 3 attempts"
-              exit 1
-            fi
-          done
-
-          if ! curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" | head -20; then
-            echo "::error title=SMOKE_TEST: Home Page::Home page check failed. Endpoint: https://${APP_URL}/"
-            exit 1
-          fi
-          echo "::notice title=Smoke Test::Home page check passed"
+          echo "::error title=SMOKE_TEST::Smoke tests failed — see diagnostics above"
+          exit 1

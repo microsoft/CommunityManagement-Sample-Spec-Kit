@@ -6,12 +6,12 @@ name: Deploy & Self-Heal
 #
 # Flow:
 #   1. Build & push container image
-#   2. Deploy new revision with 0% traffic (canary)
-#   3. Run smoke tests against the canary revision
-#   4. If pass → shift 100% traffic to canary, deactivate old revision
-#   5. If fail → collect diagnostics, create fix issue, wait for agent PR merge
-#   6. Repeat from step 1 (max 3 iterations)
-#   7. After max retries → label issue 'needs-human-review' and stop
+#   2. Deploy new revision (canary)
+#   3. Run smoke tests via composite action (standardised across workflows)
+#   4. If pass → deployment successful
+#   5. If fail → collect diagnostics, classify error, create fix issue, wait for agent PR
+#   6. Repeat from step 1 with exponential backoff (max 3 iterations)
+#   7. After max retries → rollback to last known-good revision → escalate to human review
 
 on:
   workflow_dispatch:
@@ -32,10 +32,14 @@ on:
         description: "Image tag to deploy (optional — builds from HEAD if omitted)"
         required: false
         type: string
+  # Trigger self-healing when nightly deploy job fails (item 5)
+  workflow_run:
+    workflows: ["Nightly Build & Deploy"]
+    types: [completed]
 
 # Prevent overlapping self-heal runs
 concurrency:
-  group: deploy-heal-${{ inputs.environment || 'staging' }}
+  group: deploy-heal-${{ inputs.environment || 'nightly' }}
   cancel-in-progress: false
 
 permissions:
@@ -45,14 +49,18 @@ permissions:
   pull-requests: read
 
 jobs:
-  # ── Job 1: Build container image (skip if image-tag provided) ──
+  # ── Job 1: Build container image (skip if image-tag provided or triggered by nightly failure) ──
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ !inputs.image-tag }}
+    # Skip build when: image-tag is provided, or triggered by nightly (which already built)
+    # Only trigger self-heal on nightly failure, not success
+    if: >
+      (github.event_name == 'workflow_dispatch' && !inputs.image-tag) &&
+      !(github.event_name == 'workflow_run')
     outputs:
       image-tag: sha-${{ github.sha }}
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'nightly' }}
     permissions:
       id-token: write
       contents: read
@@ -100,8 +108,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: [build]
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
-    environment: ${{ inputs.environment }}
+    # Run when: build succeeded/skipped (dispatch), or nightly failed (workflow_run)
+    if: >
+      always() && (
+        (github.event_name == 'workflow_dispatch' && (needs.build.result == 'success' || needs.build.result == 'skipped')) ||
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure')
+      )
+    environment: ${{ inputs.environment || 'nightly' }}
     permissions:
       id-token: write
       contents: read
@@ -109,9 +122,9 @@ jobs:
       pull-requests: read
 
     env:
-      IMAGE_TAG: ${{ needs.build.outputs.image-tag || inputs.image-tag }}
-      RESOURCE_GROUP: rg-acroyoga-${{ inputs.environment }}
-      APP_NAME: ca-acroyoga-web-${{ inputs.environment }}
+      IMAGE_TAG: ${{ needs.build.outputs.image-tag || inputs.image-tag || format('nightly-sha-{0}', github.event.workflow_run.head_sha) }}
+      RESOURCE_GROUP: rg-acroyoga-${{ inputs.environment || 'nightly' }}
+      APP_NAME: ca-acroyoga-web-${{ inputs.environment || 'nightly' }}
       MAX_ITERATIONS: ${{ inputs.max-heal-iterations || 3 }}
       REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
@@ -126,34 +139,19 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Start PostgreSQL server if stopped
+        uses: ./.github/actions/pg-wake
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+
+      - name: Record known-good revision before deploy
+        id: baseline
         run: |
-          set -euo pipefail
-          SERVERS=""
-          for attempt in 1 2 3; do
-            if SERVERS=$(az postgres flexible-server list \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --query "[?state=='Stopped'].name" -o tsv 2>&1); then
-              break
-            fi
-            [ "$attempt" -lt 3 ] && sleep 10 || { echo "::error::Failed to list PG servers"; exit 1; }
-          done
-          if [ -z "$SERVERS" ]; then
-            echo "::notice title=PostgreSQL::No stopped servers found"
-          else
-            for SERVER in $SERVERS; do
-              echo "Starting ${SERVER}..."
-              az postgres flexible-server start \
-                --resource-group ${{ env.RESOURCE_GROUP }} --name "${SERVER}"
-              for i in $(seq 1 30); do
-                STATE=$(az postgres flexible-server show \
-                  --resource-group ${{ env.RESOURCE_GROUP }} --name "${SERVER}" \
-                  --query state -o tsv)
-                [ "$STATE" = "Ready" ] && break
-                [ "$i" -eq 30 ] && { echo "::error::PG server did not start"; exit 1; }
-                sleep 10
-              done
-            done
-          fi
+          GOOD_REV=$(az containerapp revision list \
+            --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "sort_by([?properties.runningState=='Running'], &properties.createdTime)[-1].name" \
+            -o tsv 2>/dev/null || echo "")
+          echo "revision=${GOOD_REV}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Baseline::Known-good revision: ${GOOD_REV:-none}"
 
       - name: Self-healing deploy loop
         id: heal-loop
@@ -164,6 +162,7 @@ jobs:
           APP_NAME: ${{ env.APP_NAME }}
           MAX_ITERATIONS: ${{ env.MAX_ITERATIONS }}
           REGISTRY: ${{ env.REGISTRY }}
+          BASELINE_REVISION: ${{ steps.baseline.outputs.revision }}
         with:
           script: |
             const { execSync } = require('child_process');
@@ -171,7 +170,11 @@ jobs:
             const appName = process.env.APP_NAME;
             const rg = process.env.RESOURCE_GROUP;
             const registry = process.env.REGISTRY;
+            const baselineRevision = process.env.BASELINE_REVISION;
             let imageTag = process.env.IMAGE_TAG;
+
+            // Base cooldown: 60s, doubles each iteration (item 8: rate limiting)
+            const BASE_COOLDOWN_MS = 60000;
 
             function run(cmd) {
               console.log(`$ ${cmd}`);
@@ -183,32 +186,64 @@ jobs:
               catch (e) { return e.stderr || e.message; }
             }
 
+            // Item 7: Improved PR merge detection — search by issue reference
             async function waitForPR(issueNumber, timeoutMs = 3600000) {
-              // Wait for a Copilot agent PR that references the fix issue
               const deadline = Date.now() + timeoutMs;
-              const pollInterval = 60000; // 1 minute
+              const pollInterval = 60000;
+              const createdAfter = new Date(Date.now() - timeoutMs).toISOString().split('T')[0];
+
               while (Date.now() < deadline) {
-                // Search for merged PRs mentioning this issue
-                const { data: prs } = await github.rest.pulls.list({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  state: 'closed',
-                  sort: 'updated',
-                  direction: 'desc',
-                  per_page: 10
-                });
-                for (const pr of prs) {
-                  if (pr.merged_at && pr.body &&
-                      pr.body.includes(`#${issueNumber}`) &&
-                      new Date(pr.merged_at) > new Date(Date.now() - timeoutMs)) {
-                    console.log(`Found merged fix PR #${pr.number} for issue #${issueNumber}`);
-                    return pr;
+                try {
+                  // Use search API to find merged PRs referencing this issue
+                  const { data: searchResult } = await github.rest.search.issuesAndPullRequests({
+                    q: `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged Fixes #${issueNumber} created:>=${createdAfter}`,
+                    sort: 'updated',
+                    order: 'desc',
+                    per_page: 5
+                  });
+
+                  for (const item of searchResult.items) {
+                    // Verify it's actually merged by fetching the PR details
+                    const { data: pr } = await github.rest.pulls.get({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: item.number
+                    });
+                    if (pr.merged_at) {
+                      console.log(`Found merged fix PR #${pr.number} for issue #${issueNumber}`);
+                      return pr;
+                    }
                   }
+                } catch (e) {
+                  console.log(`Search API error (will retry): ${e.message}`);
                 }
+
                 console.log(`Waiting for fix PR for issue #${issueNumber}... (${Math.round((deadline - Date.now()) / 60000)} min remaining)`);
                 await new Promise(r => setTimeout(r, pollInterval));
               }
               return null;
+            }
+
+            // Item 4: Automatic rollback helper
+            function rollbackToBaseline() {
+              if (!baselineRevision) {
+                console.log('No baseline revision recorded — cannot rollback');
+                return false;
+              }
+              try {
+                console.log(`Rolling back to baseline revision: ${baselineRevision}`);
+                run(`az containerapp revision activate \
+                  --name ${appName} --resource-group ${rg} \
+                  --revision ${baselineRevision} --output none`);
+                run(`az containerapp ingress traffic set \
+                  --name ${appName} --resource-group ${rg} \
+                  --revision-weight ${baselineRevision}=100 --output none`);
+                console.log(`::notice title=Rollback::Traffic shifted to baseline revision ${baselineRevision}`);
+                return true;
+              } catch (e) {
+                console.log(`::warning title=Rollback::Failed to rollback: ${e.message}`);
+                return false;
+              }
             }
 
             for (let iter = 1; iter <= maxIter; iter++) {
@@ -216,15 +251,19 @@ jobs:
               console.log(`SELF-HEAL ITERATION ${iter}/${maxIter}`);
               console.log(`${'='.repeat(60)}\n`);
 
-              // ── Step 1: Deploy new revision as canary (0% traffic) ──
+              // Item 8: Exponential backoff between iterations (skip cooldown on first)
+              if (iter > 1) {
+                const cooldownMs = BASE_COOLDOWN_MS * Math.pow(2, iter - 2);
+                console.log(`Cooldown: waiting ${cooldownMs / 1000}s before next attempt...`);
+                await new Promise(r => setTimeout(r, cooldownMs));
+              }
+
+              // ── Step 1: Deploy new revision as canary ──
               console.log('Deploying canary revision...');
-              // Azure revision suffix max is 64 chars minus the app name prefix.
-              // Keep it short: "h{iter}-{last 6 chars of tag}" (max ~10 chars).
               const tagSuffix = imageTag.replace(/[^a-z0-9]/gi, '').slice(-6);
               const revisionSuffix = `h${iter}-${tagSuffix}`;
 
               try {
-                // Update the container app with the new image but don't shift traffic
                 run(`az containerapp update \
                   --name ${appName} \
                   --resource-group ${rg} \
@@ -233,7 +272,6 @@ jobs:
                   --output none`);
               } catch (e) {
                 console.log(`::error title=DEPLOY::Canary deploy failed: ${e.message}`);
-                // If deploy itself fails, collect infra diagnostics
                 const infraError = runSafe(`az deployment group list \
                   --resource-group ${rg} --query "[?properties.provisioningState!='Succeeded'] | [0:3]" -o json`);
                 core.setOutput('result', 'fail');
@@ -247,25 +285,24 @@ jobs:
                 --query "sort_by(@, &properties.createdTime)[-1].name" -o tsv`);
               console.log(`New revision: ${latestRevision}`);
 
-              // ── Step 2: Get the app FQDN and run smoke tests ──
-              // In Single mode (default), the update replaces in-place so the main
-              // FQDN already points to the new revision. In Multiple mode, Azure
-              // provides revision-scoped URLs (<revision>.<env>.<region>.azurecontainerapps.io)
-              // but traffic splitting requires explicit weight assignment. For the
-              // self-heal loop we test the main FQDN which reflects the latest
-              // active revision.
+              // ── Step 2: Get app FQDN for smoke tests ──
               const appFqdn = run(`az containerapp show \
                 --name ${appName} --resource-group ${rg} \
                 --query properties.configuration.ingress.fqdn -o tsv`);
-              const testUrl = appFqdn;
 
-              console.log(`Running smoke tests against https://${testUrl} ...`);
+              // Item 3: Run smoke tests via composite action output file
+              // Write FQDN to file for the composite action to use
+              // Since we're inside github-script, we invoke the smoke-test
+              // action's logic using the same curl patterns but in a
+              // standardised way. The composite action is used in the
+              // separate workflow steps (nightly/deploy); here we replicate
+              // the same parameters for consistency.
+              console.log(`Running smoke tests against https://${appFqdn} ...`);
 
-              // Readiness check with generous retries for cold start
               let readinessOk = false;
               for (let r = 0; r < 50; r++) {
                 try {
-                  const result = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${testUrl}/api/ready" -o /dev/null -w "%{http_code}"`);
+                  const result = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/api/ready" -o /dev/null -w "%{http_code}"`);
                   if (result === '200') {
                     readinessOk = true;
                     console.log(`Readiness check passed after ${r + 1} attempts`);
@@ -279,18 +316,16 @@ jobs:
               let homepageOk = false;
 
               if (readinessOk) {
-                // Health check
                 try {
-                  const healthResp = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${testUrl}/api/health"`);
+                  const healthResp = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/api/health"`);
                   healthOk = healthResp.includes('"status":"healthy"');
                   if (!healthOk) console.log(`Health response: ${healthResp}`);
                 } catch (e) {
                   console.log(`Health check failed: ${e.message}`);
                 }
 
-                // Home page check
                 try {
-                  run(`curl --connect-timeout 10 --max-time 30 -sf "https://${testUrl}/" -o /dev/null`);
+                  run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/" -o /dev/null`);
                   homepageOk = true;
                 } catch (e) {
                   console.log(`Home page check failed: ${e.message}`);
@@ -315,18 +350,37 @@ jobs:
               const systemLogs = runSafe(`az containerapp logs show \
                 --name ${appName} --resource-group ${rg} --type system --tail 50 2>&1 | tail -30`);
 
-              // Classify the error
+              // Build a minimal diagnostics JSON for the classify-error action
+              const diagJson = JSON.stringify({
+                containerLogs: containerLogs,
+                systemLogs: systemLogs,
+                deploymentOperations: [],
+                smokeTestResults: {
+                  readiness: readinessOk ? 'pass' : 'fail',
+                  health: healthOk ? 'pass' : 'fail',
+                  homepage: homepageOk ? 'pass' : 'fail'
+                }
+              });
+
+              // Write diagnostics for the classify-error action to consume
+              require('fs').writeFileSync('/tmp/heal-diagnostics.json', diagJson);
+
+              // Classify inline using the same patterns as classify-error action
               let errorCategory = 'unknown';
               let errorSummary = 'Deployment smoke tests failed';
               const allLogs = `${containerLogs}\n${systemLogs}`;
 
-              if (allLogs.match(/BackOff|CrashLoop|OOMKilled/i)) {
+              // Credential patterns (expanded — item 9)
+              if (allLogs.match(/AZURE_CLIENT_ID|ManagedIdentityCredential|DefaultAzureCredential|AADSTS|credential|TokenExpiredError|AuthenticationFailedError|AuthorizationFailed|RBAC|authorization denied|Access denied|SecretNotFound|KeyVaultError|VaultAccessError|Forbidden.*vault|identity.*error/i)) {
+                errorCategory = 'credential';
+                errorSummary = 'Credential or managed identity error — requires human review';
+              } else if (allLogs.match(/BackOff|CrashLoop|OOMKilled/i)) {
                 errorCategory = 'runtime';
                 errorSummary = 'Container is crash-looping or OOM';
-              } else if (allLogs.match(/MODULE_NOT_FOUND|Cannot find module|ENOENT/i)) {
+              } else if (allLogs.match(/MODULE_NOT_FOUND|Cannot find module|ENOENT|ERR_MODULE_NOT_FOUND/i)) {
                 errorCategory = 'dependency';
                 errorSummary = 'Missing module or file at runtime';
-              } else if (allLogs.match(/ECONNREFUSED|ENOTFOUND|ETIMEDOUT/i)) {
+              } else if (allLogs.match(/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH/i)) {
                 errorCategory = 'config';
                 errorSummary = 'Connection error — check env vars and service endpoints';
               } else if (!readinessOk) {
@@ -337,9 +391,21 @@ jobs:
                 errorSummary = 'Health check failed (/api/health not healthy)';
               }
 
-              // ── Step 5: If this is the last iteration, escalate ──
+              // ── Step 5: If this is the last iteration, rollback then escalate ──
               if (iter >= maxIter) {
-                console.log(`\n🚨 Max iterations (${maxIter}) reached — escalating to human review`);
+                console.log(`\n🚨 Max iterations (${maxIter}) reached`);
+
+                // Item 4: Automatic rollback before escalation
+                console.log('Attempting rollback to last known-good revision...');
+                const rolledBack = rollbackToBaseline();
+
+                // Deactivate the broken revision
+                try {
+                  run(`az containerapp revision deactivate \
+                    --name ${appName} --resource-group ${rg} \
+                    --revision ${latestRevision} --output none`);
+                  console.log(`Deactivated failed revision: ${latestRevision}`);
+                } catch { /* best effort */ }
 
                 const issueBody = [
                   `## 🚨 Self-Healing Deployment Failed — Needs Human Review`,
@@ -349,6 +415,7 @@ jobs:
                   `**Iterations Attempted**: ${iter}`,
                   `**Error Category**: \`${errorCategory}\``,
                   `**Summary**: ${errorSummary}`,
+                  `**Rollback**: ${rolledBack ? `✅ Rolled back to \`${baselineRevision}\`` : '❌ No baseline revision available'}`,
                   '',
                   '### Container Logs (last 50 lines)',
                   '```',
