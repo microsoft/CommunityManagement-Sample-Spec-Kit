@@ -1,18 +1,19 @@
 <!--
   Sync Impact Report
-  Version change: 1.5.0 → 1.6.0 (MINOR — added XV, tiered QG, agent protocol)
-  Modified principles: (none)
+  Version change: 1.6.0 → 1.7.0 (MINOR — added self-healing deployment to XV, new QG)
+  Modified principles: XV (extended with self-healing deployment constraints)
   Unchanged principles: I–XIV
   Added sections:
-    - XV. Autonomous Development Pipeline — tiered CI, auto-merge, agent protocol
+    - Self-Healing Deployment Protocol under Governance
   Modified sections:
-    - Quality Gates — split into Tier 1 (fast) and Tier 2 (full)
-    - Governance — added Autonomous Agent Protocol subsection
+    - XV. Autonomous Development Pipeline — added self-healing deployment loop constraints
+    - Quality Gates — added Tier 3 (deployment verification)
+    - Governance — added Self-Healing Deployment Protocol subsection
   Removed sections: (none)
-  Alignment matrix: added row for XV
+  Alignment matrix: (no change)
   Templates requiring updates:
-    - .github/copilot-instructions.md ✅ updated (autonomous protocol, fast iteration, branch naming)
-    - .specify/templates/tasks-template.md ✅ updated (concurrency rules for agent sessions)
+    - .github/copilot-instructions.md ✅ updated (deploy-fix protocol for agents)
+    - docs/deployment-runbook.md ✅ updated (self-healing procedures)
   Follow-up TODOs:
     - Existing routes using x-user-id header MUST be migrated to getServerSession()/requireAuth()
     - GDPR deletion function MUST be audited to cover Spec 005 tables
@@ -20,7 +21,7 @@
 -->
 # AcroYoga Community — Project Constitution
 
-> Version 1.6.0 — Governing architectural principles for the
+> Version 1.7.0 — Governing architectural principles for the
 > AcroYoga Community Events platform.
 
 ## Core Principles
@@ -250,14 +251,18 @@ fallback chain that works in Codespaces, CI, and production.
 
 Feature development follows an automated pipeline: issue creation →
 spec generation → planning → task decomposition → GitHub issue
-creation → agent implementation → fast CI → merge. Human review is
-required only at designated gates.
+creation → agent implementation → fast CI → merge. Deployment
+follows a self-healing loop: deploy canary → smoke test → promote
+or diagnose → auto-fix → retry. Human review is required only at
+designated gates.
 
 **Rationale:** Maximising autonomy reduces cycle time from days to
 hours for standard features. Human gates remain for architectural
 decisions and security-sensitive changes. The two-tier CI approach
 ensures rapid iteration during development while maintaining full
-quality before merge.
+quality before merge. The self-healing deployment loop closes the
+gap between "code merged" and "code running in production" by
+automatically diagnosing and fixing deployment failures.
 
 **Constraints:**
 - Feature requests tagged `feature-request-auto` MUST trigger the full spec-kit pipeline automatically via GitHub Actions
@@ -270,6 +275,12 @@ quality before merge.
 - Agent branches MUST follow the naming convention: `copilot/{spec-number}/{task-id}`
 - PRs MUST include `Fixes #{issue-number}` in the description to auto-close the originating issue on merge
 - Failed agent PRs are relabelled `needs-human-review` after 3 retry attempts
+- The self-healing deployment loop (`deploy-and-heal.yml`) MUST cap iterations at 3 per run
+- The self-healing loop MUST have a maximum wall-clock timeout of 2 hours
+- After max self-heal iterations, the pipeline MUST label the issue `needs-human-review` and stop
+- Failed canary revisions MUST be deactivated to prevent revision limit exhaustion
+- Deploy-fix issues MUST be tagged `deploy-fix-auto` and `copilot` for agent pickup
+- Error categories `runtime`, `dependency`, and `config` are agent-fixable; `infra` errors require human review; credential/secret errors MUST NOT be auto-fixed
 
 ---
 
@@ -334,6 +345,16 @@ pass before merge:
 15. **Storybook** — Storybook build + a11y audit passes
 16. **E2E** — Playwright end-to-end tests pass
 
+### Tier 3: Deployment Verification (post-deploy)
+
+These gates run via `deploy-and-heal.yml` after deploying to staging
+or nightly. Failures trigger the self-healing loop (Constitution XV):
+
+17. **Readiness** — `/api/ready` returns 200 within retry window
+18. **Health** — `/api/health` returns `{"status":"healthy"}`
+19. **Home page** — HTTP 200 from the root URL
+20. **Diagnostics** — on failure, structured error diagnostics are collected and classified
+
 ### Performance Thresholds
 
 These thresholds enforce Principle VI (Performance Budget) and may
@@ -395,4 +416,34 @@ all quality gates in `ci-full.yml` are eligible for auto-merge via
 merge queue. Human-authored PRs require at least one human approval.
 The merge queue MUST run full CI on the merge commit before completing.
 
-**Version**: 1.6.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-04-14
+### Self-Healing Deployment Protocol
+
+The self-healing deployment pipeline (`deploy-and-heal.yml`) extends
+the autonomous pipeline to cover post-merge deployment failures:
+
+1. **Deploy** — new container revision deployed as canary
+2. **Verify** — smoke tests run against the canary (readiness, health, home page)
+3. **Promote or Diagnose** — on pass, promote to 100% traffic; on fail, collect structured diagnostics
+4. **Auto-Fix** — create a `deploy-fix-auto` issue with error context for Copilot agent pickup
+5. **Wait** — poll for the agent's fix PR to merge (up to 1 hour per iteration)
+6. **Retry** — rebuild and redeploy with the fix (max 3 iterations total)
+7. **Escalate** — after max retries, label `needs-human-review` and stop
+
+**Safety guardrails:**
+- Maximum 3 self-heal iterations per workflow run
+- Maximum 2-hour total wall-clock timeout
+- Failed revisions are deactivated to prevent Azure revision limits
+- `infra` error category requires human review — agent MUST NOT modify Bicep without approval
+- Credential and secret errors (`AZURE_CLIENT_ID`, Key Vault, OIDC) MUST NOT be auto-fixed
+- Agent fix branches use the naming convention: `copilot/deploy-fix/{issue-number}`
+
+**Error categories:**
+| Category | Agent-Fixable | Examples |
+|----------|:---:|---------|
+| `runtime` | ✅ | Crash loops, health check failures, startup errors |
+| `dependency` | ✅ | Missing modules, import errors, build failures |
+| `config` | ✅ | Wrong env vars in code, misconfigured API paths |
+| `infra` | ❌ | Bicep errors, resource quota, networking |
+| Credentials | ❌ | Expired secrets, missing OIDC, Key Vault access |
+
+**Version**: 1.7.0 | **Ratified**: 2026-03-16 | **Last Amended**: 2026-04-14

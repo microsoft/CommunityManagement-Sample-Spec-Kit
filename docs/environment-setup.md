@@ -73,7 +73,12 @@ curl http://localhost:3000/api/ready
 | `Dockerfile` | Multi-stage container build |
 | `infra/main.bicep` | Infrastructure orchestrator |
 | `infra/main.parameters.json` | Default Bicep parameters |
-| `.github/workflows/ci.yml` | CI pipeline (extended with Docker build test) |
+| `.github/workflows/ci-fast.yml` | Tier 1 CI pipeline (typecheck + lint + affected tests) |
+| `.github/workflows/ci-full.yml` | Tier 2 CI pipeline (full quality gates) |
 | `.github/workflows/deploy.yml` | CD pipeline (staging → production) |
+| `.github/workflows/deploy-and-heal.yml` | Self-healing deploy pipeline (canary → test → fix → retry) |
+| `.github/workflows/deploy-fix-orchestrate.yml` | Lightweight deploy-fix issue orchestration for Copilot agent |
+| `.github/actions/smoke-test/action.yml` | Reusable composite action for smoke tests |
+| `.github/actions/deploy-diagnostics/action.yml` | Reusable composite action for failure diagnostics |
 | `.azure/staging/.env` | Staging environment config |
 | `.azure/production/.env` | Production environment config |

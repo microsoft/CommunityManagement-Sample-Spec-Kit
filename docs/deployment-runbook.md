@@ -113,8 +113,44 @@ az containerapp revision deactivate --name ca-acroyoga-web-production \
 ```
 Push to main → ci-full.yml passes → deploy.yml triggers:
   1. Build container image → push to ACR
-  2. Deploy to staging → run smoke tests
+  2. Deploy to staging → run smoke tests (readiness + health + home page)
   3. Manual approval → promote to production
+```
+
+### Self-Healing Deployment (`deploy-and-heal.yml`)
+
+For staging and nightly environments, the self-healing pipeline automates
+failure recovery (Constitution XV):
+
+```
+Trigger deploy-and-heal.yml (manual or scheduled):
+  1. Build & push container image to ACR
+  2. Deploy new revision to Container App
+  3. Run smoke tests (readiness, health, home page)
+     ├── ✅ All pass → deployment successful, exit
+     └── ❌ Any fail → collect structured diagnostics
+  4. Classify error (runtime | dependency | config | infra)
+  5. Create GitHub issue with diagnostics (labels: deploy-fix-auto, copilot)
+  6. Copilot agent picks up issue, diagnoses, implements fix, opens PR
+  7. PR goes through Tier 1 → Tier 2 CI → auto-merge
+  8. Rebuild & redeploy with fix (go to step 2)
+  9. After 3 iterations → label 'needs-human-review', stop
+```
+
+**Error categories:**
+| Category | Auto-fixable | Examples |
+|----------|:---:|---------|
+| `runtime` | ✅ | Crash loops, health check failures, startup errors |
+| `dependency` | ✅ | Missing modules, import errors |
+| `config` | ✅ | Wrong env vars in code, misconfigured routes |
+| `infra` | ❌ | Bicep errors, resource quota, networking |
+| Credentials | ❌ | Expired secrets, missing OIDC |
+
+**Manual trigger:**
+```bash
+gh workflow run deploy-and-heal.yml \
+  -f environment=staging \
+  -f max-heal-iterations=3
 ```
 
 ### PR Lifecycle

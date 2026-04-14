@@ -11,7 +11,7 @@ This repo uses spec-kit for structured feature development:
 - `specs/{NNN}-{name}/plan.md` — Implementation plan
 - `specs/{NNN}-{name}/tasks.md` — Ordered task list
 - `specs/{NNN}-{name}/data-model.md` — Data model (if applicable)
-- `specs/constitution.md` — Architectural principles (v1.6.0, 15 principles — **MUST read**)
+- `specs/constitution.md` — Architectural principles (v1.7.0, 15 principles — **MUST read**)
 
 When assigned an issue:
 
@@ -34,7 +34,7 @@ When implementing a task autonomously:
 
 1. **Find the relevant spec** — Check `specs/` for the feature spec matching
    your issue. Read spec.md, plan.md, tasks.md, and data-model.md before coding.
-2. **Read the constitution** — `specs/constitution.md` (v1.6.0) defines 15
+2. **Read the constitution** — `specs/constitution.md` (v1.7.0) defines 15
    mandatory architectural principles. Key constraints:
    - **I. API-First**: All mutations go through API routes, never direct DB from components.
      Response shapes live in `packages/shared/src/types/`. Error responses use `@/lib/errors`.
@@ -135,4 +135,26 @@ If you add a new API route, you MUST also:
 
 PRs are blocked if any Tier 1 gate fails. Tier 2 runs when the `ready-for-merge`
 label is applied. Agent PRs get this label automatically after Tier 1 passes.
+
+## Deploy-Fix Protocol (Self-Healing Pipeline)
+
+When assigned an issue labelled `deploy-fix-auto`:
+
+1. **Read the issue body** — it contains structured deployment diagnostics:
+   - Error category (`runtime`, `dependency`, `config`, `infra`)
+   - Container logs, system logs, and smoke test results
+   - Suggested fix approach based on error patterns
+2. **Identify the root cause** from the logs and error classification
+3. **Create a branch**: `copilot/deploy-fix/{issue-number}`
+4. **Implement the fix** — focus only on the deployment failure, do not make unrelated changes
+5. **Create a PR** with `Fixes #{issue-number}` in the description
+6. **The self-healing pipeline handles the rest** — after merge, it will automatically rebuild and redeploy
+
+**Important constraints:**
+- `runtime` / `dependency` / `config` errors → fix autonomously
+- `infra` errors → propose a fix but add the `needs-human-review` label (Constitution XV)
+- Credential/secret errors → do NOT attempt to fix; add `needs-human-review` label instead
+- Do NOT modify Bicep infrastructure files without human approval
+- Do NOT add or remove environment variables in Bicep without human approval
+- Keep fixes minimal and focused on the diagnosed error
 
