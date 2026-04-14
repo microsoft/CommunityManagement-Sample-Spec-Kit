@@ -1,0 +1,598 @@
+name: Deploy & Self-Heal
+
+# Autonomous deployment pipeline with self-healing loop.
+# Deploys as a canary revision → smoke tests → promote or diagnose → auto-fix → retry.
+# Constitution XV — Autonomous Development Pipeline (self-healing extension).
+#
+# Flow:
+#   1. Build & push container image
+#   2. Deploy new revision (canary)
+#   3. Run smoke tests via composite action (standardised across workflows)
+#   4. If pass → deployment successful
+#   5. If fail → collect diagnostics, classify error, create fix issue, wait for agent PR
+#   6. Repeat from step 1 with exponential backoff (max 3 iterations)
+#   7. After max retries → rollback to last known-good revision → escalate to human review
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - nightly
+      max-heal-iterations:
+        description: "Maximum self-heal iterations (1-3)"
+        required: false
+        type: number
+        default: 3
+      image-tag:
+        description: "Image tag to deploy (optional — builds from HEAD if omitted)"
+        required: false
+        type: string
+  # Trigger self-healing when nightly deploy job fails (item 5)
+  workflow_run:
+    workflows: ["Nightly Build & Deploy"]
+    types: [completed]
+
+# Prevent overlapping self-heal runs
+concurrency:
+  group: deploy-heal-${{ inputs.environment || 'nightly' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  # ── Job 1: Build container image (skip if image-tag provided or triggered by nightly failure) ──
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Skip build when: image-tag is provided, or triggered by nightly (which already built)
+    # Only trigger self-heal on nightly failure, not success
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.image-tag }}
+    outputs:
+      image-tag: sha-${{ github.sha }}
+    environment: ${{ inputs.environment || 'nightly' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: ACR login (with retry)
+        run: |
+          REGISTRY="${{ secrets.AZURE_CONTAINER_REGISTRY }}"
+          for attempt in 1 2 3; do
+            echo "ACR login attempt ${attempt}/3..."
+            if az acr login --name "${REGISTRY}"; then
+              echo "::notice title=ACR Login::Success (attempt ${attempt})"
+              exit 0
+            fi
+            [ "$attempt" -lt 3 ] && sleep 10
+          done
+          echo "::error title=ACR Login::Failed after 3 attempts"
+          exit 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.AZURE_CONTAINER_REGISTRY }}/acroyoga-web:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Job 2: Deploy canary, test, promote or heal ──
+  deploy-and-heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: [build]
+    # Run when: build succeeded/skipped (dispatch), or nightly failed (workflow_run)
+    if: >
+      always() && (
+        (github.event_name == 'workflow_dispatch' && (needs.build.result == 'success' || needs.build.result == 'skipped')) ||
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure')
+      )
+    environment: ${{ inputs.environment || 'nightly' }}
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+      pull-requests: read
+
+    env:
+      # For workflow_run triggers, head_sha may be empty if nightly failed before checkout;
+      # fall back to github.sha in that case
+      IMAGE_TAG: ${{ needs.build.outputs.image-tag || inputs.image-tag || format('nightly-sha-{0}', github.event.workflow_run.head_sha || github.sha) }}
+      RESOURCE_GROUP: rg-acroyoga-${{ inputs.environment || 'nightly' }}
+      APP_NAME: ca-acroyoga-web-${{ inputs.environment || 'nightly' }}
+      MAX_ITERATIONS: ${{ inputs.max-heal-iterations || 3 }}
+      REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Start PostgreSQL server if stopped
+        uses: ./.github/actions/pg-wake
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+
+      - name: Record known-good revision before deploy
+        id: baseline
+        run: |
+          GOOD_REV=$(az containerapp revision list \
+            --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "sort_by([?properties.runningState=='Running'], &properties.createdTime)[-1].name" \
+            -o tsv 2>/dev/null || echo "")
+          echo "revision=${GOOD_REV}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Baseline::Known-good revision: ${GOOD_REV:-none}"
+
+      - name: Self-healing deploy loop
+        id: heal-loop
+        uses: actions/github-script@v7
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+          APP_NAME: ${{ env.APP_NAME }}
+          MAX_ITERATIONS: ${{ env.MAX_ITERATIONS }}
+          REGISTRY: ${{ env.REGISTRY }}
+          BASELINE_REVISION: ${{ steps.baseline.outputs.revision }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const maxIter = parseInt(process.env.MAX_ITERATIONS, 10) || 3;
+            const appName = process.env.APP_NAME;
+            const rg = process.env.RESOURCE_GROUP;
+            const registry = process.env.REGISTRY;
+            const baselineRevision = process.env.BASELINE_REVISION;
+            let imageTag = process.env.IMAGE_TAG;
+
+            // Base cooldown: 60s, doubles each iteration (item 8: rate limiting)
+            const BASE_COOLDOWN_MS = 60000;
+
+            function run(cmd) {
+              console.log(`$ ${cmd}`);
+              return execSync(cmd, { encoding: 'utf8', timeout: 300000 }).trim();
+            }
+
+            function runSafe(cmd) {
+              try { return run(cmd); }
+              catch (e) { return e.stderr || e.message; }
+            }
+
+            // Item 7: Improved PR merge detection — search by issue reference
+            async function waitForPR(issueNumber, timeoutMs = 3600000) {
+              const deadline = Date.now() + timeoutMs;
+              const pollInterval = 60000;
+              const createdAfter = new Date(Date.now() - timeoutMs).toISOString().split('T')[0];
+
+              while (Date.now() < deadline) {
+                try {
+                  // Use search API to find merged PRs referencing this issue
+                  const { data: searchResult } = await github.rest.search.issuesAndPullRequests({
+                    q: `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged Fixes #${issueNumber} created:>=${createdAfter}`,
+                    sort: 'updated',
+                    order: 'desc',
+                    per_page: 5
+                  });
+
+                  for (const item of searchResult.items) {
+                    // Verify it's actually merged by fetching the PR details
+                    const { data: pr } = await github.rest.pulls.get({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: item.number
+                    });
+                    if (pr.merged_at) {
+                      console.log(`Found merged fix PR #${pr.number} for issue #${issueNumber}`);
+                      return pr;
+                    }
+                  }
+                } catch (e) {
+                  console.log(`Search API error (will retry): ${e.message}`);
+                }
+
+                console.log(`Waiting for fix PR for issue #${issueNumber}... (${Math.round((deadline - Date.now()) / 60000)} min remaining)`);
+                await new Promise(r => setTimeout(r, pollInterval));
+              }
+              return null;
+            }
+
+            // Item 4: Automatic rollback helper
+            function rollbackToBaseline() {
+              if (!baselineRevision) {
+                console.log('No baseline revision recorded — cannot rollback');
+                return false;
+              }
+              try {
+                console.log(`Rolling back to baseline revision: ${baselineRevision}`);
+                run(`az containerapp revision activate \
+                  --name ${appName} --resource-group ${rg} \
+                  --revision ${baselineRevision} --output none`);
+                run(`az containerapp ingress traffic set \
+                  --name ${appName} --resource-group ${rg} \
+                  --revision-weight ${baselineRevision}=100 --output none`);
+                console.log(`::notice title=Rollback::Traffic shifted to baseline revision ${baselineRevision}`);
+                return true;
+              } catch (e) {
+                console.log(`::warning title=Rollback::Failed to rollback: ${e.message}`);
+                return false;
+              }
+            }
+
+            for (let iter = 1; iter <= maxIter; iter++) {
+              console.log(`\n${'='.repeat(60)}`);
+              console.log(`SELF-HEAL ITERATION ${iter}/${maxIter}`);
+              console.log(`${'='.repeat(60)}\n`);
+
+              // Item 8: Exponential backoff between iterations (skip cooldown on first)
+              if (iter > 1) {
+                const cooldownMs = BASE_COOLDOWN_MS * Math.pow(2, iter - 2);
+                console.log(`Cooldown: waiting ${cooldownMs / 1000}s before next attempt...`);
+                await new Promise(r => setTimeout(r, cooldownMs));
+              }
+
+              // ── Step 1: Deploy new revision as canary ──
+              console.log('Deploying canary revision...');
+              const tagSuffix = imageTag.replace(/[^a-z0-9]/gi, '').slice(-6);
+              const revisionSuffix = `h${iter}-${tagSuffix}`;
+
+              try {
+                run(`az containerapp update \
+                  --name ${appName} \
+                  --resource-group ${rg} \
+                  --image ${registry}/acroyoga-web:${imageTag} \
+                  --revision-suffix ${revisionSuffix} \
+                  --output none`);
+              } catch (e) {
+                console.log(`::error title=DEPLOY::Canary deploy failed: ${e.message}`);
+                const infraError = runSafe(`az deployment group list \
+                  --resource-group ${rg} --query "[?properties.provisioningState!='Succeeded'] | [0:3]" -o json`);
+                core.setOutput('result', 'fail');
+                core.setOutput('error', `Infrastructure deployment failed at iteration ${iter}: ${infraError}`);
+                return;
+              }
+
+              // Get the new revision name
+              const latestRevision = run(`az containerapp revision list \
+                --name ${appName} --resource-group ${rg} \
+                --query "sort_by(@, &properties.createdTime)[-1].name" -o tsv`);
+              console.log(`New revision: ${latestRevision}`);
+
+              // ── Step 2: Get app FQDN for smoke tests ──
+              const appFqdn = run(`az containerapp show \
+                --name ${appName} --resource-group ${rg} \
+                --query properties.configuration.ingress.fqdn -o tsv`);
+
+              // Item 3: Run smoke tests via composite action output file
+              // Write FQDN to file for the composite action to use
+              // Since we're inside github-script, we invoke the smoke-test
+              // action's logic using the same curl patterns but in a
+              // standardised way. The composite action is used in the
+              // separate workflow steps (nightly/deploy); here we replicate
+              // the same parameters for consistency.
+              console.log(`Running smoke tests against https://${appFqdn} ...`);
+
+              let readinessOk = false;
+              for (let r = 0; r < 50; r++) {
+                try {
+                  const result = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/api/ready" -o /dev/null -w "%{http_code}"`);
+                  if (result === '200') {
+                    readinessOk = true;
+                    console.log(`Readiness check passed after ${r + 1} attempts`);
+                    break;
+                  }
+                } catch { /* retry */ }
+                if (r < 49) await new Promise(resolve => setTimeout(resolve, 15000));
+              }
+
+              let healthOk = false;
+              let homepageOk = false;
+
+              if (readinessOk) {
+                try {
+                  const healthResp = run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/api/health"`);
+                  healthOk = healthResp.includes('"status":"healthy"');
+                  if (!healthOk) console.log(`Health response: ${healthResp}`);
+                } catch (e) {
+                  console.log(`Health check failed: ${e.message}`);
+                }
+
+                try {
+                  run(`curl --connect-timeout 10 --max-time 30 -sf "https://${appFqdn}/" -o /dev/null`);
+                  homepageOk = true;
+                } catch (e) {
+                  console.log(`Home page check failed: ${e.message}`);
+                }
+              }
+
+              const allPassed = readinessOk && healthOk && homepageOk;
+
+              // ── Step 3: If all pass → success ──
+              if (allPassed) {
+                console.log('\n✅ All smoke tests passed — deployment successful!');
+                core.setOutput('result', 'pass');
+                core.setOutput('iteration', String(iter));
+                return;
+              }
+
+              // ── Step 4: Tests failed — collect diagnostics ──
+              console.log('\n❌ Smoke tests failed — collecting diagnostics...');
+
+              const containerLogs = runSafe(`az containerapp logs show \
+                --name ${appName} --resource-group ${rg} --tail 100 2>&1 | tail -50`);
+              const systemLogs = runSafe(`az containerapp logs show \
+                --name ${appName} --resource-group ${rg} --type system --tail 50 2>&1 | tail -30`);
+
+              // Build a minimal diagnostics JSON for the classify-error action
+              const diagJson = JSON.stringify({
+                containerLogs: containerLogs,
+                systemLogs: systemLogs,
+                deploymentOperations: [],
+                smokeTestResults: {
+                  readiness: readinessOk ? 'pass' : 'fail',
+                  health: healthOk ? 'pass' : 'fail',
+                  homepage: homepageOk ? 'pass' : 'fail'
+                }
+              });
+
+              // Write diagnostics for the classify-error action to consume
+              require('fs').writeFileSync('/tmp/heal-diagnostics.json', diagJson);
+
+              // Classify inline using the same patterns as classify-error action
+              let errorCategory = 'unknown';
+              let errorSummary = 'Deployment smoke tests failed';
+              const allLogs = `${containerLogs}\n${systemLogs}`;
+
+              // Credential patterns (expanded — item 9)
+              if (allLogs.match(/AZURE_CLIENT_ID|ManagedIdentityCredential|DefaultAzureCredential|AADSTS|credential|TokenExpiredError|AuthenticationFailedError|AuthorizationFailed|RBAC|authorization denied|Access denied|SecretNotFound|KeyVaultError|VaultAccessError|Forbidden.*vault|identity.*error/i)) {
+                errorCategory = 'credential';
+                errorSummary = 'Credential or managed identity error — requires human review';
+              } else if (allLogs.match(/BackOff|CrashLoop|OOMKilled/i)) {
+                errorCategory = 'runtime';
+                errorSummary = 'Container is crash-looping or OOM';
+              } else if (allLogs.match(/MODULE_NOT_FOUND|Cannot find module|ENOENT|ERR_MODULE_NOT_FOUND/i)) {
+                errorCategory = 'dependency';
+                errorSummary = 'Missing module or file at runtime';
+              } else if (allLogs.match(/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH/i)) {
+                errorCategory = 'config';
+                errorSummary = 'Connection error — check env vars and service endpoints';
+              } else if (!readinessOk) {
+                errorCategory = 'runtime';
+                errorSummary = 'Application never became ready (/api/ready timeout)';
+              } else if (!healthOk) {
+                errorCategory = 'runtime';
+                errorSummary = 'Health check failed (/api/health not healthy)';
+              }
+
+              // ── Step 5: If this is the last iteration, rollback then escalate ──
+              if (iter >= maxIter) {
+                console.log(`\n🚨 Max iterations (${maxIter}) reached`);
+
+                // Item 4: Automatic rollback before escalation
+                console.log('Attempting rollback to last known-good revision...');
+                const rolledBack = rollbackToBaseline();
+
+                // Deactivate the broken revision
+                try {
+                  run(`az containerapp revision deactivate \
+                    --name ${appName} --resource-group ${rg} \
+                    --revision ${latestRevision} --output none`);
+                  console.log(`Deactivated failed revision: ${latestRevision}`);
+                } catch { /* best effort */ }
+
+                const issueBody = [
+                  `## 🚨 Self-Healing Deployment Failed — Needs Human Review`,
+                  '',
+                  `**Environment**: \`${rg}\``,
+                  `**Image Tag**: \`${imageTag}\``,
+                  `**Iterations Attempted**: ${iter}`,
+                  `**Error Category**: \`${errorCategory}\``,
+                  `**Summary**: ${errorSummary}`,
+                  `**Rollback**: ${rolledBack ? `✅ Rolled back to \`${baselineRevision}\`` : '❌ No baseline revision available'}`,
+                  '',
+                  '### Container Logs (last 50 lines)',
+                  '```',
+                  // Truncate to 3000 chars to stay within GitHub issue body limit (~65535 chars)
+                  containerLogs.slice(-3000),
+                  '```',
+                  '',
+                  '### System Logs (last 30 lines)',
+                  '```',
+                  // Truncate to 2000 chars — system logs are less verbose than container logs
+                  systemLogs.slice(-2000),
+                  '```',
+                  '',
+                  '### Smoke Test Results',
+                  `- Readiness: ${readinessOk ? '✅' : '❌'}`,
+                  `- Health: ${healthOk ? '✅' : '❌'}`,
+                  `- Home page: ${homepageOk ? '✅' : '❌'}`,
+                  '',
+                  '> This issue was auto-created by the self-healing deploy pipeline after exhausting all retry attempts.',
+                ].join('\n');
+
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `[Deploy Fix] Self-healing failed: ${errorSummary}`,
+                  body: issueBody,
+                  labels: ['deploy-fix-auto', 'needs-human-review']
+                });
+
+                core.setOutput('result', 'fail');
+                core.setOutput('error', `Self-healing exhausted after ${iter} iterations: ${errorSummary}`);
+                return;
+              }
+
+              // ── Step 6: Create a fix issue for the Copilot agent ──
+              console.log(`\nCreating fix issue for Copilot agent (iteration ${iter})...`);
+
+              const fixIssueBody = [
+                `## 🔧 Automated Deployment Fix Required`,
+                '',
+                `**Environment**: \`${rg}\``,
+                `**Image Tag**: \`${imageTag}\``,
+                `**Self-Heal Iteration**: ${iter}/${maxIter}`,
+                `**Error Category**: \`${errorCategory}\``,
+                `**Error Summary**: ${errorSummary}`,
+                '',
+                '### Agent Instructions',
+                '',
+                'This issue was auto-created by the self-healing deployment pipeline.',
+                'The deployment to Azure Container Apps failed smoke tests.',
+                'Diagnose and fix the root cause based on the error category and logs below.',
+                '',
+                '**Steps:**',
+                '1. Read the error diagnostics below',
+                '2. Identify the root cause in the codebase',
+                '3. Implement a fix (code, config, or infrastructure)',
+                '4. Create a PR with `Fixes #ISSUE_NUMBER` in the description (replace ISSUE_NUMBER with this issue number)',
+                '5. The self-healing pipeline will automatically redeploy after your fix merges',
+                '',
+                `**Error Category**: \`${errorCategory}\``,
+                '',
+                errorCategory === 'runtime' ? '> **Hint**: Check application startup, API route handlers, database migrations, and health check endpoints.' :
+                errorCategory === 'dependency' ? '> **Hint**: Check package.json, imports, and the Dockerfile build steps.' :
+                errorCategory === 'config' ? '> **Hint**: Check environment variables, connection strings, and Azure service endpoints.' :
+                errorCategory === 'infra' ? '> **Hint**: Check Bicep templates, resource parameters, and Azure resource configurations. Note: infra changes require human review per Constitution XV.' :
+                '> **Hint**: Review the full logs below to identify the failure pattern.',
+                '',
+                '### Container Logs',
+                '```',
+                // Truncate to 3000 chars to stay within GitHub issue body limit (~65535 chars)
+                containerLogs.slice(-3000),
+                '```',
+                '',
+                '### System Logs',
+                '```',
+                // Truncate to 2000 chars — system logs are less verbose than container logs
+                systemLogs.slice(-2000),
+                '```',
+                '',
+                '### Smoke Test Results',
+                `- Readiness (/api/ready): ${readinessOk ? '✅ pass' : '❌ fail'}`,
+                `- Health (/api/health): ${healthOk ? '✅ pass' : '❌ fail'}`,
+                `- Home page (/): ${homepageOk ? '✅ pass' : '❌ fail'}`,
+              ].join('\n');
+
+              const { data: fixIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Deploy Fix] ${errorSummary} (iteration ${iter})`,
+                body: fixIssueBody,
+                labels: ['deploy-fix-auto', 'copilot']
+              });
+
+              // Update the issue body with the actual issue number now that we have it
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: fixIssue.number,
+                body: fixIssueBody.replace('ISSUE_NUMBER', String(fixIssue.number))
+              });
+
+              console.log(`Created fix issue #${fixIssue.number}`);
+
+              // ── Step 7: Wait for the agent to merge a fix PR ──
+              console.log(`Waiting for Copilot agent to fix issue #${fixIssue.number}...`);
+
+              const fixPR = await waitForPR(fixIssue.number, 3600000); // 1 hour timeout
+
+              if (!fixPR) {
+                console.log(`::warning title=SELF-HEAL::No fix PR merged within timeout for issue #${fixIssue.number}`);
+                // Continue to next iteration anyway — the agent might have pushed to main directly
+              } else {
+                console.log(`Fix PR #${fixPR.number} merged — rebuilding for next iteration...`);
+                // Update image tag for the next iteration using the merge commit
+                imageTag = `sha-${fixPR.merge_commit_sha}`;
+
+                // Rebuild with the new code
+                try {
+                  // ACR login with retry (matching the initial login pattern)
+                  let acrLoggedIn = false;
+                  for (let a = 1; a <= 3; a++) {
+                    try {
+                      run(`az acr login --name ${registry}`);
+                      acrLoggedIn = true;
+                      break;
+                    } catch (e) {
+                      if (a < 3) {
+                        console.log(`ACR login attempt ${a}/3 failed, retrying in 10s...`);
+                        await new Promise(r => setTimeout(r, 10000));
+                      } else {
+                        console.log(`::warning title=SELF-HEAL::ACR login failed after 3 attempts: ${e.message}`);
+                      }
+                    }
+                  }
+
+                  // Trigger a rebuild via ACR task or use the existing image if deploy.yml already built it
+                  // For now, check if the image exists from the deploy.yml pipeline
+                  const imageExists = runSafe(`az acr repository show-tags \
+                    --name ${registry.split('.')[0]} \
+                    --repository acroyoga-web \
+                    --query "contains(@, '${imageTag}')" -o tsv`);
+
+                  if (imageExists !== 'true') {
+                    console.log('Fix image not yet built — waiting for deploy.yml to build it...');
+                    // Wait up to 10 minutes for the main deploy pipeline to build the image
+                    for (let w = 0; w < 20; w++) {
+                      await new Promise(r => setTimeout(r, 30000));
+                      const exists = runSafe(`az acr repository show-tags \
+                        --name ${registry.split('.')[0]} \
+                        --repository acroyoga-web \
+                        --query "contains(@, '${imageTag}')" -o tsv`);
+                      if (exists === 'true') break;
+                    }
+                  }
+                } catch (e) {
+                  console.log(`::warning title=SELF-HEAL::Could not verify fix image: ${e.message}`);
+                }
+              }
+
+              // Clean up failed revision to avoid revision limit
+              try {
+                run(`az containerapp revision deactivate \
+                  --name ${appName} --resource-group ${rg} \
+                  --revision ${latestRevision} --output none`);
+                console.log(`Deactivated failed revision: ${latestRevision}`);
+              } catch { /* best effort */ }
+
+              console.log(`\nProceeding to iteration ${iter + 1}...`);
+            }
+
+      - name: Report result
+        if: always()
+        run: |
+          RESULT="${{ steps.heal-loop.outputs.result }}"
+          if [ "$RESULT" = "pass" ]; then
+            echo "::notice title=Deploy & Self-Heal::✅ Deployment successful (iteration ${{ steps.heal-loop.outputs.iteration }})"
+          else
+            echo "::error title=Deploy & Self-Heal::❌ Deployment failed after self-healing attempts"
+            exit 1
+          fi

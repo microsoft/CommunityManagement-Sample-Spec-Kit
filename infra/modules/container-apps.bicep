@@ -49,6 +49,13 @@ param memorySize string = '1Gi'
 @description('Entra External ID CIAM tenant subdomain (e.g. "acroyogacommunity")')
 param entraTenantDomain string = ''
 
+@description('Container App active revisions mode. Use "Multiple" for canary deployments with traffic splitting, "Single" for replace-in-place deployments.')
+@allowed([
+  'Single'
+  'Multiple'
+])
+param activeRevisionsMode string = 'Single'
+
 var environmentResourceName = 'cae-acroyoga-${environmentName}'
 var appName = 'ca-acroyoga-web-${environmentName}'
 var imageName = '${containerRegistryLoginServer}/acroyoga-web:${imageTag}'
@@ -91,7 +98,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
-      activeRevisionsMode: 'Single'
+      activeRevisionsMode: activeRevisionsMode
       ingress: {
         external: true
         targetPort: 3000
@@ -248,3 +255,4 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
 output environmentId string = containerAppEnvironment.id
+output appName string = containerApp.name

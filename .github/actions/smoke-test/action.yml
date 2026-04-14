@@ -1,0 +1,124 @@
+name: Smoke Test
+description: >
+  Run smoke tests against a specific Container App revision or FQDN.
+  Checks readiness, health, and home page availability.
+
+inputs:
+  app-url:
+    description: 'FQDN or full URL (without protocol) to test against'
+    required: true
+  readiness-retries:
+    description: 'Number of retries for the readiness check'
+    required: false
+    default: '50'
+  readiness-delay:
+    description: 'Seconds between readiness retries'
+    required: false
+    default: '15'
+  readiness-max-time:
+    description: 'Maximum total time in seconds for the readiness check'
+    required: false
+    default: '900'
+
+outputs:
+  result:
+    description: 'pass or fail'
+    value: ${{ steps.summary.outputs.result }}
+  diagnostics:
+    description: 'JSON object with per-check results'
+    value: ${{ steps.summary.outputs.diagnostics }}
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for readiness
+      id: readiness
+      shell: bash
+      run: |
+        APP_URL="${{ inputs.app-url }}"
+        READY_START=$SECONDS
+        echo "Waiting for https://${APP_URL}/api/ready ..."
+        if curl --retry ${{ inputs.readiness-retries }} \
+          --retry-delay ${{ inputs.readiness-delay }} --retry-all-errors \
+          --connect-timeout 10 --max-time 30 \
+          --retry-max-time ${{ inputs.readiness-max-time }} \
+          -sf "https://${APP_URL}/api/ready" -o /tmp/ready-response.json; then
+          ELAPSED=$((SECONDS - READY_START))
+          echo "::notice title=Readiness Check::Application ready after ${ELAPSED}s"
+          echo "status=pass" >> "$GITHUB_OUTPUT"
+        else
+          ELAPSED=$((SECONDS - READY_START))
+          echo "::error title=SMOKE_TEST: Readiness Check::Readiness check failed after ${ELAPSED}s. Endpoint: https://${APP_URL}/api/ready"
+          echo "status=fail" >> "$GITHUB_OUTPUT"
+          # Capture whatever response we got for diagnostics
+          curl --connect-timeout 10 --max-time 30 -s "https://${APP_URL}/api/ready" -o /tmp/ready-response.json 2>/dev/null || true
+        fi
+
+    - name: Smoke test — health
+      id: health
+      shell: bash
+      if: always()
+      run: |
+        APP_URL="${{ inputs.app-url }}"
+        if RESPONSE=$(curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/api/health"); then
+          echo "${RESPONSE}" > /tmp/health-response.json
+          if echo "${RESPONSE}" | grep -q '"status":"healthy"'; then
+            echo "::notice title=Smoke Test::Health check passed"
+            echo "status=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error title=SMOKE_TEST: Health Check::Unexpected status. Response: ${RESPONSE}"
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "::error title=SMOKE_TEST: Health Check::Failed. Endpoint: https://${APP_URL}/api/health"
+          echo '{}' > /tmp/health-response.json
+          echo "status=fail" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Smoke test — home page
+      id: homepage
+      shell: bash
+      if: always()
+      run: |
+        APP_URL="${{ inputs.app-url }}"
+        if curl --connect-timeout 10 --max-time 30 -sf "https://${APP_URL}/" -o /tmp/homepage-response.html; then
+          echo "::notice title=Smoke Test::Home page check passed"
+          echo "status=pass" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error title=SMOKE_TEST: Home Page::Failed. Endpoint: https://${APP_URL}/"
+          echo "status=fail" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Summarise results
+      id: summary
+      shell: bash
+      if: always()
+      run: |
+        READINESS="${{ steps.readiness.outputs.status }}"
+        HEALTH="${{ steps.health.outputs.status }}"
+        HOMEPAGE="${{ steps.homepage.outputs.status }}"
+
+        READY_BODY="$(cat /tmp/ready-response.json 2>/dev/null || echo '{}')"
+        HEALTH_BODY="$(cat /tmp/health-response.json 2>/dev/null || echo '{}')"
+
+        # Build diagnostics JSON (escape for GITHUB_OUTPUT)
+        DIAG=$(jq -n \
+          --arg readiness "$READINESS" \
+          --arg health "$HEALTH" \
+          --arg homepage "$HOMEPAGE" \
+          --argjson readyBody "$(echo "$READY_BODY" | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson healthBody "$(echo "$HEALTH_BODY" | jq '.' 2>/dev/null || echo 'null')" \
+          '{readiness: $readiness, health: $health, homepage: $homepage, readyResponse: $readyBody, healthResponse: $healthBody}')
+
+        if [ "$READINESS" = "pass" ] && [ "$HEALTH" = "pass" ] && [ "$HOMEPAGE" = "pass" ]; then
+          echo "result=pass" >> "$GITHUB_OUTPUT"
+        else
+          echo "result=fail" >> "$GITHUB_OUTPUT"
+        fi
+
+        # Use EOF delimiter for multi-line output
+        {
+          echo "diagnostics<<DIAG_EOF"
+          echo "$DIAG"
+          echo "DIAG_EOF"
+        } >> "$GITHUB_OUTPUT"

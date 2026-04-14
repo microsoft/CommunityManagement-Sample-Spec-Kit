@@ -58,7 +58,7 @@ npm run test
 
 Every feature is driven by a specification in `specs/`. Before writing code:
 
-1. Read `specs/constitution.md` (v1.6.0) — defines 15 mandatory architectural principles
+1. Read `specs/constitution.md` (v1.7.0) — defines 15 mandatory architectural principles
 2. Find the relevant spec in `specs/NNN-feature-name/`
 3. Read `spec.md`, `plan.md`, and `tasks.md` to understand scope and acceptance criteria
 4. Check which tasks are already marked `[X]` (done) vs `[ ]` (pending)
@@ -142,7 +142,7 @@ npm run build -w @acroyoga/web
 
 This project follows the Spec-Kit agentic development workflow:
 
-1. **Constitution** — Architectural principles and quality gates (`specs/constitution.md`, v1.6.0)
+1. **Constitution** — Architectural principles and quality gates (`specs/constitution.md`, v1.7.0)
 2. **Specify** — Feature specs with user scenarios, acceptance criteria, and edge cases
 3. **Plan** — Implementation plans with data models and API contracts
 4. **Tasks** — Dependency-ordered, actionable task lists
@@ -161,8 +161,17 @@ The spec-kit process supports near-fully autonomous execution:
 4. PRs include `Fixes #{issue-number}` for automatic issue closure on merge
 5. Tier 1 CI runs on every push; on pass, `ready-for-merge` is auto-applied
 6. Tier 2 CI runs; on pass, the PR is auto-merged
+7. **Self-healing deployment** — after merge to `main`, `deploy-and-heal.yml` deploys a canary revision, runs smoke tests (readiness + health + home page), and if they fail: collects structured diagnostics → classifies error → creates a `deploy-fix-auto` issue → Copilot agent diagnoses and fixes → redeploys automatically (up to 3 iterations with exponential backoff). On final failure, the pipeline rolls back to the last known-good revision before escalating.
+8. **Nightly integration** — when the nightly build & deploy workflow fails, `deploy-and-heal.yml` triggers automatically via `workflow_run` to attempt self-healing recovery.
 
-Human review is required only for: spec approval, constitution amendments, security-sensitive changes, new dependencies, and database migrations. See [Constitution XV](specs/constitution.md) for the full policy.
+Human review is required only for: spec approval, constitution amendments, security-sensitive changes, new dependencies, database migrations, credential/identity errors, and infrastructure errors during self-healing. See [Constitution XV](specs/constitution.md) for the full policy.
+
+When an issue is labelled `needs-human-review` by the self-healing pipeline:
+1. Review the issue's error category, container logs, and smoke test results
+2. Verify the automatic rollback restored the previous working revision
+3. Investigate the root cause using the diagnostics JSON (see [Deployment Runbook](docs/deployment-runbook.md))
+4. Apply a fix manually or re-assign to an agent with additional context
+5. Trigger `deploy-and-heal.yml` manually after the fix merges
 
 ## Code Conventions
 
@@ -247,6 +256,15 @@ Runs when the `ready-for-merge` label is applied, on push to `main`, or manual d
 13. **Auth consistency** — Session-based auth only, no client-injectable headers
 14. **Storybook** — Build + a11y audit passes
 15. **E2E** — Playwright tests pass
+
+### Tier 3: Deployment Verification (`deploy-and-heal.yml`) — post-deploy
+
+Runs after deploying to staging or nightly:
+
+16. **Readiness** — `/api/ready` returns 200 within retry window
+17. **Health** — `/api/health` returns `{"status":"healthy"}`
+18. **Home page** — Root URL returns HTTP 200
+19. **Self-heal** — on failure, diagnostics collected and auto-fix loop triggered (max 3 iterations)
 
 Agent PRs get `ready-for-merge` auto-applied after Tier 1 passes. See `.github/workflows/auto-merge-agent.yml`.
 

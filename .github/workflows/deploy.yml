@@ -81,23 +81,28 @@ jobs:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           imageToDeploy: ${{ env.REGISTRY }}/acroyoga-web:${{ env.IMAGE_TAG }}
 
-      - name: Wait for readiness
+      - name: Resolve app FQDN
+        id: fqdn
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+          echo "url=${APP_URL}" >> "$GITHUB_OUTPUT"
 
-      - name: Smoke test — health
-        run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
-          echo "Health response: ${RESPONSE}"
-          echo "${RESPONSE}" | grep -q '"status":"healthy"'
+      - name: Run smoke tests
+        id: smoke
+        uses: ./.github/actions/smoke-test
+        with:
+          app-url: ${{ steps.fqdn.outputs.url }}
+          readiness-retries: '10'
+          readiness-delay: '10'
+          readiness-max-time: '120'
 
-      - name: Smoke test — home page
-        run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          curl -sf "https://${APP_URL}/" | head -20
+      - name: Collect diagnostics on failure
+        if: failure() || steps.smoke.outputs.result == 'fail'
+        uses: ./.github/actions/deploy-diagnostics
+        with:
+          app-name: ${{ env.APP_NAME }}
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          smoke-test-diagnostics: ${{ steps.smoke.outputs.diagnostics }}
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -130,15 +135,21 @@ jobs:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           imageToDeploy: ${{ env.REGISTRY }}/acroyoga-web:${{ env.IMAGE_TAG }}
 
-      - name: Wait for readiness
+      - name: Resolve app FQDN
+        id: fqdn
         run: |
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          echo "Waiting for https://${APP_URL}/api/ready ..."
-          curl --retry 10 --retry-delay 10 --retry-all-errors -sf "https://${APP_URL}/api/ready"
+          echo "url=${APP_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Run smoke tests
+        id: smoke
+        uses: ./.github/actions/smoke-test
+        with:
+          app-url: ${{ steps.fqdn.outputs.url }}
 
       - name: Verify deployed version
         run: |
-          APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          APP_URL="${{ steps.fqdn.outputs.url }}"
           RESPONSE=$(curl -sf "https://${APP_URL}/api/health")
           echo "Health response: ${RESPONSE}"
           EXPECTED_VERSION="sha-${{ github.sha }}"

@@ -1,0 +1,86 @@
+name: Wake PostgreSQL Server
+description: >
+  Start any stopped Azure PostgreSQL Flexible Servers in a resource group.
+  Handles cost-optimised environments where PG auto-stops overnight.
+  Retries the list query and polls until the server reaches 'Ready' state.
+
+inputs:
+  resource-group:
+    description: 'Azure resource group containing the PostgreSQL server(s)'
+    required: true
+  max-wait-seconds:
+    description: 'Maximum seconds to wait for the server to reach Ready state'
+    required: false
+    default: '300'
+
+outputs:
+  servers-started:
+    description: 'Comma-separated list of servers that were started (empty if none were stopped)'
+    value: ${{ steps.wake.outputs.servers-started }}
+
+runs:
+  using: composite
+  steps:
+    - name: Start PostgreSQL servers if stopped
+      id: wake
+      shell: bash
+      run: |
+        set -euo pipefail
+        RG="${{ inputs.resource-group }}"
+        MAX_WAIT="${{ inputs.max-wait-seconds }}"
+        POLL_INTERVAL=10
+        MAX_POLLS=$((MAX_WAIT / POLL_INTERVAL))
+
+        # Retry the list query to handle transient Azure API failures
+        SERVERS=""
+        for list_attempt in $(seq 1 3); do
+          if SERVERS=$(az postgres flexible-server list \
+            --resource-group "$RG" \
+            --query "[?state=='Stopped'].name" -o tsv 2>&1); then
+            break
+          fi
+          if [ "$list_attempt" -lt 3 ]; then
+            echo "::warning title=PostgreSQL Wake::List attempt ${list_attempt} failed, retrying in 10s..."
+            sleep 10
+          else
+            echo "::error title=PostgreSQL Wake::Failed to list PostgreSQL servers after 3 attempts — ${SERVERS}"
+            exit 1
+          fi
+        done
+
+        if [ -z "$SERVERS" ]; then
+          echo "::notice title=PostgreSQL Wake::No stopped PostgreSQL servers found — skipping start"
+          echo "servers-started=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        STARTED_LIST=""
+        for SERVER in $SERVERS; do
+          echo "Starting stopped PostgreSQL server: ${SERVER}"
+          WAKE_START=$SECONDS
+          az postgres flexible-server start \
+            --resource-group "$RG" --name "${SERVER}"
+
+          # Poll until the server reaches 'Ready' state
+          for i in $(seq 1 "$MAX_POLLS"); do
+            STATE=$(az postgres flexible-server show \
+              --resource-group "$RG" --name "${SERVER}" \
+              --query state -o tsv)
+            echo "  Attempt ${i}/${MAX_POLLS}: server state = ${STATE}"
+            if [ "$STATE" = "Ready" ]; then
+              ELAPSED=$((SECONDS - WAKE_START))
+              echo "::notice title=PostgreSQL Wake::Server ${SERVER} started and ready (elapsed: ${ELAPSED}s)"
+              break
+            fi
+            if [ "$i" -eq "$MAX_POLLS" ]; then
+              ELAPSED=$((SECONDS - WAKE_START))
+              echo "::error title=PostgreSQL Wake::Server ${SERVER} did not reach Ready state after ${ELAPSED}s (last state: ${STATE})"
+              exit 1
+            fi
+            sleep "$POLL_INTERVAL"
+          done
+
+          [ -n "$STARTED_LIST" ] && STARTED_LIST="${STARTED_LIST},${SERVER}" || STARTED_LIST="${SERVER}"
+        done
+
+        echo "servers-started=${STARTED_LIST}" >> "$GITHUB_OUTPUT"

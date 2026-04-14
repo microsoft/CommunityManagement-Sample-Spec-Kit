@@ -93,6 +93,13 @@ param deployMonitoringAlerts bool = true
 @description('Deploy the DB Wake custom role (requires subscription-level Microsoft.Authorization/roleDefinitions/write). Set to false for environments where the deploying identity only has resource-group-scoped permissions.')
 param deployDbWakeRole bool = true
 
+@description('Container App active revisions mode. Use "Multiple" for canary deployments with traffic splitting, "Single" for replace-in-place. Defaults to "Single" for backward compatibility.')
+@allowed([
+  'Single'
+  'Multiple'
+])
+param activeRevisionsMode string = 'Single'
+
 // ──────────────────────────────────────────────
 // 1. Managed Identity
 // ──────────────────────────────────────────────
@@ -211,6 +218,7 @@ module containerApps 'modules/container-apps.bicep' = {
     pgHost: database.outputs.serverHost
     pgDatabase: database.outputs.databaseName
     entraTenantDomain: entraTenantDomain
+    activeRevisionsMode: activeRevisionsMode
   }
 }
 

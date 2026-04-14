@@ -36,6 +36,20 @@ Create two environments in GitHub (Settings > Environments):
 
 1. **staging** — no protection rules
 2. **production** — required reviewers (1+), restrict to `main` branch
+3. **nightly** — no protection rules (used by nightly build & self-healing)
+
+## GitHub Permissions
+
+The self-healing pipeline (`deploy-and-heal.yml`) requires these workflow permissions:
+
+| Permission | Scope | Purpose |
+|-----------|-------|---------|
+| `id-token: write` | OIDC | Azure login via federated credentials |
+| `contents: read` | Repository | Checkout code and read composite actions |
+| `issues: write` | Repository | Create deploy-fix issues and escalation issues |
+| `pull-requests: read` | Repository | Search for merged fix PRs |
+
+The `deploy-fix-orchestrate.yml` also requires `contents: write` to push fix branches.
 
 ## Local Docker Testing
 
@@ -73,7 +87,15 @@ curl http://localhost:3000/api/ready
 | `Dockerfile` | Multi-stage container build |
 | `infra/main.bicep` | Infrastructure orchestrator |
 | `infra/main.parameters.json` | Default Bicep parameters |
-| `.github/workflows/ci.yml` | CI pipeline (extended with Docker build test) |
+| `.github/workflows/ci-fast.yml` | Tier 1 CI pipeline (typecheck + lint + affected tests) |
+| `.github/workflows/ci-full.yml` | Tier 2 CI pipeline (full quality gates) |
 | `.github/workflows/deploy.yml` | CD pipeline (staging → production) |
+| `.github/workflows/deploy-and-heal.yml` | Self-healing deploy pipeline (canary → test → fix → retry → rollback) |
+| `.github/workflows/deploy-fix-orchestrate.yml` | Lightweight deploy-fix issue orchestration for Copilot agent |
+| `.github/workflows/nightly.yml` | Nightly build, validate, deploy (triggers self-healing on failure) |
+| `.github/actions/smoke-test/action.yml` | Reusable composite action for smoke tests |
+| `.github/actions/deploy-diagnostics/action.yml` | Reusable composite action for failure diagnostics |
+| `.github/actions/classify-error/action.yml` | Reusable composite action for error classification |
+| `.github/actions/pg-wake/action.yml` | Reusable composite action for waking stopped PostgreSQL servers |
 | `.azure/staging/.env` | Staging environment config |
 | `.azure/production/.env` | Production environment config |

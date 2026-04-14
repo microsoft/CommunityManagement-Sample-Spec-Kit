@@ -58,7 +58,7 @@ This is an **npm workspaces monorepo** with shared packages:
 │       └── build/              # Generated CSS, TS, Swift, Kotlin
 │
 ├── specs/                      # Spec-Kit feature specifications
-│   ├── constitution.md         # Architectural principles (v1.6.0, 15 principles)
+│   ├── constitution.md         # Architectural principles (v1.7.0, 15 principles)
 │   └── 001–021/                # Feature specs with plans, tasks, contracts
 │
 ├── .github/
@@ -66,6 +66,9 @@ This is an **npm workspaces monorepo** with shared packages:
 │   └── workflows/
 │       ├── ci-fast.yml         # Tier 1: typecheck + lint + affected tests (<3 min)
 │       ├── ci-full.yml         # Tier 2: full quality gates (ready-for-merge)
+│       ├── deploy.yml          # CD pipeline (staging → production) with smoke tests
+│       ├── deploy-and-heal.yml     # Self-healing deploy loop (canary → test → fix → retry)
+│       ├── deploy-fix-orchestrate.yml # Lightweight deploy-fix issue orchestration
 │       ├── auto-merge-agent.yml    # Auto-merge for agent PRs
 │       ├── speckit-orchestrate.yml # Spec-kit orchestration pipeline
 │       └── feature-request-auto.yml # Issue → spec automation
@@ -135,7 +138,7 @@ Additional deferred work (lower priority, not yet specced):
 
 ## Architectural Principles
 
-The project is governed by a [constitution](specs/constitution.md) (v1.6.0) defining 15 core principles:
+The project is governed by a [constitution](specs/constitution.md) (v1.7.0) defining 15 core principles:
 
 1. **API-First Design** — Every feature exposes a versioned REST API before any UI
 2. **Test-First Development** — Integration tests against real (in-memory) Postgres; ≥80% service coverage
@@ -151,7 +154,7 @@ The project is governed by a [constitution](specs/constitution.md) (v1.6.0) defi
 12. **Financial Integrity** — Server-side pricing; Stripe Connect; signed OAuth state
 13. **Codespaces Mandate** — All development runs in GitHub Codespaces
 14. **Managed Identity** — Azure Managed Identity with DefaultAzureCredential for all service connections
-15. **Autonomous Development Pipeline** — Two-tier CI (fast iteration + full pre-merge); auto-merge for agent PRs; workspace-isolated concurrency; human gates only for architecture and security decisions
+15. **Autonomous Development Pipeline** — Two-tier CI (fast iteration + full pre-merge); auto-merge for agent PRs; workspace-isolated concurrency; self-healing deployment loop (deploy → smoke test → diagnose → auto-fix → redeploy); human gates only for architecture and security decisions
 
 ## Getting Started
 
@@ -217,6 +220,15 @@ Runs when the `ready-for-merge` label is applied, on push to `main`, or via manu
 - Storybook build + a11y audit
 - Playwright E2E tests
 
+### Tier 3: Deployment Verification (`deploy-and-heal.yml`) — post-deploy
+
+Runs after deploying to staging or nightly via the self-healing pipeline:
+
+- **Readiness** — `/api/ready` returns 200 within retry window
+- **Health** — `/api/health` returns `{"status":"healthy"}`
+- **Home page** — Root URL returns HTTP 200
+- **Self-heal** — on failure, structured diagnostics are collected, a fix issue is created for the Copilot agent, and the pipeline retries after the fix merges (max 3 iterations)
+
 Agent PRs (from `copilot/*` branches) get the `ready-for-merge` label auto-applied after Tier 1 passes, and are auto-merged after Tier 2 passes. See the [auto-merge workflow](.github/workflows/auto-merge-agent.yml) for details.
 
 ## Spec-Kit Workflow
@@ -241,8 +253,9 @@ The spec-kit process can run near-fully autonomously:
 - **Agent sessions** pick up implementation issues, create `copilot/{spec}/{task}` branches, and open PRs with `Fixes #N`
 - **Tier 1 CI** runs automatically; on pass, `ready-for-merge` is auto-applied
 - **Tier 2 CI** runs; on pass, the PR is auto-merged via squash
+- **Self-healing deployment** — after merge, `deploy-and-heal.yml` deploys as a canary revision, runs smoke tests, and if they fail: collects structured diagnostics → creates a fix issue → Copilot agent fixes it → redeploys (up to 3 iterations)
 
-Human review is required only at two gates: (1) spec approval before implementation, and (2) the `ready-for-merge` label for human PRs. See [Constitution XV](specs/constitution.md) for the full policy.
+Human review is required only at two gates: (1) spec approval before implementation, and (2) the `ready-for-merge` label for human PRs. Infrastructure and credential errors always escalate to human review. See [Constitution XV](specs/constitution.md) for the full policy.
 
 ## License
 
