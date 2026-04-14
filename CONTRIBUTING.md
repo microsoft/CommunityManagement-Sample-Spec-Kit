@@ -4,7 +4,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 
 ## Prerequisites
 
-- **Node.js 22+** (managed via [fnm](https://github.com/Schniz/fnm) — see `.nvmrc`)
+- **Node.js 24+** (managed via [fnm](https://github.com/Schniz/fnm) — see `.nvmrc`)
 - **Git** 2.40+
 - **GitHub Codespaces** (recommended) or a Linux environment
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing! This guide covers everything you ne
 The fastest way to get started:
 
 1. Click **Code → Codespaces → Create codespace on main** on the repository page
-2. Wait for the devcontainer to build (pre-configured in `.devcontainer/devcontainer.json` with Node 22, Azure CLI, GitHub CLI, and PostgreSQL)
-3. Dependencies install automatically via `npm ci --force`
+2. Wait for the devcontainer to build (pre-configured in `.devcontainer/devcontainer.json` with Node 24, Azure CLI, GitHub CLI, and PostgreSQL)
+3. Dependencies install automatically via `npm ci` and design tokens are pre-built on start
 4. Run the validation checklist (see below) to confirm everything works
 
 ## Local Setup (Linux)
@@ -58,7 +58,7 @@ npm run test
 
 Every feature is driven by a specification in `specs/`. Before writing code:
 
-1. Read `specs/constitution.md` (v1.5.0) — defines 14 mandatory architectural principles
+1. Read `specs/constitution.md` (v1.6.0) — defines 15 mandatory architectural principles
 2. Find the relevant spec in `specs/NNN-feature-name/`
 3. Read `spec.md`, `plan.md`, and `tasks.md` to understand scope and acceptance criteria
 4. Check which tasks are already marked `[X]` (done) vs `[ ]` (pending)
@@ -66,7 +66,13 @@ Every feature is driven by a specification in `specs/`. Before writing code:
 ### 2. Create a Branch
 
 ```bash
-git checkout -b your-feature-branch
+# Human contributors:
+git checkout -b feature/{spec-number}-{description}
+# or for bugfixes:
+git checkout -b fix/{issue-number}-{description}
+
+# Agent sessions use:
+# copilot/{spec-number}/{task-id}  (e.g., copilot/022/T005)
 ```
 
 ### 3. Make Changes
@@ -84,7 +90,9 @@ Follow these conventions:
 
 ### 4. Run the Validation Checklist
 
-Run these commands **in order** before submitting a PR. All must pass:
+#### Fast Iteration (during development)
+
+Run these checks during active development — they complete in **< 3 minutes**:
 
 ```bash
 # 1. Build design tokens (prerequisite for other packages)
@@ -96,7 +104,27 @@ npm run typecheck
 # 3. Lint — zero warnings (warnings are errors)
 npm run lint -w @acroyoga/web
 
-# 4. Run all tests — tokens (20) → shared-ui (85) → web (630+)
+# 4. Run tests for affected workspace only
+npm run test -w @acroyoga/{workspace}
+```
+
+Do NOT run during development: production build, Storybook build, Playwright E2E, i18n lint, or bundle size check. These run automatically in the full CI pipeline before merge.
+
+#### Full Validation (before requesting merge)
+
+Run these commands **in order** before applying the `ready-for-merge` label. All must pass:
+
+```bash
+# 1. Build design tokens (prerequisite for other packages)
+npm run tokens:build -w @acroyoga/tokens
+
+# 2. Type check — zero errors
+npm run typecheck
+
+# 3. Lint — zero warnings (warnings are errors)
+npm run lint -w @acroyoga/web
+
+# 4. Run all tests — tokens (20) → shared-ui (175) → shared (44) → web (935) → mobile (52)
 npm run test
 
 # 5. Production build — must succeed
@@ -114,13 +142,27 @@ npm run build -w @acroyoga/web
 
 This project follows the Spec-Kit agentic development workflow:
 
-1. **Constitution** — Architectural principles and quality gates (`specs/constitution.md`)
+1. **Constitution** — Architectural principles and quality gates (`specs/constitution.md`, v1.6.0)
 2. **Specify** — Feature specs with user scenarios, acceptance criteria, and edge cases
 3. **Plan** — Implementation plans with data models and API contracts
 4. **Tasks** — Dependency-ordered, actionable task lists
-5. **Implement** — Code changes that follow the spec and constitution
+5. **Issues** — Convert tasks to GitHub issues with workspace labels for parallel execution
+6. **Implement** — Code changes that follow the spec and constitution
 
 When completing a task, mark it `[X]` in the relevant `tasks.md` file.
+
+### Autonomous Pipeline
+
+The spec-kit process supports near-fully autonomous execution:
+
+1. **Create an issue** with the `feature-request-auto` label
+2. The orchestration pipeline auto-generates spec → plan → tasks → GitHub issues
+3. Agent sessions pick up issues, implement on `copilot/{spec}/{task}` branches
+4. PRs include `Fixes #{issue-number}` for automatic issue closure on merge
+5. Tier 1 CI runs on every push; on pass, `ready-for-merge` is auto-applied
+6. Tier 2 CI runs; on pass, the PR is auto-merged
+
+Human review is required only for: spec approval, constitution amendments, security-sensitive changes, new dependencies, and database migrations. See [Constitution XV](specs/constitution.md) for the full policy.
 
 ## Code Conventions
 
@@ -179,21 +221,34 @@ npm run db:seed:geography -w @acroyoga/web
 npm run db:seed:admin -w @acroyoga/web
 ```
 
-## Quality Gates
+## Quality Gates (Two-Tier CI)
 
-Every PR must pass these gates (enforced by CI):
+Quality gates are split into two tiers to enable rapid iteration during development (see [Constitution XV](specs/constitution.md)):
 
-1. **Type check** — `tsc --noEmit` with zero errors
-2. **Lint** — ESLint with `jsx-a11y` plugin, zero warnings
-3. **Tests** — All Vitest tests pass (tokens → shared-ui → web)
-4. **Build** — Next.js production build succeeds
-5. **Bundle size** — Initial JS ≤ 200 KB compressed
-6. **Accessibility** — No new axe-core violations
-7. **API contract** — Any API change updates the central types file with tests
-8. **Constitution compliance** — Reviewer confirms no principle violations
-9. **i18n compliance** — No raw string literals in UI components (exit code 1)
-10. **Permission smoke test** — New mutation endpoints include 403 test for unauthorized callers
-11. **Auth consistency** — Session-based auth only, no client-injectable headers
+### Tier 1: Fast CI (`ci-fast.yml`) — every PR push
+
+1. **Tokens build** — design tokens compile without errors
+2. **Type check** — `tsc --noEmit` with zero errors
+3. **Lint** — ESLint with `jsx-a11y` plugin, zero warnings
+4. **Affected tests** — tests for changed workspaces only (via `dorny/paths-filter`)
+
+### Tier 2: Full CI (`ci-full.yml`) — before merge
+
+Runs when the `ready-for-merge` label is applied, on push to `main`, or manual dispatch:
+
+5. **All tests** — full test suite passes across all workspaces
+6. **Build** — Next.js production build succeeds
+7. **Bundle size** — Initial JS ≤ 200 KB compressed
+8. **Accessibility** — No new axe-core violations
+9. **API contract** — Any API change updates the central types file with tests
+10. **Constitution compliance** — Reviewer confirms no principle violations
+11. **i18n compliance** — No raw string literals in UI components (exit code 1)
+12. **Permission smoke test** — New mutation endpoints include 403 test for unauthorized callers
+13. **Auth consistency** — Session-based auth only, no client-injectable headers
+14. **Storybook** — Build + a11y audit passes
+15. **E2E** — Playwright tests pass
+
+Agent PRs get `ready-for-merge` auto-applied after Tier 1 passes. See `.github/workflows/auto-merge-agent.yml`.
 
 ## Internationalisation (i18n)
 
@@ -247,7 +302,7 @@ apps/web/messages/
 The mobile app is built with Expo/React Native and lives in `apps/mobile/`.
 
 ### Prerequisites
-- Node.js >= 22
+- Node.js >= 24
 - Expo CLI: `npm install -g expo-cli`
 - iOS Simulator (macOS) or Android Emulator
 
