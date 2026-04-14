@@ -247,6 +247,33 @@ gh workflow run deploy.yml -f environment=production -f image-tag=sha-abc1234
 |-------------|-----------------|
 | `staging` | None (auto-deploy on merge) |
 | `production` | Required reviewers (1+), deployment branch: `main` |
+| `canary` | None — used for autonomous pipeline testing with traffic splitting |
+
+### Canary Environment
+
+The canary environment uses `activeRevisionsMode: "Multiple"` for traffic
+splitting between old and new revisions. Deploy via the self-healing pipeline:
+
+```bash
+# Initial deployment (provisions infrastructure via Bicep)
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary \
+  -f deploy-infrastructure=true
+
+# Subsequent deployments (update revision only)
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary
+
+# Deploy a specific image
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary \
+  -f image-tag=sha-abc1234
+```
+
+Canary uses the same cost-optimised settings as nightly (`minReplicas: 0`,
+no Front Door, no monitoring alerts). Cold-start takes 5–10 minutes.
+
+Parameters file: `infra/main.parameters.canary.json`
 
 ## Teardown
 
