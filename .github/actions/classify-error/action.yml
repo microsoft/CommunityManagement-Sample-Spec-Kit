@@ -1,0 +1,93 @@
+name: Classify Deployment Error
+description: >
+  Classify a deployment error from structured diagnostics JSON.
+  Single source of truth for error classification patterns — used by both
+  deploy-diagnostics and the self-healing deploy loop.
+  Constitution XV — error categories: runtime | dependency | config | credential | infra | unknown
+
+inputs:
+  diagnostics-json:
+    description: >
+      Full diagnostics JSON (from deploy-diagnostics action) or a minimal
+      JSON with at least { containerLogs, systemLogs, deploymentOperations, smokeTestResults }.
+    required: true
+
+outputs:
+  category:
+    description: 'Error category: runtime | dependency | config | credential | infra | unknown'
+    value: ${{ steps.classify.outputs.category }}
+  summary:
+    description: 'Human-readable one-line error summary'
+    value: ${{ steps.classify.outputs.summary }}
+
+runs:
+  using: composite
+  steps:
+    - name: Classify error
+      id: classify
+      shell: bash
+      run: |
+        # Write input to temp file to avoid shell escaping issues
+        cat <<'DIAG_INPUT_EOF' > /tmp/classify-error-input.json
+        ${{ inputs.diagnostics-json }}
+        DIAG_INPUT_EOF
+
+        DIAG=$(jq '.' /tmp/classify-error-input.json 2>/dev/null || echo '{}')
+
+        CATEGORY="unknown"
+        SUMMARY="Deployment failed — see diagnostics for details"
+
+        # ── 1. Infrastructure errors (Bicep / ARM deployment failures) ──
+        if echo "$DIAG" | jq -e '.deploymentOperations | if type == "array" then length > 0 else false end' >/dev/null 2>&1; then
+          CATEGORY="infra"
+          SUMMARY="Infrastructure deployment error — check Bicep deployment operations"
+
+        # ── 2. Credential / identity errors (must NOT be auto-fixed — Constitution XV) ──
+        # Check both container logs and system logs for auth-related patterns
+        elif echo "$DIAG" | jq -e '
+          [.containerLogs, .systemLogs] | map(tostring) | add |
+          test("AZURE_CLIENT_ID|ManagedIdentityCredential|DefaultAzureCredential|AADSTS|credential|TokenExpiredError|AuthenticationFailedError|AuthorizationFailed|RBAC|authorization denied|Access denied|SecretNotFound|KeyVaultError|VaultAccessError|Forbidden.*vault|identity.*error"; "i")
+        ' >/dev/null 2>&1; then
+          CATEGORY="credential"
+          SUMMARY="Credential or managed identity error — requires human review"
+
+        # ── 3. Container crash / runtime errors ──
+        elif echo "$DIAG" | jq -e '
+          [.containerLogs, .systemLogs] | map(tostring) | add |
+          test("BackOff|CrashLoop|OOMKilled|Error.*container|ContainerTerminated"; "i")
+        ' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Container runtime error — application is crashing or OOM"
+
+        # ── 4. Dependency / module errors ──
+        elif echo "$DIAG" | jq -e '
+          [.containerLogs, .systemLogs] | map(tostring) | add |
+          test("MODULE_NOT_FOUND|Cannot find module|ENOENT|ERR_MODULE_NOT_FOUND"; "i")
+        ' >/dev/null 2>&1; then
+          CATEGORY="dependency"
+          SUMMARY="Missing dependency — module not found during startup"
+
+        # ── 5. Configuration / connection errors ──
+        elif echo "$DIAG" | jq -e '
+          [.containerLogs, .systemLogs] | map(tostring) | add |
+          test("ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH"; "i")
+        ' >/dev/null 2>&1; then
+          CATEGORY="config"
+          SUMMARY="Configuration error — connection refused or service endpoint unreachable"
+
+        # ── 6. Smoke test failures (readiness / health) ──
+        elif echo "$DIAG" | jq -e '.smokeTestResults.readiness == "fail"' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Application failed readiness check — not responding on /api/ready"
+        elif echo "$DIAG" | jq -e '.smokeTestResults.health == "fail"' >/dev/null 2>&1; then
+          CATEGORY="runtime"
+          SUMMARY="Application health check failed — /api/health returned unhealthy"
+        fi
+
+        echo "category=${CATEGORY}" >> "$GITHUB_OUTPUT"
+        echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
+
+        echo "::notice title=Error Classification::Category: ${CATEGORY} — ${SUMMARY}"
+
+        # Clean up
+        rm -f /tmp/classify-error-input.json

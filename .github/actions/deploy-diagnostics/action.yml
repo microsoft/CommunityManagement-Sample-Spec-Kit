@@ -116,47 +116,9 @@ runs:
 
     - name: Classify error
       id: classify
-      shell: bash
-      run: |
-        DIAG=$(cat /tmp/deploy-diagnostics.json 2>/dev/null || echo '{}')
-
-        # Simple heuristic classification
-        CATEGORY="unknown"
-        SUMMARY="Deployment failed — see diagnostics for details"
-
-        # Check for infrastructure errors
-        if echo "$DIAG" | jq -e '.deploymentOperations | length > 0' >/dev/null 2>&1; then
-          CATEGORY="infra"
-          SUMMARY="Infrastructure deployment error — check Bicep deployment operations"
-        # Check for container crash / runtime errors
-        elif echo "$DIAG" | jq -e '.systemLogs | tostring | test("BackOff|CrashLoop|OOMKilled|Error")' >/dev/null 2>&1; then
-          CATEGORY="runtime"
-          SUMMARY="Container runtime error — application is crashing or OOM"
-        # Check for dependency / startup errors in container logs
-        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("MODULE_NOT_FOUND|Cannot find module|ENOENT")' >/dev/null 2>&1; then
-          CATEGORY="dependency"
-          SUMMARY="Missing dependency — module not found during startup"
-        # Check for config errors (connection issues — excludes credential-related patterns)
-        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("ECONNREFUSED|ENOTFOUND|ETIMEDOUT")' >/dev/null 2>&1; then
-          CATEGORY="config"
-          SUMMARY="Configuration error — connection refused or service endpoint unreachable"
-        # Check for credential/identity errors (must NOT be auto-fixed per Constitution XV)
-        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("AZURE_CLIENT_ID|ManagedIdentityCredential|DefaultAzureCredential|AADSTS|credential")' >/dev/null 2>&1; then
-          CATEGORY="credential"
-          SUMMARY="Credential or managed identity error — requires human review"
-        # Check smoke test results
-        elif echo "$DIAG" | jq -e '.smokeTestResults.readiness == "fail"' >/dev/null 2>&1; then
-          CATEGORY="runtime"
-          SUMMARY="Application failed readiness check — not responding on /api/ready"
-        elif echo "$DIAG" | jq -e '.smokeTestResults.health == "fail"' >/dev/null 2>&1; then
-          CATEGORY="runtime"
-          SUMMARY="Application health check failed — /api/health returned unhealthy"
-        fi
-
-        echo "category=${CATEGORY}" >> "$GITHUB_OUTPUT"
-        echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
-
-        echo "::notice title=Diagnostics::Category: ${CATEGORY} — ${SUMMARY}"
+      uses: ./.github/actions/classify-error
+      with:
+        diagnostics-json: ${{ steps.collect.outputs.diagnostics }}
 
     - name: Upload diagnostics artifact
       uses: actions/upload-artifact@v4
