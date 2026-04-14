@@ -136,10 +136,14 @@ runs:
         elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("MODULE_NOT_FOUND|Cannot find module|ENOENT")' >/dev/null 2>&1; then
           CATEGORY="dependency"
           SUMMARY="Missing dependency — module not found during startup"
-        # Check for config errors
-        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("ECONNREFUSED|ENOTFOUND|ETIMEDOUT|AZURE_CLIENT_ID")' >/dev/null 2>&1; then
+        # Check for config errors (connection issues — excludes credential-related patterns)
+        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("ECONNREFUSED|ENOTFOUND|ETIMEDOUT")' >/dev/null 2>&1; then
           CATEGORY="config"
-          SUMMARY="Configuration error — connection refused or missing environment variable"
+          SUMMARY="Configuration error — connection refused or service endpoint unreachable"
+        # Check for credential/identity errors (must NOT be auto-fixed per Constitution XV)
+        elif echo "$DIAG" | jq -e '.containerLogs | tostring | test("AZURE_CLIENT_ID|ManagedIdentityCredential|DefaultAzureCredential|AADSTS|credential")' >/dev/null 2>&1; then
+          CATEGORY="credential"
+          SUMMARY="Credential or managed identity error — requires human review"
         # Check smoke test results
         elif echo "$DIAG" | jq -e '.smokeTestResults.readiness == "fail"' >/dev/null 2>&1; then
           CATEGORY="runtime"

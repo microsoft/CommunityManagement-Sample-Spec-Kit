@@ -48,7 +48,7 @@ runs:
           echo "status=pass" >> "$GITHUB_OUTPUT"
         else
           ELAPSED=$((SECONDS - READY_START))
-          echo "::error title=TIMEOUT: Readiness Check::Readiness check failed after ${ELAPSED}s. Endpoint: https://${APP_URL}/api/ready"
+          echo "::error title=SMOKE_TEST: Readiness Check::Readiness check failed after ${ELAPSED}s. Endpoint: https://${APP_URL}/api/ready"
           echo "status=fail" >> "$GITHUB_OUTPUT"
           # Capture whatever response we got for diagnostics
           curl --connect-timeout 10 --max-time 30 -s "https://${APP_URL}/api/ready" -o /tmp/ready-response.json 2>/dev/null || true

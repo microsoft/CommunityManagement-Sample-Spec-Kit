@@ -218,7 +218,10 @@ jobs:
 
               // ── Step 1: Deploy new revision as canary (0% traffic) ──
               console.log('Deploying canary revision...');
-              const revisionSuffix = `heal-${iter}-${imageTag.replace(/[^a-z0-9]/gi, '').slice(-8)}`;
+              // Azure revision suffix max is 64 chars minus the app name prefix.
+              // Keep it short: "h{iter}-{last 6 chars of tag}" (max ~10 chars).
+              const tagSuffix = imageTag.replace(/[^a-z0-9]/gi, '').slice(-6);
+              const revisionSuffix = `h${iter}-${tagSuffix}`;
 
               try {
                 // Update the container app with the new image but don't shift traffic
@@ -244,15 +247,16 @@ jobs:
                 --query "sort_by(@, &properties.createdTime)[-1].name" -o tsv`);
               console.log(`New revision: ${latestRevision}`);
 
-              // ── Step 2: Get the revision-specific URL and run smoke tests ──
+              // ── Step 2: Get the app FQDN and run smoke tests ──
+              // In Single mode (default), the update replaces in-place so the main
+              // FQDN already points to the new revision. In Multiple mode, Azure
+              // provides revision-scoped URLs (<revision>.<env>.<region>.azurecontainerapps.io)
+              // but traffic splitting requires explicit weight assignment. For the
+              // self-heal loop we test the main FQDN which reflects the latest
+              // active revision.
               const appFqdn = run(`az containerapp show \
                 --name ${appName} --resource-group ${rg} \
                 --query properties.configuration.ingress.fqdn -o tsv`);
-
-              // For Multiple revision mode, use the revision-scoped URL
-              // Format: <revision-name>.<env-unique-id>.<region>.azurecontainerapps.io
-              // But the simplest approach is to use the main FQDN after shifting test traffic
-              // Instead, hit the main FQDN since Single mode replaces in-place
               const testUrl = appFqdn;
 
               console.log(`Running smoke tests against https://${testUrl} ...`);
@@ -399,7 +403,7 @@ jobs:
                 '1. Read the error diagnostics below',
                 '2. Identify the root cause in the codebase',
                 '3. Implement a fix (code, config, or infrastructure)',
-                '4. Create a PR with `Fixes #${ISSUE_NUMBER}` in the description',
+                '4. Create a PR with `Fixes #ISSUE_NUMBER` in the description (replace ISSUE_NUMBER with this issue number)',
                 '5. The self-healing pipeline will automatically redeploy after your fix merges',
                 '',
                 `**Error Category**: \`${errorCategory}\``,
@@ -430,8 +434,16 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title: `[Deploy Fix] ${errorSummary} (iteration ${iter})`,
-                body: fixIssueBody.replace('${ISSUE_NUMBER}', 'this issue'),
+                body: fixIssueBody,
                 labels: ['deploy-fix-auto', 'copilot']
+              });
+
+              // Update the issue body with the actual issue number now that we have it
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: fixIssue.number,
+                body: fixIssueBody.replace('ISSUE_NUMBER', String(fixIssue.number))
               });
 
               console.log(`Created fix issue #${fixIssue.number}`);
@@ -451,7 +463,22 @@ jobs:
 
                 // Rebuild with the new code
                 try {
-                  run(`az acr login --name ${registry}`);
+                  // ACR login with retry (matching the initial login pattern)
+                  let acrLoggedIn = false;
+                  for (let a = 1; a <= 3; a++) {
+                    try {
+                      run(`az acr login --name ${registry}`);
+                      acrLoggedIn = true;
+                      break;
+                    } catch (e) {
+                      if (a < 3) {
+                        console.log(`ACR login attempt ${a}/3 failed, retrying in 10s...`);
+                        await new Promise(r => setTimeout(r, 10000));
+                      } else {
+                        console.log(`::warning title=SELF-HEAL::ACR login failed after 3 attempts: ${e.message}`);
+                      }
+                    }
+                  }
 
                   // Trigger a rebuild via ACR task or use the existing image if deploy.yml already built it
                   // For now, check if the image exists from the deploy.yml pipeline

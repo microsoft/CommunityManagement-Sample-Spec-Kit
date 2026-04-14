@@ -82,8 +82,10 @@ jobs:
               ].join('\n')
             });
 
-            // Add copilot-agent label to trigger Copilot assignment
-            // (Copilot coding agent picks up issues assigned to it or labelled appropriately)
+            // Note: The 'copilot' label was already applied when this workflow
+            // triggered (line 21 filters on it). The label re-application below is
+            // intentionally kept as a no-op safety net in case external automation
+            // removes the label during the orchestration window.
             try {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -92,6 +94,6 @@ jobs:
                 labels: ['copilot']
               });
             } catch (e) {
-              // Label may already exist
+              // Label already exists — expected
               console.log(`Label already applied: ${e.message}`);
             }
