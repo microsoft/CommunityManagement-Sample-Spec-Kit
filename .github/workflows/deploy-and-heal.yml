@@ -152,6 +152,10 @@ jobs:
         if: github.event_name == 'workflow_run'
         run: |
           SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          if [ -z "$SHA" ]; then
+            echo "::error title=Image Tag::Could not resolve commit SHA for nightly trigger"
+            exit 1
+          fi
           echo "IMAGE_TAG=nightly-sha-${SHA:0:7}" >> "$GITHUB_ENV"
           echo "::notice title=Image Tag::Resolved nightly image tag: nightly-sha-${SHA:0:7}"
 
