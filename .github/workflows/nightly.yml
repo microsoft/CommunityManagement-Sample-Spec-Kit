@@ -109,7 +109,7 @@ jobs:
 
       - name: Run mobile unit tests (Spec 016)
         run: |
-          if ! npm run test -w @acroyoga/mobile -- --pool forks; then
+          if ! npm run test -w @acroyoga/mobile; then
             echo "::error title=BUILD: Mobile Tests::Mobile test suite failed (exit code: $?)"
             exit 1
           fi

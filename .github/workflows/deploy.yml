@@ -12,6 +12,7 @@ on:
         options:
           - staging
           - production
+          - canary
       image-tag:
         description: "Image tag to deploy (e.g. sha-abc1234)"
         required: false

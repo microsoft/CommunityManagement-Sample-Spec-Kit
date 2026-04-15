@@ -236,17 +236,104 @@ gh workflow run deploy.yml -f environment=production -f image-tag=sha-abc1234
 
 ## GitHub Secrets Required
 
-| Secret | Description |
-|--------|-------------|
-| `AZURE_CREDENTIALS` | Service principal JSON |
-| `AZURE_CONTAINER_REGISTRY` | ACR login server (e.g. `acracroyoga.azurecr.io`) |
+| Secret | Description | Used by |
+|--------|-------------|---------|
+| `AZURE_CLIENT_ID` | App registration client ID for staging OIDC login | `deploy.yml`, `deploy-and-heal.yml` (staging) |
+| `AZURE_CLIENT_ID_NIGHTLY` | App registration client ID for nightly/canary OIDC login | `nightly.yml`, `deploy-and-heal.yml` (nightly/canary) |
+| `AZURE_TENANT_ID` | Azure AD tenant ID | All deploy workflows |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID | All deploy workflows |
+| `AZURE_CONTAINER_REGISTRY` | ACR login server (e.g. `acracroyoga.azurecr.io`) | All deploy workflows |
+| `DB_ADMIN_PASSWORD` | PostgreSQL admin password | Bicep deployments |
+
+### OIDC Identity Setup
+
+Each environment needs an Azure AD App Registration with federated credentials
+for GitHub Actions OIDC. The nightly identity is shared by nightly and canary.
+
+```bash
+# Create app registration for nightly/canary
+az ad app create --display-name "github-actions-nightly"
+# Note the appId → store as AZURE_CLIENT_ID_NIGHTLY
+
+# Add federated credential for the nightly GitHub Environment
+az ad app federated-credential create --id <app-object-id> --parameters '{
+  "name": "github-actions-nightly",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:microsoft/CommunityManagement-Sample-Spec-Kit:environment:nightly",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+
+# Add federated credential for the canary GitHub Environment
+az ad app federated-credential create --id <app-object-id> --parameters '{
+  "name": "github-actions-canary",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:microsoft/CommunityManagement-Sample-Spec-Kit:environment:canary",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+
+# Grant Owner role on the nightly resource group
+az role assignment create \
+  --assignee <app-id> \
+  --role Owner \
+  --scope /subscriptions/<sub-id>/resourceGroups/rg-acroyoga-nightly
+
+# Grant AcrPush on the container registry
+az role assignment create \
+  --assignee <app-id> \
+  --role AcrPush \
+  --scope /subscriptions/<sub-id>/resourceGroups/<acr-rg>/providers/Microsoft.ContainerRegistry/registries/<acr-name>
+```
 
 ## GitHub Environments
 
-| Environment | Protection Rules |
-|-------------|-----------------|
-| `staging` | None (auto-deploy on merge) |
-| `production` | Required reviewers (1+), deployment branch: `main` |
+| Environment | Protection Rules | Used by |
+|-------------|-----------------|---------|
+| `nightly` | None — auto-deploy on schedule | `nightly.yml`, `deploy-and-heal.yml` (default) |
+| `staging` | None (auto-deploy on merge) | `deploy.yml` |
+| `production` | Required reviewers (1+), deployment branch: `main` | `deploy.yml` |
+| `canary` | None — used for autonomous pipeline testing with traffic splitting | `deploy-and-heal.yml` |
+
+### Creating GitHub Environments
+
+Environments must be created in **Settings → Environments** before the workflows
+can reference them. Each environment needs access to the repository secrets above.
+
+### GitHub Labels Required
+
+The self-healing pipeline creates issues with these labels (auto-created on
+first run if missing):
+
+| Label | Purpose |
+|-------|---------|
+| `deploy-fix-auto` | Marks auto-created deployment fix issues |
+| `copilot` | Assigns issue to Copilot agent for autonomous fix |
+| `needs-human-review` | Escalation — agent cannot fix autonomously |
+
+### Canary Environment
+
+The canary environment uses `activeRevisionsMode: "Multiple"` for traffic
+splitting between old and new revisions. Deploy via the self-healing pipeline:
+
+```bash
+# Initial deployment (provisions infrastructure via Bicep)
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary \
+  -f deploy-infrastructure=true
+
+# Subsequent deployments (update revision only)
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary
+
+# Deploy a specific image
+gh workflow run deploy-and-heal.yml \
+  -f environment=canary \
+  -f image-tag=sha-abc1234
+```
+
+Canary uses the same cost-optimised settings as nightly (`minReplicas: 0`,
+no Front Door, no monitoring alerts). Cold-start takes 5–10 minutes.
+
+Parameters file: `infra/main.parameters.canary.json`
 
 ## Teardown
 

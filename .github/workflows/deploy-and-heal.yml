@@ -23,6 +23,12 @@ on:
         options:
           - staging
           - nightly
+          - canary
+      deploy-infrastructure:
+        description: "Deploy infrastructure via Bicep before app update (required for new environments)"
+        required: false
+        type: boolean
+        default: false
       max-heal-iterations:
         description: "Maximum self-heal iterations (1-3)"
         required: false
@@ -66,10 +72,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ inputs.environment == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
@@ -131,17 +138,119 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ (inputs.environment || 'nightly') == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Fix IMAGE_TAG for workflow_run trigger: nightly tags images with 7-char SHA
+      # (nightly-sha-abc1234) but the env default uses the full SHA
+      - name: Resolve image tag for nightly trigger
+        if: github.event_name == 'workflow_run'
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          if [ -z "$SHA" ]; then
+            echo "::error title=Image Tag::Could not resolve commit SHA for nightly trigger"
+            exit 1
+          fi
+          echo "IMAGE_TAG=nightly-sha-${SHA:0:7}" >> "$GITHUB_ENV"
+          echo "::notice title=Image Tag::Resolved nightly image tag: nightly-sha-${SHA:0:7}"
+
+      # Ensure required labels exist before the self-healing loop tries to use them.
+      # GitHub returns 422 when creating an issue with non-existent labels.
+      - name: Ensure deploy-fix labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'deploy-fix-auto', color: 'd93f0b', description: 'Auto-created by self-healing deploy pipeline' },
+              { name: 'copilot', color: '1d76db', description: 'Assigned to Copilot agent for autonomous fix' },
+              { name: 'needs-human-review', color: 'e4e669', description: 'Requires human review — agent cannot fix autonomously' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                });
+              } catch (e) {
+                if (e.status === 404) {
+                  console.log(`Creating missing label: ${label.name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ...label,
+                  });
+                }
+              }
+            }
 
       - name: Start PostgreSQL server if stopped
         uses: ./.github/actions/pg-wake
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
+
+      - name: Validate infrastructure (Bicep)
+        if: inputs.deploy-infrastructure == true
+        run: |
+          ENV="${{ inputs.environment || 'nightly' }}"
+          PARAMS_FILE="infra/main.parameters.${ENV}.json"
+          echo "Running Bicep template validation for ${ENV}..."
+          if ! az deployment group validate \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --template-file infra/main.bicep \
+            --parameters "$PARAMS_FILE" \
+            --parameters \
+              imageTag="${{ env.IMAGE_TAG }}" \
+              dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+              nextAuthSecret="$(openssl rand -base64 32)" \
+              sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
+              githubOwnerId="${{ github.repository_owner_id }}" \
+              githubRepoId="${{ github.repository_id }}" 2>&1; then
+            echo "::error title=DEPLOYMENT: Bicep validate::Template validation failed — fix Bicep errors before deployment"
+            exit 1
+          fi
+          echo "::notice title=Bicep Validate::Template validation passed"
+
+      - name: Deploy infrastructure (Bicep)
+        if: inputs.deploy-infrastructure == true
+        run: |
+          ENV="${{ inputs.environment || 'nightly' }}"
+          PARAMS_FILE="infra/main.parameters.${ENV}.json"
+          if [ ! -f "$PARAMS_FILE" ]; then
+            echo "::error title=DEPLOY::Parameter file ${PARAMS_FILE} not found"
+            exit 1
+          fi
+          echo "Deploying infrastructure for ${ENV} environment..."
+          MAX_ATTEMPTS=2
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Bicep deployment attempt ${attempt}/${MAX_ATTEMPTS}..."
+            if az deployment group create \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --template-file infra/main.bicep \
+              --parameters "$PARAMS_FILE" \
+              --parameters \
+                imageTag="${{ env.IMAGE_TAG }}" \
+                dbAdminPassword="${{ secrets.DB_ADMIN_PASSWORD }}" \
+                nextAuthSecret="$(openssl rand -base64 32)" \
+                sharedContainerRegistryLoginServer="${{ secrets.AZURE_CONTAINER_REGISTRY }}" \
+                githubOwnerId="${{ github.repository_owner_id }}" \
+                githubRepoId="${{ github.repository_id }}" 2>&1; then
+              echo "::notice title=Bicep Deploy::Infrastructure deployed successfully (attempt ${attempt})"
+              break
+            fi
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "::warning title=DEPLOYMENT: Bicep deploy::Attempt ${attempt} failed, retrying in 60s..."
+              sleep 60
+            else
+              echo "::error title=DEPLOYMENT: Bicep deploy::Deployment failed after ${MAX_ATTEMPTS} attempts"
+              exit 1
+            fi
+          done
 
       - name: Record known-good revision before deploy
         id: baseline
