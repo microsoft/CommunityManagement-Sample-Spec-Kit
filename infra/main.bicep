@@ -127,6 +127,7 @@ module registry 'modules/container-registry.bicep' = if (deployContainerRegistry
 }
 
 // Resolve ACR login server: own ACR if deployed, shared otherwise
+#disable-next-line BCP318
 var resolvedContainerRegistryLoginServer = deployContainerRegistry ? registry.outputs.loginServer : sharedContainerRegistryLoginServer
 
 // ──────────────────────────────────────────────
@@ -251,5 +252,6 @@ module monitoringAlerts 'modules/monitoring.bicep' = if (deployMonitoringAlerts)
 // ──────────────────────────────────────────────
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resolvedContainerRegistryLoginServer
 output containerAppFqdn string = containerApps.outputs.fqdn
+#disable-next-line BCP318
 output frontDoorEndpoint string = deployFrontDoor ? frontDoor.outputs.endpoint : ''
 output containerRegistryLoginServer string = resolvedContainerRegistryLoginServer
