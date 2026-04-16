@@ -43,55 +43,83 @@ runs:
         RG="${{ inputs.resource-group }}"
         REVISION="${{ inputs.revision-name }}"
 
+        normalize_json() {
+          local value="$1"
+          if [ -z "$value" ]; then
+            echo 'null'
+            return
+          fi
+          if jq -e . >/dev/null 2>&1 <<<"$value"; then
+            jq -c . <<<"$value"
+          else
+            jq -cn --arg raw "$value" '{ format: "text", raw: $raw }'
+          fi
+        }
+
+        run_capture_json() {
+          local output
+          if output="$("$@" 2>&1)"; then
+            normalize_json "$output"
+          else
+            jq -cn --arg error "$output" '{ error: $error }'
+          fi
+        }
+
         # 1. Get revision status
         echo "Collecting revision status..."
         if [ -n "$REVISION" ]; then
-          REVISION_INFO=$(az containerapp revision show \
+          REVISION_INFO_JSON=$(run_capture_json az containerapp revision show \
             --name "$APP_NAME" --resource-group "$RG" \
-            --revision "$REVISION" -o json 2>&1) || REVISION_INFO='{"error":"failed to query revision"}'
+            --revision "$REVISION" -o json)
         else
-          REVISION_INFO=$(az containerapp revision list \
+          REVISION_INFO_JSON=$(run_capture_json az containerapp revision list \
             --name "$APP_NAME" --resource-group "$RG" \
-            --query "[0]" -o json 2>&1) || REVISION_INFO='{"error":"failed to list revisions"}'
+            --query "[0]" -o json)
         fi
 
         # 2. Get container logs (last 200 lines)
         echo "Collecting container logs..."
-        CONTAINER_LOGS=$(az containerapp logs show \
+        CONTAINER_LOGS_JSON=$(run_capture_json az containerapp logs show \
           --name "$APP_NAME" --resource-group "$RG" \
-          --tail 200 -o json 2>&1) || CONTAINER_LOGS='[]'
+          --tail 200 -o json)
 
         # 3. Get system logs
         echo "Collecting system logs..."
-        SYSTEM_LOGS=$(az containerapp logs show \
+        SYSTEM_LOGS_JSON=$(run_capture_json az containerapp logs show \
           --name "$APP_NAME" --resource-group "$RG" \
-          --type system --tail 100 -o json 2>&1) || SYSTEM_LOGS='[]'
+          --type system --tail 100 -o json)
 
         # 4. Get recent deployment operations
         echo "Collecting deployment operations..."
-        DEPLOY_OPS=$(az deployment group list \
+        DEPLOY_OPS_JSON=$(run_capture_json az deployment group list \
           --resource-group "$RG" \
           --query "[?properties.provisioningState!='Succeeded'] | [0:5]" \
-          -o json 2>&1) || DEPLOY_OPS='[]'
+          -o json)
 
         # 5. Get app configuration
         echo "Collecting app configuration..."
-        APP_CONFIG=$(az containerapp show \
+        APP_CONFIG_JSON=$(run_capture_json az containerapp show \
           --name "$APP_NAME" --resource-group "$RG" \
           --query "{ingress:properties.configuration.ingress, activeRevisions:properties.configuration.activeRevisionsMode, latestRevision:properties.latestRevisionName, latestReady:properties.latestReadyRevisionName}" \
-          -o json 2>&1) || APP_CONFIG='{"error":"failed to query app config"}'
+          -o json)
+
+        # 6. Parse smoke test diagnostics safely
+        cat <<'SMOKE_TEST_DIAG_EOF' > /tmp/smoke-test-diagnostics.json
+        ${{ inputs.smoke-test-diagnostics }}
+        SMOKE_TEST_DIAG_EOF
+        SMOKE_TESTS_JSON=$(normalize_json "$(cat /tmp/smoke-test-diagnostics.json)")
 
         # Build full diagnostics JSON
         DIAG=$(jq -n \
           --arg appName "$APP_NAME" \
           --arg rg "$RG" \
           --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-          --argjson revision "$(echo "$REVISION_INFO" | jq '.' 2>/dev/null || echo 'null')" \
-          --argjson containerLogs "$(echo "$CONTAINER_LOGS" | jq '.' 2>/dev/null || echo 'null')" \
-          --argjson systemLogs "$(echo "$SYSTEM_LOGS" | jq '.' 2>/dev/null || echo 'null')" \
-          --argjson deployOps "$(echo "$DEPLOY_OPS" | jq '.' 2>/dev/null || echo 'null')" \
-          --argjson appConfig "$(echo "$APP_CONFIG" | jq '.' 2>/dev/null || echo 'null')" \
-          --argjson smokeTests "$(echo '${{ inputs.smoke-test-diagnostics }}' | jq '.' 2>/dev/null || echo 'null')" \
+          --argjson revision "$REVISION_INFO_JSON" \
+          --argjson containerLogs "$CONTAINER_LOGS_JSON" \
+          --argjson systemLogs "$SYSTEM_LOGS_JSON" \
+          --argjson deployOps "$DEPLOY_OPS_JSON" \
+          --argjson appConfig "$APP_CONFIG_JSON" \
+          --argjson smokeTests "$SMOKE_TESTS_JSON" \
           '{
             timestamp: $timestamp,
             appName: $appName,
@@ -103,6 +131,15 @@ runs:
             appConfig: $appConfig,
             smokeTestResults: $smokeTests
           }')
+
+        if [ -z "$DIAG" ]; then
+          DIAG=$(jq -n \
+            --arg appName "$APP_NAME" \
+            --arg rg "$RG" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg error "failed to assemble diagnostics JSON" \
+            '{timestamp: $timestamp, appName: $appName, resourceGroup: $rg, error: $error}')
+        fi
 
         # Write to file for artifact upload
         echo "$DIAG" > /tmp/deploy-diagnostics.json

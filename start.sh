@@ -3,8 +3,10 @@ set -e
 
 # Run database migrations with retries to handle transient cold-start failures
 # (e.g. Managed Identity IMDS delays, PostgreSQL not yet accepting connections).
-MAX_RETRIES=3
-RETRY_DELAY=10
+# Nightly can hit longer DB cold-start / Entra token propagation delays.
+# Keep startup retry budget within smoke-test readiness max-time (900s).
+MAX_RETRIES=10
+RETRY_DELAY=15
 MIGRATION_TIMEOUT=60
 RETRY=0
 while [ "$RETRY" -lt "$MAX_RETRIES" ]; do
