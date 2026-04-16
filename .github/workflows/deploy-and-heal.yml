@@ -38,6 +38,10 @@ on:
         description: "Image tag to deploy (optional — builds from HEAD if omitted)"
         required: false
         type: string
+      source-issue-number:
+        description: "Issue number to post self-heal progress comments to"
+        required: false
+        type: string
   # Trigger self-healing when nightly deploy job fails (item 5)
   workflow_run:
     workflows: ["Nightly Build & Deploy"]
@@ -134,6 +138,7 @@ jobs:
       APP_NAME: ca-acroyoga-web-${{ inputs.environment || 'nightly' }}
       MAX_ITERATIONS: ${{ inputs.max-heal-iterations || 3 }}
       REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+      SOURCE_ISSUE_NUMBER: ${{ inputs.source-issue-number || '' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -272,6 +277,7 @@ jobs:
           MAX_ITERATIONS: ${{ env.MAX_ITERATIONS }}
           REGISTRY: ${{ env.REGISTRY }}
           BASELINE_REVISION: ${{ steps.baseline.outputs.revision }}
+          SOURCE_ISSUE_NUMBER: ${{ env.SOURCE_ISSUE_NUMBER }}
         with:
           script: |
             const { execSync } = require('child_process');
@@ -280,6 +286,9 @@ jobs:
             const rg = process.env.RESOURCE_GROUP;
             const registry = process.env.REGISTRY;
             const baselineRevision = process.env.BASELINE_REVISION;
+            const sourceIssueRaw = process.env.SOURCE_ISSUE_NUMBER || '';
+            const parsedSourceIssue = parseInt(sourceIssueRaw, 10);
+            const sourceIssueNumber = Number.isNaN(parsedSourceIssue) ? 0 : parsedSourceIssue;
             let imageTag = process.env.IMAGE_TAG;
 
             // Base cooldown: 60s, doubles each iteration (item 8: rate limiting)
@@ -293,6 +302,26 @@ jobs:
             function runSafe(cmd) {
               try { return run(cmd); }
               catch (e) { return e.stderr || e.message; }
+            }
+
+            async function commentSourceIssue(title, lines) {
+              if (!sourceIssueNumber || sourceIssueNumber <= 0) {
+                return;
+              }
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: sourceIssueNumber,
+                  body: [
+                    `## ${title}`,
+                    '',
+                    ...lines,
+                  ].join('\n')
+                });
+              } catch (e) {
+                console.log(`Failed to comment on source issue #${sourceIssueNumber}: ${e.message}`);
+              }
             }
 
             // Item 7: Improved PR merge detection — search by issue reference
@@ -446,6 +475,18 @@ jobs:
               // ── Step 3: If all pass → success ──
               if (allPassed) {
                 console.log('\n✅ All smoke tests passed — deployment successful!');
+                await commentSourceIssue('✅ Self-heal deployment succeeded', [
+                  `- Environment: \`${rg}\``,
+                  `- App: \`${appName}\``,
+                  `- FQDN: \`${appFqdn}\``,
+                  `- Image tag: \`${imageTag}\``,
+                  `- Iteration: ${iter}/${maxIter}`,
+                  '',
+                  '### Smoke Tests',
+                  '- Readiness (/api/ready): ✅ pass',
+                  '- Health (/api/health): ✅ pass',
+                  '- Home page (/): ✅ pass',
+                ]);
                 core.setOutput('result', 'pass');
                 core.setOutput('iteration', String(iter));
                 return;
@@ -554,6 +595,31 @@ jobs:
                   labels: ['deploy-fix-auto', 'needs-human-review']
                 });
 
+                await commentSourceIssue('🚨 Self-heal exhausted and escalated', [
+                  `- Environment: \`${rg}\``,
+                  `- App: \`${appName}\``,
+                  `- Image tag: \`${imageTag}\``,
+                  `- Iterations attempted: ${iter}/${maxIter}`,
+                  `- Error category: \`${errorCategory}\``,
+                  `- Summary: ${errorSummary}`,
+                  `- Rollback: ${rolledBack ? `✅ Rolled back to \`${baselineRevision}\`` : '❌ No baseline revision available'}`,
+                  '',
+                  '### Smoke Tests',
+                  `- Readiness (/api/ready): ${readinessOk ? '✅ pass' : '❌ fail'}`,
+                  `- Health (/api/health): ${healthOk ? '✅ pass' : '❌ fail'}`,
+                  `- Home page (/): ${homepageOk ? '✅ pass' : '❌ fail'}`,
+                  '',
+                  '### Container Logs (tail)',
+                  '```',
+                  containerLogs.slice(-1500),
+                  '```',
+                  '',
+                  '### System Logs (tail)',
+                  '```',
+                  systemLogs.slice(-1200),
+                  '```',
+                ]);
+
                 core.setOutput('result', 'fail');
                 core.setOutput('error', `Self-healing exhausted after ${iter} iterations: ${errorSummary}`);
                 return;
@@ -625,6 +691,30 @@ jobs:
                 issue_number: fixIssue.number,
                 body: fixIssueBody.replace('ISSUE_NUMBER', String(fixIssue.number))
               });
+
+              await commentSourceIssue(`🔎 Self-heal iteration ${iter}/${maxIter} failed`, [
+                `- Environment: \`${rg}\``,
+                `- App: \`${appName}\``,
+                `- Image tag: \`${imageTag}\``,
+                `- Error category: \`${errorCategory}\``,
+                `- Summary: ${errorSummary}`,
+                `- Automated fix issue created: #${fixIssue.number}`,
+                '',
+                '### Smoke Tests',
+                `- Readiness (/api/ready): ${readinessOk ? '✅ pass' : '❌ fail'}`,
+                `- Health (/api/health): ${healthOk ? '✅ pass' : '❌ fail'}`,
+                `- Home page (/): ${homepageOk ? '✅ pass' : '❌ fail'}`,
+                '',
+                '### Container Logs (tail)',
+                '```',
+                containerLogs.slice(-1500),
+                '```',
+                '',
+                '### System Logs (tail)',
+                '```',
+                systemLogs.slice(-1200),
+                '```',
+              ]);
 
               console.log(`Created fix issue #${fixIssue.number}`);
 

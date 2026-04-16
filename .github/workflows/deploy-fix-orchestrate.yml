@@ -12,19 +12,37 @@ on:
     types: [labeled]
 
 permissions:
+  actions: write
   contents: write
   issues: write
 
 jobs:
   orchestrate-fix:
     if: >
-      github.event.label.name == 'copilot' &&
       contains(github.event.issue.labels.*.name, 'deploy-fix-auto')
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Ensure copilot label exists on issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name);
+            if (!labels.includes('copilot')) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['copilot']
+              });
+              console.log(`Applied 'copilot' label to issue #${issue.number}`);
+            } else {
+              console.log(`Issue #${issue.number} already has 'copilot' label`);
+            }
 
       - name: Create fix branch
         id: branch
@@ -35,11 +53,36 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "${BRANCH}"
 
-          # Use an empty commit instead of marker files to avoid repo accumulation
-          git commit --allow-empty -m "chore: scaffold deploy fix for issue #${ISSUE_NUMBER}"
-          git push origin "${BRANCH}"
+          # Idempotent branch creation: reuse existing branch if already present.
+          if git ls-remote --heads origin "${BRANCH}" | grep -q "${BRANCH}"; then
+            echo "Branch ${BRANCH} already exists on origin — reusing"
+          else
+            git checkout -b "${BRANCH}"
+            # Use an empty commit instead of marker files to avoid repo accumulation
+            git commit --allow-empty -m "chore: scaffold deploy fix for issue #${ISSUE_NUMBER}"
+            git push origin "${BRANCH}"
+          fi
+
+      - name: Trigger Deploy & Self-Heal workflow
+        id: self-heal
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-and-heal.yml',
+              ref: 'main',
+              inputs: {
+                environment: 'nightly',
+                'deploy-infrastructure': 'true',
+                'max-heal-iterations': '3',
+                'source-issue-number': String(issue.number)
+              }
+            });
+            core.setOutput('triggered', 'true');
 
       - name: Update issue with branch info
         uses: actions/github-script@v7
@@ -57,12 +100,13 @@ jobs:
                 '',
                 `- Branch: \`${branch}\``,
                 `- Issue: #${issue.number}`,
+                '- Deploy workflow: `deploy-and-heal.yml` (nightly, infra deploy enabled)',
                 '',
                 'A Copilot agent will pick up this issue and:',
                 '1. Read the deployment error diagnostics above',
                 '2. Identify and fix the root cause',
                 `3. Create a PR targeting \`main\` with \`Fixes #${issue.number}\``,
-                '4. The self-healing pipeline will redeploy automatically after merge',
+                '4. The self-healing pipeline redeploys and validates in Azure automatically',
                 '',
                 '**Error classification guidelines (Constitution XV):**',
                 '- `runtime` / `dependency` / `config` errors → agent can fix autonomously',
@@ -70,19 +114,3 @@ jobs:
                 '- Credential / secret errors → MUST NOT be fixed by agent (label `needs-human-review`)',
               ].join('\n')
             });
-
-            // Note: The 'copilot' label was already applied when this workflow
-            // triggered (lines 20-22 filter on it). The label re-application below is
-            // intentionally kept as a no-op safety net in case external automation
-            // removes the label during the orchestration window.
-            try {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                labels: ['copilot']
-              });
-            } catch (e) {
-              // Label already exists — expected
-              console.log(`Label already applied: ${e.message}`);
-            }
