@@ -11,16 +11,21 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const maxKB = parseInt(process.argv[2] ?? "200", 10);
-const pageManifest = resolve(__dirname, "../.next/server/app/page/build-manifest.json");
+const manifestOverride = process.env.NEXT_BUNDLE_MANIFEST_PATH;
+const manifestCandidates = [
+  manifestOverride ? resolve(__dirname, manifestOverride) : null,
+  resolve(__dirname, "../.next/server/app/page/build-manifest.json"),
+  resolve(__dirname, "../.next/build-manifest.json"),
+].filter(Boolean);
 const indexHtml = resolve(__dirname, "../.next/server/app/index.html");
 
 let chunkFiles = [];
-if (existsSync(pageManifest)) {
-  const manifest = JSON.parse(readFileSync(pageManifest, "utf-8"));
-  chunkFiles = [
-    ...(manifest.polyfillFiles ?? []),
-    ...(manifest.rootMainFiles ?? []),
-  ];
+let source = "none";
+const manifestPath = manifestCandidates.find((candidate) => existsSync(candidate));
+if (manifestPath) {
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+  chunkFiles = [...(manifest.polyfillFiles ?? []), ...(manifest.rootMainFiles ?? [])];
+  source = manifestPath;
 } else if (existsSync(indexHtml)) {
   const html = readFileSync(indexHtml, "utf-8");
   const chunkRe = /src="\/_next\/static\/chunks\/([^"]+)"/g;
@@ -28,6 +33,7 @@ if (existsSync(pageManifest)) {
   while ((match = chunkRe.exec(html)) !== null) {
     chunkFiles.push(`static/chunks/${match[1]}`);
   }
+  source = indexHtml;
 } else {
   console.error("Build output not found. Run `npm run build` first.");
   process.exit(1);
@@ -46,7 +52,8 @@ const totalKB = Math.ceil(totalGz / 1024);
 console.log(`Initial JS bundle size (gzipped): ${totalKB}KB / ${maxKB}KB budget`);
 
 if (chunkFiles.length === 0 || totalGz === 0) {
-  console.error("FAIL: Bundle size check could not resolve initial JS chunks.");
+  const checkedManifests = manifestCandidates.join(", ");
+  console.error(`FAIL: Could not resolve initial JS chunks (source=${source}, manifests=[${checkedManifests}], indexHtml=${indexHtml}).`);
   process.exit(1);
 }
 

@@ -42,7 +42,13 @@ runs:
         APP_NAME="${{ inputs.app-name }}"
         RG="${{ inputs.resource-group }}"
         REVISION="${{ inputs.revision-name }}"
+        SMOKE_DIAG_FILE="$(mktemp /tmp/smoke-test-diagnostics.XXXXXX.json)"
+        trap 'rm -f "$SMOKE_DIAG_FILE"' EXIT
 
+        # Converts arbitrary CLI output into safe JSON for `--argjson`:
+        # - empty output -> null
+        # - valid JSON   -> compact JSON value
+        # - plain text   -> { format: "text", raw: "..." }
         normalize_json() {
           local value="$1"
           if [ -z "$value" ]; then
@@ -104,10 +110,10 @@ runs:
           -o json)
 
         # 6. Parse smoke test diagnostics safely
-        cat <<'SMOKE_TEST_DIAG_EOF' > /tmp/smoke-test-diagnostics.json
+        cat <<'SMOKE_TEST_DIAG_EOF' > "$SMOKE_DIAG_FILE"
         ${{ inputs.smoke-test-diagnostics }}
         SMOKE_TEST_DIAG_EOF
-        SMOKE_TESTS_JSON=$(normalize_json "$(cat /tmp/smoke-test-diagnostics.json)")
+        SMOKE_TESTS_JSON=$(normalize_json "$(cat "$SMOKE_DIAG_FILE")")
 
         # Build full diagnostics JSON
         DIAG=$(jq -n \
