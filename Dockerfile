@@ -22,8 +22,7 @@ RUN npx --yes esbuild apps/web/src/db/migrate.ts \
   --platform=node \
   --format=cjs \
   --outfile=migrate.cjs \
-  --external:pg \
-  --external:@azure/identity
+  --external:pg
 
 # Stage 2: Production runner
 FROM acracroyogai6t2epo2hhajo.azurecr.io/node:22-alpine AS runner
