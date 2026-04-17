@@ -50,7 +50,7 @@ on:
 # Prevent overlapping self-heal runs
 concurrency:
   group: deploy-heal-${{ inputs.environment || 'nightly' }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -121,7 +121,7 @@ jobs:
     if: >
       always() && (
         (github.event_name == 'workflow_dispatch' && (needs.build.result == 'success' || needs.build.result == 'skipped')) ||
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure')
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_sha == github.sha)
       )
     environment: ${{ inputs.environment || 'nightly' }}
     permissions:
