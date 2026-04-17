@@ -54,7 +54,10 @@ export async function GET(): Promise<NextResponse<ReadinessResponse>> {
     withTimeout(checkStorage()),
   ]);
 
-  const allOk = databaseStatus === "ok" && storageStatus === "ok";
+  // Readiness is used by the platform probe to decide if the app can serve traffic.
+  // Database connectivity is required for core API behavior, while storage can be
+  // degraded without preventing startup.
+  const allOk = databaseStatus === "ok";
   const response: ReadinessResponse = {
     status: allOk ? "ready" : "not_ready",
     checks: {
