@@ -38,6 +38,10 @@ on:
         description: "Image tag to deploy (optional — builds from HEAD if omitted)"
         required: false
         type: string
+      source-issue-number:
+        description: "Issue number to post deploy/self-heal diagnostics to"
+        required: false
+        type: string
   # Trigger self-healing when nightly deploy job fails (item 5)
   workflow_run:
     workflows: ["Nightly Build & Deploy"]
@@ -134,6 +138,7 @@ jobs:
       APP_NAME: ca-acroyoga-web-${{ inputs.environment || 'nightly' }}
       MAX_ITERATIONS: ${{ inputs.max-heal-iterations || 3 }}
       REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+      SOURCE_ISSUE_NUMBER: ${{ inputs.source-issue-number || '' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -272,6 +277,7 @@ jobs:
           MAX_ITERATIONS: ${{ env.MAX_ITERATIONS }}
           REGISTRY: ${{ env.REGISTRY }}
           BASELINE_REVISION: ${{ steps.baseline.outputs.revision }}
+          SOURCE_ISSUE_NUMBER: ${{ env.SOURCE_ISSUE_NUMBER }}
         with:
           script: |
             const { execSync } = require('child_process');
@@ -280,6 +286,8 @@ jobs:
             const rg = process.env.RESOURCE_GROUP;
             const registry = process.env.REGISTRY;
             const baselineRevision = process.env.BASELINE_REVISION;
+            const sourceIssueNumber = parseInt(process.env.SOURCE_ISSUE_NUMBER || '', 10) || 0;
+            const runIdSuffix = (process.env.GITHUB_RUN_ID || String(Date.now())).slice(-6);
             let imageTag = process.env.IMAGE_TAG;
 
             // Base cooldown: 60s, doubles each iteration (item 8: rate limiting)
@@ -296,7 +304,7 @@ jobs:
             }
 
             // Item 7: Improved PR merge detection — search by issue reference
-            async function waitForPR(issueNumber, timeoutMs = 3600000) {
+            async function waitForPR(issueNumber, timeoutMs = 900000) {
               const deadline = Date.now() + timeoutMs;
               const pollInterval = 60000;
               const createdAfter = new Date(Date.now() - timeoutMs).toISOString().split('T')[0];
@@ -331,6 +339,24 @@ jobs:
                 await new Promise(r => setTimeout(r, pollInterval));
               }
               return null;
+            }
+
+            async function commentSourceIssue(title, lines) {
+              if (!sourceIssueNumber) return;
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: sourceIssueNumber,
+                  body: [
+                    `## ${title}`,
+                    '',
+                    ...lines,
+                  ].join('\n')
+                });
+              } catch (e) {
+                console.log(`Could not comment on source issue #${sourceIssueNumber}: ${e.message}`);
+              }
             }
 
             // Item 4: Automatic rollback helper
@@ -370,7 +396,7 @@ jobs:
               // ── Step 1: Deploy new revision as canary ──
               console.log('Deploying canary revision...');
               const tagSuffix = imageTag.replace(/[^a-z0-9]/gi, '').slice(-6);
-              const revisionSuffix = `h${iter}-${tagSuffix}`;
+              const revisionSuffix = `h${iter}-${tagSuffix}-${runIdSuffix}`;
 
               try {
                 run(`az containerapp update \
@@ -383,6 +409,18 @@ jobs:
                 console.log(`::error title=DEPLOY::Canary deploy failed: ${e.message}`);
                 const infraError = runSafe(`az deployment group list \
                   --resource-group ${rg} --query "[?properties.provisioningState!='Succeeded'] | [0:3]" -o json`);
+                await commentSourceIssue('❌ Self-heal canary deploy failed', [
+                  `- Environment: \`${rg}\``,
+                  `- App: \`${appName}\``,
+                  `- Iteration: ${iter}/${maxIter}`,
+                  `- Image tag: \`${imageTag}\``,
+                  `- Revision suffix: \`${revisionSuffix}\``,
+                  '',
+                  '### Error',
+                  '```',
+                  String(e.message || e).slice(-3000),
+                  '```'
+                ]);
                 core.setOutput('result', 'fail');
                 core.setOutput('error', `Infrastructure deployment failed at iteration ${iter}: ${infraError}`);
                 return;
@@ -446,6 +484,17 @@ jobs:
               // ── Step 3: If all pass → success ──
               if (allPassed) {
                 console.log('\n✅ All smoke tests passed — deployment successful!');
+                await commentSourceIssue('✅ Self-heal deployment succeeded', [
+                  `- Environment: \`${rg}\``,
+                  `- App: \`${appName}\``,
+                  `- Iteration: ${iter}/${maxIter}`,
+                  `- Image tag: \`${imageTag}\``,
+                  '',
+                  '### Smoke Test Results',
+                  '- Readiness (/api/ready): ✅ pass',
+                  '- Health (/api/health): ✅ pass',
+                  '- Home page (/): ✅ pass'
+                ]);
                 core.setOutput('result', 'pass');
                 core.setOutput('iteration', String(iter));
                 return;
@@ -618,6 +667,20 @@ jobs:
                 labels: ['deploy-fix-auto', 'copilot']
               });
 
+              await commentSourceIssue(`🔁 Self-heal iteration ${iter}/${maxIter} failed`, [
+                `- Environment: \`${rg}\``,
+                `- App: \`${appName}\``,
+                `- Image tag: \`${imageTag}\``,
+                `- Error category: \`${errorCategory}\``,
+                `- Summary: ${errorSummary}`,
+                `- Auto-created fix issue: #${fixIssue.number}`,
+                '',
+                '### Smoke Test Results',
+                `- Readiness (/api/ready): ${readinessOk ? '✅ pass' : '❌ fail'}`,
+                `- Health (/api/health): ${healthOk ? '✅ pass' : '❌ fail'}`,
+                `- Home page (/): ${homepageOk ? '✅ pass' : '❌ fail'}`
+              ]);
+
               // Update the issue body with the actual issue number now that we have it
               await github.rest.issues.update({
                 owner: context.repo.owner,
@@ -631,7 +694,7 @@ jobs:
               // ── Step 7: Wait for the agent to merge a fix PR ──
               console.log(`Waiting for Copilot agent to fix issue #${fixIssue.number}...`);
 
-              const fixPR = await waitForPR(fixIssue.number, 3600000); // 1 hour timeout
+              const fixPR = await waitForPR(fixIssue.number, 900000); // 15 minute timeout
 
               if (!fixPR) {
                 console.log(`::warning title=SELF-HEAL::No fix PR merged within timeout for issue #${fixIssue.number}`);
@@ -698,7 +761,7 @@ jobs:
       - name: Report result
         if: always()
         run: |
-          RESULT="${{ steps.heal-loop.outputs.result }}"
+          RESULT="${{ steps.heal-loop.outputs.result || 'fail' }}"
           if [ "$RESULT" = "pass" ]; then
             echo "::notice title=Deploy & Self-Heal::✅ Deployment successful (iteration ${{ steps.heal-loop.outputs.iteration }})"
           else
