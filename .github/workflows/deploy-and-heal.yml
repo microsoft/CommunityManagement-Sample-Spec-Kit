@@ -74,11 +74,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
-        uses: azure/login@v3
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
         with:
           client-id: ${{ inputs.environment == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -99,10 +99,10 @@ jobs:
           exit 1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: ./Dockerfile
@@ -141,11 +141,11 @@ jobs:
       SOURCE_ISSUE_NUMBER: ${{ inputs.source-issue-number || '' }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       # Use the nightly identity for nightly/canary environments; staging identity for staging
       - name: Azure login (OIDC)
-        uses: azure/login@v3
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
         with:
           client-id: ${{ (inputs.environment || 'nightly') == 'staging' && secrets.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID_NIGHTLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -167,7 +167,7 @@ jobs:
       # Ensure required labels exist before the self-healing loop tries to use them.
       # GitHub returns 422 when creating an issue with non-existent labels.
       - name: Ensure deploy-fix labels exist
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const labels = [
@@ -269,7 +269,7 @@ jobs:
 
       - name: Self-healing deploy loop
         id: heal-loop
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
           RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
